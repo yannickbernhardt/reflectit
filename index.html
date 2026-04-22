@@ -841,7 +841,7 @@ input.text:focus, textarea.text:focus { border-color: var(--ink); }
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
@@ -983,7 +983,25 @@ input.text:focus, textarea.text:focus { border-color: var(--ink); }
 // QR pattern — uses the real qrcode library when available, falls back to a
 // decorative pseudo-QR so the app still looks right locally.
 window.__qrPattern = function (text, size = 25) {
-  if (window.QRCode && window.QRCode.create) {
+  // Try qrcode-generator (window.qrcode)
+  if (typeof window.qrcode === 'function') {
+    try {
+      const typeNumber = 0; // auto
+      const q = window.qrcode(typeNumber, 'M');
+      q.addData(text);
+      q.make();
+      const n = q.getModuleCount();
+      const grid = [];
+      for (let y = 0; y < n; y++) {
+        const row = [];
+        for (let x = 0; x < n; x++) row.push(q.isDark(y, x) ? 1 : 0);
+        grid.push(row);
+      }
+      return grid;
+    } catch (e) { console.warn('[ReflectIt] qrcode-generator failed', e); }
+  }
+  // Try qrcode (node-qrcode) — window.QRCode
+  if (window.QRCode && typeof window.QRCode.create === 'function') {
     try {
       const qr = window.QRCode.create(text, { errorCorrectionLevel: 'M' });
       const modules = qr.modules;
