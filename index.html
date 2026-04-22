@@ -1499,10 +1499,12 @@ Object.assign(window, { StudentView, MoodSmiley, MOOD_COLORS, MOOD_LABELS, HELP_
 // Teacher view: live dashboard with 4 tiles
 
 function QRBlock({ code, size = 120 }) {
-  const grid = React.useMemo(() => window.__qrPattern(code, 25), [code]);
-  const cell = size / 25;
+  const url = `${window.location.origin}${window.location.pathname}#join=${code}`;
+  const grid = React.useMemo(() => window.__qrPattern(url), [url]);
+  const n = grid.length;
+  const cell = size / n;
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} shapeRendering="crispEdges">
       <rect width={size} height={size} fill="white" />
       {grid.map((row, y) =>
         row.map((v, x) =>
