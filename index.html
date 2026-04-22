@@ -1,0 +1,1998 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>ReflectIt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: oklch(0.985 0.004 85);
+  --bg-soft: oklch(0.97 0.005 85);
+  --ink: oklch(0.22 0.01 260);
+  --ink-soft: oklch(0.45 0.01 260);
+  --ink-faint: oklch(0.68 0.008 260);
+  --line: oklch(0.9 0.006 260);
+  --line-soft: oklch(0.94 0.005 260);
+  --cool: oklch(0.52 0.07 245);
+  --cool-soft: oklch(0.93 0.02 245);
+  --warm: oklch(0.66 0.14 55);
+  --warm-soft: oklch(0.95 0.04 65);
+  --teacher-bg: oklch(0.22 0.015 260);
+  --teacher-panel: oklch(0.27 0.015 260);
+  --teacher-line: oklch(0.34 0.015 260);
+  --teacher-ink: oklch(0.97 0.005 85);
+  --teacher-ink-soft: oklch(0.72 0.012 260);
+  --mood-1: oklch(0.62 0.16 25);
+  --mood-2: oklch(0.72 0.12 45);
+  --mood-3: oklch(0.78 0.04 90);
+  --mood-4: oklch(0.72 0.11 140);
+  --mood-5: oklch(0.62 0.14 155);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, textarea { font-family: inherit; color: inherit; }
+textarea { resize: none; }
+
+/* Shared */
+.app-root { min-height: 100vh; }
+
+/* Landing */
+.landing {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 32px 24px 48px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.landing-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 64px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-size: 17px;
+}
+.brand-mark {
+  width: 22px; height: 22px; border-radius: 6px;
+  background: var(--ink);
+  position: relative;
+}
+.brand-mark::after {
+  content: ''; position: absolute; inset: 5px 5px 5px 11px;
+  background: var(--bg); border-radius: 2px;
+}
+.landing-meta {
+  font-size: 13px; color: var(--ink-soft);
+}
+.landing-hero {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 72px;
+  align-items: start;
+}
+.landing-hero h1 {
+  font-size: 64px;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  font-weight: 500;
+  margin: 0 0 24px;
+  text-wrap: balance;
+}
+.landing-hero h1 em {
+  font-style: normal;
+  color: var(--ink-soft);
+}
+.landing-hero p.lede {
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  max-width: 42ch;
+  margin: 0 0 40px;
+}
+.landing-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.landing-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 22px 24px;
+  background: white;
+  cursor: pointer;
+  transition: border-color .15s, transform .15s;
+  text-align: left;
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+.landing-card:hover {
+  border-color: var(--ink);
+}
+.landing-card .tag {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 4px;
+}
+.landing-card h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.landing-card p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.landing-card .arrow {
+  margin-left: auto;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-soft);
+  transition: background .15s, color .15s, border-color .15s;
+  flex-shrink: 0;
+}
+.landing-card:hover .arrow { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+.join-inline {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.join-inline input {
+  flex: 1;
+  border: 1px solid var(--line);
+  background: var(--bg-soft);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 18px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  outline: none;
+  font-family: 'JetBrains Mono', monospace;
+}
+.join-inline input:focus { border-color: var(--ink); background: white; }
+.join-inline button {
+  padding: 12px 18px;
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.join-inline button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.privacy-note {
+  margin-top: 48px;
+  padding: 20px 22px;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  background: var(--bg-soft);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  max-width: 640px;
+}
+.privacy-note strong { color: var(--ink); font-weight: 500; }
+
+/* ===== Student view ===== */
+.student {
+  min-height: 100vh;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 20px 18px 120px;
+  display: flex;
+  flex-direction: column;
+}
+.student-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.student-head .left { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink-soft); }
+.student-head .code { font-family: 'JetBrains Mono', monospace; letter-spacing: 0.12em; color: var(--ink); font-weight: 500; }
+
+.stepper {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 28px;
+}
+.stepper-pill {
+  padding: 10px 8px 9px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: white;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-align: center;
+  transition: all .15s;
+}
+.stepper-pill.active {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+.stepper-pill.done {
+  border-color: var(--ink);
+  color: var(--ink);
+  background: white;
+}
+.stepper-pill .num { display: block; font-size: 10px; margin-bottom: 2px; opacity: 0.7; }
+
+.level-header { margin-bottom: 24px; }
+.level-header .eyebrow {
+  font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 8px;
+}
+.level-header h2 {
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  margin: 0 0 10px;
+  text-wrap: balance;
+}
+.level-header p {
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin: 0;
+  line-height: 1.5;
+}
+.level-3 .level-header .eyebrow { color: var(--warm); }
+.level-3 .level-header h2 { }
+
+.field { margin-bottom: 28px; }
+.field label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 10px;
+  color: var(--ink);
+}
+.field .hint {
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin-top: 6px;
+  font-weight: 400;
+}
+.field .optional { color: var(--ink-faint); font-weight: 400; font-size: 13px; margin-left: 6px; }
+
+input.text, textarea.text {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 10px;
+  padding: 14px 14px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color .15s;
+  line-height: 1.5;
+}
+textarea.text { min-height: 92px; }
+input.text:focus, textarea.text:focus { border-color: var(--ink); }
+
+/* Scale 1-5 */
+.scale {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.scale button {
+  aspect-ratio: 1.2;
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 10px;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  transition: all .12s;
+}
+.scale button:hover { border-color: var(--ink-soft); }
+.scale button.sel {
+  background: var(--cool);
+  color: white;
+  border-color: var(--cool);
+}
+.scale-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+/* Single choice */
+.choices { display: flex; flex-direction: column; gap: 8px; }
+.choice {
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 10px;
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all .12s;
+  min-height: 50px;
+}
+.choice:hover { border-color: var(--ink-soft); }
+.choice .dot {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  flex-shrink: 0;
+  transition: all .12s;
+}
+.choice.sel { border-color: var(--ink); background: var(--bg-soft); }
+.choice.sel .dot { border-color: var(--ink); background: var(--ink); box-shadow: inset 0 0 0 3px white; }
+
+/* Mood barometer */
+.mood {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.mood button {
+  aspect-ratio: 1;
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 14px;
+  transition: all .15s;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0;
+}
+.mood button svg { width: 60%; height: 60%; }
+.mood button:hover { border-color: var(--ink-soft); }
+.mood button.sel { border-color: var(--warm); border-width: 2px; box-shadow: 0 0 0 4px var(--warm-soft); }
+.mood-scale-labels {
+  display: flex; justify-content: space-between;
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+/* Footer nav on student */
+.student-nav {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  background: linear-gradient(to top, var(--bg) 65%, transparent);
+  padding: 16px 18px 22px;
+  display: flex; gap: 10px;
+  justify-content: space-between;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.student-nav button {
+  flex: 1;
+  padding: 15px 18px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all .15s;
+}
+.btn-ghost { border: 1px solid var(--line); background: white; color: var(--ink); }
+.btn-ghost:hover { border-color: var(--ink); }
+.btn-primary { background: var(--ink); color: var(--bg); }
+.btn-primary:hover { background: oklch(0.15 0.01 260); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-submit { background: var(--warm); color: white; }
+.btn-submit:hover { background: oklch(0.6 0.14 55); }
+
+/* Submitted screen */
+.submitted {
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+  padding: 40px 24px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.submitted .check {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: var(--warm-soft);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 28px;
+  color: var(--warm);
+}
+.submitted h2 {
+  font-size: 34px; font-weight: 500; letter-spacing: -0.02em;
+  margin: 0 0 14px; line-height: 1.1;
+}
+.submitted p { color: var(--ink-soft); font-size: 16px; line-height: 1.55; margin: 0 0 8px; }
+
+/* ===== Teacher view ===== */
+.teacher {
+  min-height: 100vh;
+  background: var(--teacher-bg);
+  color: var(--teacher-ink);
+  padding: 28px 32px 40px;
+  display: flex; flex-direction: column;
+}
+.teacher-head {
+  display: flex; align-items: center; gap: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--teacher-line);
+  margin-bottom: 28px;
+}
+.teacher-head .brand { color: var(--teacher-ink); }
+.teacher-head .brand-mark { background: var(--teacher-ink); }
+.teacher-head .brand-mark::after { background: var(--teacher-bg); }
+.teacher-session {
+  display: flex; align-items: baseline; gap: 14px; margin-left: 12px;
+}
+.teacher-session .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--teacher-ink-soft); }
+.teacher-session .code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 30px; font-weight: 500;
+  letter-spacing: 0.15em;
+}
+.teacher-stats {
+  margin-left: auto;
+  display: flex; gap: 32px; align-items: center;
+}
+.teacher-stat .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--teacher-ink-soft); }
+.teacher-stat .v { font-size: 24px; font-weight: 500; letter-spacing: -0.01em; }
+.teacher-stat .v small { font-size: 14px; color: var(--teacher-ink-soft); font-weight: 400; margin-left: 4px; }
+.teacher-head-btns { display: flex; gap: 8px; }
+.t-btn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--teacher-line);
+  color: var(--teacher-ink);
+  background: var(--teacher-panel);
+  display: flex; align-items: center; gap: 6px;
+  transition: background .15s, border-color .15s;
+}
+.t-btn:hover { background: oklch(0.32 0.015 260); }
+.t-btn.danger:hover { background: oklch(0.35 0.08 25); border-color: oklch(0.55 0.15 25); }
+.t-btn.primary { background: var(--teacher-ink); color: var(--teacher-bg); border-color: var(--teacher-ink); }
+.t-btn.primary:hover { background: oklch(0.9 0.01 85); }
+
+/* Tile grid */
+.tiles {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 20px;
+  flex: 1;
+}
+.tile {
+  background: var(--teacher-panel);
+  border: 1px solid var(--teacher-line);
+  border-radius: 16px;
+  padding: 24px 26px;
+  display: flex; flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.tile-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px; }
+.tile-head .eyebrow {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--teacher-ink-soft);
+  margin-bottom: 6px;
+}
+.tile-head h3 {
+  margin: 0; font-size: 20px; font-weight: 500; letter-spacing: -0.01em;
+}
+.tile-head .tabs { display: flex; gap: 2px; background: oklch(0.2 0.012 260); border-radius: 8px; padding: 3px; }
+.tile-head .tabs button {
+  font-size: 12px; padding: 6px 10px; border-radius: 6px;
+  color: var(--teacher-ink-soft);
+}
+.tile-head .tabs button.active { background: var(--teacher-panel); color: var(--teacher-ink); }
+
+.tile-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+.empty {
+  color: var(--teacher-ink-soft);
+  font-size: 14px;
+  text-align: center;
+  padding: 40px 20px;
+  border: 1px dashed var(--teacher-line);
+  border-radius: 12px;
+  margin: auto 0;
+}
+
+/* Word cloud */
+.cloud {
+  flex: 1;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: 4px 14px;
+  padding: 8px 0 20px;
+  line-height: 1.1;
+}
+.cloud span {
+  display: inline-block;
+  color: var(--teacher-ink);
+  letter-spacing: -0.01em;
+  font-weight: 500;
+  transition: color .2s;
+}
+.cloud span.w1 { color: var(--teacher-ink-soft); font-weight: 400; }
+.cloud span.w2 { color: oklch(0.85 0.01 85); }
+.cloud span.w3 { color: var(--teacher-ink); }
+.cloud span.w4 { color: var(--teacher-ink); }
+.cloud span.w5 { color: oklch(0.85 0.05 245); }
+
+.confidence {
+  padding-top: 16px;
+  border-top: 1px solid var(--teacher-line);
+}
+.confidence-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+.confidence-head .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--teacher-ink-soft); }
+.confidence-head .avg { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; }
+.confidence-head .avg small { font-size: 13px; color: var(--teacher-ink-soft); margin-left: 4px; font-weight: 400; }
+.confidence-bars {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+  align-items: end;
+  height: 80px;
+}
+.confidence-bar {
+  background: oklch(0.4 0.04 245);
+  border-radius: 6px 6px 0 0;
+  position: relative;
+  min-height: 4px;
+  transition: height .4s;
+}
+.confidence-bar .count {
+  position: absolute; top: -18px; left: 0; right: 0; text-align: center;
+  font-size: 12px; color: var(--teacher-ink-soft);
+}
+.confidence-bar .lab {
+  position: absolute; bottom: -22px; left: 0; right: 0; text-align: center;
+  font-size: 12px; color: var(--teacher-ink-soft);
+}
+.confidence-wrap { padding-bottom: 24px; }
+
+/* Bar chart */
+.bars { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.bar-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+.bar-row .lab { font-size: 14px; color: var(--teacher-ink); }
+.bar-row .track {
+  grid-column: 1 / -1;
+  height: 10px; background: oklch(0.22 0.012 260); border-radius: 6px;
+  overflow: hidden;
+}
+.bar-row .fill { height: 100%; background: oklch(0.6 0.06 245); border-radius: 6px; transition: width .5s; }
+.bar-row-inner {
+  display: flex; justify-content: space-between; font-size: 13px; color: var(--teacher-ink-soft);
+  margin-bottom: 4px;
+}
+.bar-row-inner .count { font-variant-numeric: tabular-nums; }
+
+.private-section {
+  margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--teacher-line);
+}
+.private-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.private-head .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--teacher-ink-soft); display: flex; align-items: center; gap: 6px; }
+.private-head .lock-badge { padding: 2px 7px; border-radius: 4px; font-size: 10px; background: oklch(0.35 0.06 55 / 0.25); color: oklch(0.85 0.1 55); letter-spacing: 0.05em; }
+.private-list { max-height: 130px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px; }
+.private-list::-webkit-scrollbar { width: 6px; }
+.private-list::-webkit-scrollbar-thumb { background: var(--teacher-line); border-radius: 3px; }
+.private-item {
+  display: grid; grid-template-columns: 22px 1fr; gap: 10px;
+  padding: 8px 10px;
+  background: oklch(0.22 0.012 260);
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--teacher-ink);
+}
+.private-item .num { color: var(--teacher-ink-soft); font-family: 'JetBrains Mono', monospace; font-size: 11px; text-align: right; padding-top: 2px; }
+.private-hidden {
+  font-size: 13px; color: var(--teacher-ink-soft);
+  padding: 28px 12px; text-align: center;
+  border: 1px dashed var(--teacher-line); border-radius: 10px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.private-hidden button { font-size: 12px; padding: 6px 12px; border-radius: 6px; background: var(--teacher-line); color: var(--teacher-ink); }
+
+/* Mood */
+.mood-chart {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+  flex: 1; align-items: end;
+  padding: 10px 0 36px;
+}
+.mood-col {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  min-height: 60px;
+}
+.mood-col .svg-wrap { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; }
+.mood-col .track {
+  width: 100%;
+  height: 160px;
+  position: relative;
+  background: oklch(0.22 0.012 260);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.mood-col .fill {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  border-radius: 10px;
+  transition: height .5s;
+}
+.mood-col .count {
+  position: absolute; top: 8px; left: 0; right: 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--teacher-ink);
+}
+.mood-col .pct {
+  font-size: 11px; color: var(--teacher-ink-soft); font-variant-numeric: tabular-nums;
+}
+
+/* Cards */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+  overflow-y: auto;
+  align-content: start;
+  padding-right: 4px;
+  flex: 1;
+  min-height: 120px;
+}
+.cards-grid::-webkit-scrollbar { width: 6px; }
+.cards-grid::-webkit-scrollbar-thumb { background: var(--teacher-line); border-radius: 3px; }
+.q-card {
+  border: 1px solid var(--teacher-line);
+  background: oklch(0.22 0.012 260);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--teacher-ink);
+  cursor: pointer;
+  transition: all .15s;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 84px;
+}
+.q-card:hover { border-color: oklch(0.5 0.015 260); }
+.q-card .num { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--teacher-ink-soft); letter-spacing: 0.08em; }
+.q-card .text { flex: 1; }
+.q-card.done { opacity: 0.45; }
+.q-card.done .text { text-decoration: line-through; }
+.q-card .pickedup {
+  position: absolute; top: 8px; right: 8px;
+  font-size: 10px; color: var(--warm);
+  background: oklch(0.35 0.08 55 / 0.25);
+  padding: 2px 6px; border-radius: 4px;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+
+/* QR overlay */
+.qr-corner {
+  position: absolute;
+  right: 28px; bottom: 24px;
+  background: var(--teacher-panel);
+  border: 1px solid var(--teacher-line);
+  border-radius: 12px;
+  padding: 14px 14px 12px;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 8px;
+  z-index: 10;
+}
+.qr-corner .qr-box {
+  width: 88px; height: 88px;
+  background: white;
+  border-radius: 6px;
+  padding: 6px;
+}
+.qr-corner .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--teacher-ink-soft); }
+.qr-corner .code { font-family: 'JetBrains Mono', monospace; font-size: 15px; letter-spacing: 0.15em; color: var(--teacher-ink); font-weight: 500; }
+
+/* Session create */
+.create {
+  min-height: 100vh;
+  padding: 40px 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+.create-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  margin-top: 40px;
+  align-items: start;
+}
+.create-left h1 { font-size: 52px; letter-spacing: -0.03em; font-weight: 500; line-height: 1; margin: 0 0 20px; }
+.create-left p { font-size: 16px; color: var(--ink-soft); line-height: 1.55; margin: 0 0 24px; max-width: 42ch; }
+.create-code-row { display: flex; align-items: center; gap: 20px; padding: 20px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-bottom: 24px; }
+.create-code-row .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); margin-bottom: 8px; }
+.create-code-row .code { font-family: 'JetBrains Mono', monospace; font-size: 64px; letter-spacing: 0.12em; font-weight: 500; line-height: 1; }
+.create-right {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 28px;
+  background: white;
+  display: flex; flex-direction: column; align-items: center;
+}
+.create-right .qr-large {
+  width: 240px; height: 240px;
+  background: white;
+  border-radius: 8px;
+}
+.create-right .url { margin-top: 18px; font-size: 13px; color: var(--ink-soft); font-family: 'JetBrains Mono', monospace; word-break: break-all; text-align: center; }
+.create-actions { display: flex; gap: 12px; margin-top: 32px; }
+.create-actions button {
+  padding: 14px 22px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+}
+.create-actions .primary { background: var(--ink); color: var(--bg); }
+.create-actions .primary:hover { background: oklch(0.15 0.01 260); }
+.create-actions .secondary { border: 1px solid var(--line); color: var(--ink); background: white; }
+.create-actions .secondary:hover { border-color: var(--ink); }
+
+/* Modal */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: oklch(0.15 0.01 260 / 0.6);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; padding: 24px;
+}
+.modal {
+  background: white;
+  color: var(--ink);
+  border-radius: 16px;
+  padding: 28px 28px 22px;
+  max-width: 440px; width: 100%;
+}
+.modal h3 { margin: 0 0 12px; font-size: 22px; font-weight: 500; letter-spacing: -0.01em; }
+.modal p { margin: 0 0 20px; font-size: 14px; color: var(--ink-soft); line-height: 1.55; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.modal-actions button { padding: 11px 18px; border-radius: 10px; font-size: 14px; font-weight: 500; }
+.modal-actions .danger { background: oklch(0.55 0.18 25); color: white; }
+.modal-actions .danger:hover { background: oklch(0.5 0.18 25); }
+.modal-actions .ghost { border: 1px solid var(--line); color: var(--ink); }
+
+.question-focus {
+  background: white; color: var(--ink);
+  border-radius: 16px;
+  padding: 40px 36px 28px;
+  max-width: 680px; width: 100%;
+  display: flex; flex-direction: column;
+  gap: 24px;
+}
+.question-focus .num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-faint); letter-spacing: 0.1em; }
+.question-focus .text { font-size: 32px; line-height: 1.15; letter-spacing: -0.015em; font-weight: 500; text-wrap: balance; }
+.question-focus .focus-actions { display: flex; gap: 10px; justify-content: space-between; align-items: center; margin-top: 8px; }
+.question-focus .focus-actions .right { display: flex; gap: 10px; }
+.question-focus .focus-actions button { padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 500; }
+.focus-mark-done { background: var(--ink); color: var(--bg); }
+.focus-mark-undo { border: 1px solid var(--line); color: var(--ink); }
+.focus-nav { border: 1px solid var(--line); color: var(--ink-soft); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.focus-nav:hover { color: var(--ink); border-color: var(--ink); }
+
+/* Projection mode */
+.projection .tile { padding: 36px 40px; border-radius: 20px; }
+.projection .tile-head h3 { font-size: 30px; }
+.projection .tile-head .eyebrow { font-size: 14px; }
+.projection .cloud span { font-weight: 600; }
+.projection .confidence-head .avg { font-size: 36px; }
+.projection .confidence-bars { height: 140px; }
+.projection .mood-col .track { height: 260px; }
+.projection .mood-col .count { font-size: 24px; }
+.projection .bar-row .lab { font-size: 18px; }
+.projection .q-card { font-size: 18px; line-height: 1.3; padding: 18px 20px; min-height: 110px; }
+.projection .teacher-session .code { font-size: 44px; }
+
+/* Small screens */
+@media (max-width: 900px) {
+  .landing-hero { grid-template-columns: 1fr; gap: 40px; }
+  .landing-hero h1 { font-size: 46px; }
+  .create-content { grid-template-columns: 1fr; gap: 40px; }
+  .create-left h1 { font-size: 40px; }
+  .create-code-row .code { font-size: 48px; }
+  .tiles { grid-template-columns: 1fr; }
+  .teacher { padding: 20px 18px; }
+  .teacher-head { flex-wrap: wrap; gap: 14px; }
+  .teacher-stats { width: 100%; order: 3; margin-left: 0; justify-content: space-between; }
+  .qr-corner { display: none; }
+}
+
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script>
+// ReflectIt — Supabase-backed storage layer
+// Keeps the same API as the localStorage version so student/teacher/app.jsx
+// don't have to change. Keys are parsed to figure out what to do:
+//   session:CODE:meta             -> row in `sessions` table (optional, we skip)
+//   session:CODE:response:ID      -> row in `responses` table
+
+(function () {
+  // ==== CONFIGURATION — fill in your own values here ====
+  const SUPABASE_URL = 'https://rrmwucfjbebzsuwixibr.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_ZxesIBTttRfevo5BKJpiIA_8_VMa386';
+  // =====================================================
+
+  if (!window.supabase || !window.supabase.createClient) {
+    console.error('[ReflectIt] Supabase JS client not loaded.');
+    return;
+  }
+  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    realtime: { params: { eventsPerSecond: 5 } },
+  });
+  window.__supabase = client;
+
+  // Key parsing
+  function parseKey(key) {
+    const m = key.match(/^session:([A-Z0-9]+):(meta|response:(.+))$/);
+    if (!m) return null;
+    const [, code, kind, respId] = m;
+    if (kind === 'meta') return { code, kind: 'meta' };
+    return { code, kind: 'response', respId };
+  }
+
+  // Convert Supabase row <-> app record
+  function rowToRecord(row) {
+    return {
+      id: String(row.id),
+      createdAt: new Date(row.created_at).getTime(),
+      takeaway: row.takeaway || '',
+      confidence: row.confidence ?? null,
+      help: row.help || null,
+      stuck: row.stuck || '',
+      mood: row.mood ?? null,
+      moodWhy: row.mood_why || '',
+      openQ: row.open_q || '',
+      transfer: row.transfer || '',
+    };
+  }
+  function recordToRow(code, record) {
+    return {
+      session_code: code,
+      takeaway: record.takeaway || null,
+      confidence: record.confidence ?? null,
+      help: record.help ?? null,
+      stuck: record.stuck || null,
+      mood: record.mood ?? null,
+      mood_why: record.moodWhy || null,
+      open_q: record.openQ || null,
+      transfer: record.transfer || null,
+    };
+  }
+
+  // Active realtime subscriptions per session code
+  const channels = new Map();
+  function ensureChannel(code) {
+    if (channels.has(code)) return;
+    const ch = client
+      .channel(`session:${code}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'responses', filter: `session_code=eq.${code}` },
+        () => {
+          window.dispatchEvent(
+            new CustomEvent('__reflectit_storage', { detail: { code } })
+          );
+        }
+      )
+      .subscribe();
+    channels.set(code, ch);
+  }
+
+  const storage = {
+    async set(key, value) {
+      const p = parseKey(key);
+      if (!p) return;
+      if (p.kind === 'meta') {
+        // no-op — session existence is implied by responses
+        ensureChannel(p.code);
+        return;
+      }
+      if (p.kind === 'response') {
+        ensureChannel(p.code);
+        const row = recordToRow(p.code, value);
+        const { error } = await client.from('responses').insert(row);
+        if (error) throw error;
+      }
+    },
+    async list(prefix) {
+      // prefix looks like `session:CODE:response:`
+      const m = prefix.match(/^session:([A-Z0-9]+):response:$/);
+      if (!m) return [];
+      const code = m[1];
+      ensureChannel(code);
+      const { data, error } = await client
+        .from('responses')
+        .select('*')
+        .eq('session_code', code)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return (data || []).map((row) => ({
+        key: `session:${code}:response:${row.id}`,
+        value: rowToRecord(row),
+      }));
+    },
+    async remove(key) {
+      const p = parseKey(key);
+      if (!p) return;
+      if (p.kind === 'response') {
+        await client.from('responses').delete().eq('id', p.respId);
+      }
+      // meta: nothing to delete
+    },
+    async clearPrefix(prefix) {
+      // prefix like `session:CODE:`
+      const m = prefix.match(/^session:([A-Z0-9]+):$/);
+      if (!m) return;
+      const code = m[1];
+      await client.from('responses').delete().eq('session_code', code);
+      // drop realtime channel
+      const ch = channels.get(code);
+      if (ch) { client.removeChannel(ch); channels.delete(code); }
+    },
+  };
+
+  window.__reflectStorage = storage;
+})();
+
+// QR pattern — uses the real qrcode library when available, falls back to a
+// decorative pseudo-QR so the app still looks right locally.
+window.__qrPattern = function (text, size = 25) {
+  if (window.QRCode && window.QRCode.create) {
+    try {
+      const qr = window.QRCode.create(text, { errorCorrectionLevel: 'M' });
+      const modules = qr.modules;
+      const n = modules.size;
+      const grid = [];
+      for (let y = 0; y < n; y++) {
+        const row = [];
+        for (let x = 0; x < n; x++) row.push(modules.get(x, y) ? 1 : 0);
+        grid.push(row);
+      }
+      return grid;
+    } catch (e) { /* fall through */ }
+  }
+  // Decorative fallback (only for prototype)
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
+  const rand = () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return ((h >>> 0) % 1000) / 1000; };
+  const grid = [];
+  for (let y = 0; y < size; y++) {
+    const row = [];
+    for (let x = 0; x < size; x++) {
+      const inFinder = (cx, cy) => x >= cx && x < cx + 7 && y >= cy && y < cy + 7 &&
+        (x === cx || x === cx + 6 || y === cy || y === cy + 6 || (x >= cx + 2 && x <= cx + 4 && y >= cy + 2 && y <= cy + 4));
+      const inFinderClear = (cx, cy) => x >= cx && x < cx + 7 && y >= cy && y < cy + 7;
+      if (inFinder(0,0) || inFinder(size-7,0) || inFinder(0,size-7)) row.push(1);
+      else if (inFinderClear(0,0) || inFinderClear(size-7,0) || inFinderClear(0,size-7)) row.push(0);
+      else if ((x===6||y===6) && (x+y)%2===0) row.push(1);
+      else if (x===6||y===6) row.push(0);
+      else row.push(rand() > 0.52 ? 1 : 0);
+    }
+    grid.push(row);
+  }
+  return grid;
+};
+
+window.__genCode = function () {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for (let i = 0; i < 4; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
+};
+
+window.__STOPWORDS = new Set([
+  'der','die','das','und','oder','aber','doch','mit','ohne','für','in','im','auf','an','am','zu','zum','zur',
+  'ein','eine','einen','einem','einer','eines','ich','du','er','sie','es','wir','ihr','mir','mich','dich','uns','euch',
+  'ist','war','sind','sein','bin','bist','hat','hab','habe','hatte','werden','wird','wurde','wurden',
+  'nicht','kein','keine','keinen','keinem','keiner','auch','schon','noch','sehr','mehr','weniger','viel',
+  'wie','wo','was','wer','wann','warum','weil','dass','daß','ob','als','wenn','dann','denn','also',
+  'man','nur','so','da','dort','hier','heute','morgen','gestern','jetzt',
+  'von','vom','bei','nach','vor','über','unter','aus','durch',
+  'ja','nein','etwas','alles','nichts','viele','sowie','dabei','einen','sehr',
+  'den','dem','des','ins','beim','zum','zur','habe','werde','können','konnte','soll','muss',
+  'the','and','of','to','in','for','on','at','is','it','this','that','a','an','be',
+]);
+
+</script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+// Landing / create / join flow for ReflectIt
+
+function Landing({ onCreate, onJoin }) {
+  const [joinCode, setJoinCode] = React.useState('');
+  const clean = joinCode.replace(/\s+/g, '').toUpperCase();
+  const canJoin = clean.length === 4;
+
+  return (
+    <div className="landing">
+      <div className="landing-head">
+        <div className="brand">
+          <div className="brand-mark" />
+          ReflectIt
+        </div>
+        <div className="landing-meta">Metareflexion für das Stundenende · Berufsschule SEK II</div>
+      </div>
+
+      <div className="landing-hero">
+        <div>
+          <h1>
+            Am Ende der Stunde <em>kurz innehalten.</em>
+          </h1>
+          <p className="lede">
+            Vier Ebenen der Reflexion in fünf Minuten — anonym, ohne Login.
+            Die Klasse antwortet am Smartphone, Sie sehen die Stimmung live am Beamer.
+          </p>
+
+          <div className="privacy-note">
+            <strong>Transparent &amp; datensparsam.</strong><br />
+            Es gibt keine Konten und keine Klarnamen. Alle Rückmeldungen werden anonym
+            und nur für die Dauer dieser Session gespeichert. Am Ende genügt ein Klick,
+            um alle Daten zu löschen.
+          </div>
+        </div>
+
+        <div className="landing-cards">
+          <button className="landing-card" onClick={onCreate}>
+            <div>
+              <div className="tag">Lehrkraft</div>
+              <h3>Neue Session starten</h3>
+              <p>Erzeugt einen 4-stelligen Code und QR für die Klasse.</p>
+            </div>
+            <div className="arrow">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+            </div>
+          </button>
+
+          <div className="landing-card" style={{display: 'block', cursor: 'default'}}>
+            <div style={{display: 'flex', gap: 18, alignItems: 'center'}}>
+              <div>
+                <div className="tag">Schüler:in</div>
+                <h3>Session beitreten</h3>
+                <p>Code eingeben oder QR-Code scannen.</p>
+              </div>
+            </div>
+            <div className="join-inline">
+              <input
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4))}
+                placeholder="A4K9"
+                maxLength={6}
+              />
+              <button disabled={!canJoin} onClick={() => onJoin(clean)}>Beitreten</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CreateSession({ code, onStart, onCancel }) {
+  const joinUrl = `${window.location.origin}${window.location.pathname}#join=${code}`;
+  return (
+    <div className="create">
+      <div className="landing-head" style={{paddingBottom: 0}}>
+        <div className="brand">
+          <div className="brand-mark" />
+          ReflectIt
+        </div>
+        <button className="t-btn" style={{background: 'white', color: 'var(--ink)', borderColor: 'var(--line)'}} onClick={onCancel}>Zurück</button>
+      </div>
+
+      <div className="create-content">
+        <div className="create-left">
+          <h1>Session bereit.</h1>
+          <p>
+            Teilen Sie den Code oder den QR-Code mit Ihrer Klasse. Schüler:innen gelangen
+            direkt zu ihrer persönlichen Reflexionsseite — ohne Login, ohne App.
+          </p>
+          <div className="create-code-row">
+            <div>
+              <div className="k">Session-Code</div>
+              <div className="code mono">{code}</div>
+            </div>
+          </div>
+          <p style={{fontSize: 14}}>
+            Beim Start öffnet sich das Live-Dashboard. Die Klasse kann jederzeit beitreten —
+            der QR bleibt klein in der Ecke sichtbar, damit Nachzügler einsteigen können.
+          </p>
+          <div className="create-actions">
+            <button className="primary" onClick={onStart}>Dashboard öffnen →</button>
+            <button className="secondary" onClick={() => navigator.clipboard?.writeText(joinUrl)}>Link kopieren</button>
+          </div>
+        </div>
+
+        <div className="create-right">
+          <QRBlock code={code} size={240} />
+          <div className="url">{joinUrl}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { Landing, CreateSession });
+
+</script>
+<script type="text/babel">
+// Mood smiley SVGs
+const MoodSmiley = ({ level, color, size = 40 }) => {
+  // level: 1 (very frustrated) .. 5 (very motivated)
+  const mouths = {
+    1: 'M14 34 Q24 26 34 34', // deep frown
+    2: 'M14 32 Q24 27 34 32',
+    3: 'M14 30 L34 30',        // flat
+    4: 'M14 28 Q24 33 34 28',
+    5: 'M14 26 Q24 36 34 26',  // big smile
+  };
+  const eyeY = level === 1 ? 20 : 19;
+  return (
+    <svg viewBox="0 0 48 48" width={size} height={size} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="24" cy="24" r="19" />
+      {level === 1 ? (
+        <>
+          <path d="M15 18 L21 22 M15 22 L21 18" />
+          <path d="M27 18 L33 22 M27 22 L33 18" />
+        </>
+      ) : (
+        <>
+          <circle cx="18" cy={eyeY} r="1.4" fill={color} stroke="none" />
+          <circle cx="30" cy={eyeY} r="1.4" fill={color} stroke="none" />
+        </>
+      )}
+      <path d={mouths[level]} />
+      {level === 5 && <path d="M14 26 Q24 36 34 26 L14 26 Z" fill={color} opacity="0.1" stroke="none" />}
+    </svg>
+  );
+};
+
+const MOOD_COLORS = [
+  'var(--mood-1)', 'var(--mood-2)', 'var(--mood-3)', 'var(--mood-4)', 'var(--mood-5)'
+];
+const MOOD_LABELS = ['sehr frustriert', 'frustriert', 'neutral', 'motiviert', 'sehr motiviert'];
+
+const HELP_OPTIONS = [
+  'Gruppenarbeit',
+  'Diskussion im Plenum',
+  'Visualisierungen',
+  'Eigenes Nachdenken',
+  'Lehrer-Input',
+  'Etwas anderes',
+];
+
+const LEVELS = [
+  { num: 1, key: 'Kognitiv', title: 'Was habe ich gelernt?' },
+  { num: 2, key: 'Prozess', title: 'Wie habe ich gelernt?' },
+  { num: 3, key: 'Gefühl', title: 'Wie ging es mir dabei?' },
+  { num: 4, key: 'Transfer', title: 'Wohin geht es?' },
+];
+
+function Stepper({ step, maxReached, onGo }) {
+  return (
+    <div className="stepper">
+      {LEVELS.map((l, i) => {
+        const active = step === i;
+        const done = i < maxReached && !active;
+        return (
+          <button
+            key={i}
+            className={'stepper-pill ' + (active ? 'active' : done ? 'done' : '')}
+            onClick={() => onGo(i)}
+          >
+            <span className="num">{String(l.num).padStart(2, '0')}</span>
+            {l.key}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function ScaleInput({ value, onChange, lowLabel, highLabel }) {
+  return (
+    <div>
+      <div className="scale">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            type="button"
+            className={value === n ? 'sel' : ''}
+            onClick={() => onChange(n)}
+            aria-label={`Stufe ${n}`}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+      <div className="scale-labels">
+        <span>{lowLabel}</span>
+        <span>{highLabel}</span>
+      </div>
+    </div>
+  );
+}
+
+function MoodInput({ value, onChange }) {
+  return (
+    <div>
+      <div className="mood">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            type="button"
+            className={value === n ? 'sel' : ''}
+            onClick={() => onChange(n)}
+            aria-label={MOOD_LABELS[n - 1]}
+          >
+            <MoodSmiley level={n} color={value === n ? 'var(--warm)' : 'var(--ink-soft)'} size={56} />
+          </button>
+        ))}
+      </div>
+      <div className="mood-scale-labels">
+        <span>sehr frustriert</span>
+        <span>sehr motiviert</span>
+      </div>
+    </div>
+  );
+}
+
+function Level1({ data, update }) {
+  return (
+    <div className="level-body">
+      <div className="field">
+        <label>In einem Satz: Was nehmen Sie heute mit? <span className="optional">(optional)</span></label>
+        <textarea
+          className="text"
+          value={data.takeaway || ''}
+          onChange={(e) => update({ takeaway: e.target.value })}
+          placeholder="z. B. Ich verstehe jetzt, wie ..."
+          maxLength={280}
+        />
+      </div>
+      <div className="field">
+        <label>Wie sicher fühlen Sie sich im heutigen Thema?</label>
+        <ScaleInput
+          value={data.confidence}
+          onChange={(v) => update({ confidence: v })}
+          lowLabel="unsicher"
+          highLabel="sehr sicher"
+        />
+      </div>
+    </div>
+  );
+}
+
+function Level2({ data, update }) {
+  return (
+    <div className="level-body">
+      <div className="field">
+        <label>Was hat Ihnen heute am meisten geholfen?</label>
+        <div className="choices">
+          {HELP_OPTIONS.map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              className={'choice ' + (data.help === opt ? 'sel' : '')}
+              onClick={() => update({ help: opt })}
+            >
+              <span className="dot" />
+              {opt}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="field">
+        <label>Wo sind Sie heute ins Stocken geraten? <span className="optional">(optional)</span></label>
+        <textarea
+          className="text"
+          value={data.stuck || ''}
+          onChange={(e) => update({ stuck: e.target.value })}
+          placeholder="Was war heute schwierig oder unklar?"
+          maxLength={280}
+        />
+        <div className="hint">Nur die Lehrkraft sieht diese Antwort — sie wird nicht projiziert.</div>
+      </div>
+    </div>
+  );
+}
+
+function Level3({ data, update }) {
+  return (
+    <div className="level-body">
+      <div className="field">
+        <label>Stimmungsbarometer</label>
+        <MoodInput value={data.mood} onChange={(v) => update({ mood: v })} />
+      </div>
+      <div className="field">
+        <label>Warum? <span className="optional">(freiwillig)</span></label>
+        <textarea
+          className="text"
+          value={data.moodWhy || ''}
+          onChange={(e) => update({ moodWhy: e.target.value })}
+          placeholder="Was war heute besonders..."
+          maxLength={200}
+        />
+      </div>
+    </div>
+  );
+}
+
+function Level4({ data, update }) {
+  return (
+    <div className="level-body">
+      <div className="field">
+        <label>Welche Frage bleibt heute offen? <span className="optional">(optional)</span></label>
+        <textarea
+          className="text"
+          value={data.openQ || ''}
+          onChange={(e) => update({ openQ: e.target.value })}
+          placeholder="z. B. Wie würde das in der Praxis aussehen, wenn ...?"
+          maxLength={240}
+        />
+      </div>
+      <div className="field">
+        <label>Was möchten Sie im Alltag weiterdenken oder anwenden? <span className="optional">(optional)</span></label>
+        <textarea
+          className="text"
+          value={data.transfer || ''}
+          onChange={(e) => update({ transfer: e.target.value })}
+          placeholder="Ein Gedanke für die nächsten Tage..."
+          maxLength={240}
+        />
+      </div>
+    </div>
+  );
+}
+
+function StudentView({ code, onExit }) {
+  const [step, setStep] = React.useState(0);
+  const [maxReached, setMaxReached] = React.useState(0);
+  const [data, setData] = React.useState({});
+  const [submitted, setSubmitted] = React.useState(false);
+  const [error, setError] = React.useState(null);
+
+  const update = (patch) => setData((d) => ({ ...d, ...patch }));
+
+  const go = (n) => {
+    const next = Math.max(0, Math.min(3, n));
+    setStep(next);
+    setMaxReached((m) => Math.max(m, next));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const submit = async () => {
+    try {
+      const id = 'r_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+      const record = {
+        id,
+        createdAt: Date.now(),
+        takeaway: (data.takeaway || '').trim(),
+        confidence: data.confidence || null,
+        help: data.help || null,
+        stuck: (data.stuck || '').trim(),
+        mood: data.mood || null,
+        moodWhy: (data.moodWhy || '').trim(),
+        openQ: (data.openQ || '').trim(),
+        transfer: (data.transfer || '').trim(),
+      };
+      await window.__reflectStorage.set(`session:${code}:response:${id}`, record);
+      setSubmitted(true);
+    } catch (e) {
+      setError('Beim Speichern ist ein Fehler aufgetreten. Bitte laden Sie die Seite neu.');
+    }
+  };
+
+  if (submitted) {
+    return (
+      <div className="submitted">
+        <div className="check">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7" /></svg>
+        </div>
+        <h2>Danke.</h2>
+        <p>Ihre Antworten fließen anonym in die Auswertung der Klasse ein.</p>
+        <p style={{marginTop: 20, fontSize: 13, color: 'var(--ink-faint)'}}>Sie können dieses Fenster jetzt schließen.</p>
+      </div>
+    );
+  }
+
+  const levelEl = step === 0 ? <Level1 data={data} update={update} />
+    : step === 1 ? <Level2 data={data} update={update} />
+    : step === 2 ? <Level3 data={data} update={update} />
+    : <Level4 data={data} update={update} />;
+
+  return (
+    <div className={`student level-${step + 1}`}>
+      <div className="student-head">
+        <div className="left">
+          <div className="brand">
+            <div className="brand-mark" />
+            ReflectIt
+          </div>
+        </div>
+        <div className="code mono">{code}</div>
+      </div>
+
+      <Stepper step={step} maxReached={Math.max(maxReached, step)} onGo={go} />
+
+      <div className="level-header">
+        <div className="eyebrow">Ebene {step + 1} · {LEVELS[step].key}</div>
+        <h2>{LEVELS[step].title}</h2>
+        <p>Nehmen Sie sich einen Moment. Alle Felder sind freiwillig.</p>
+      </div>
+
+      {levelEl}
+
+      {error && (
+        <div style={{background: 'oklch(0.95 0.05 25)', color: 'oklch(0.4 0.15 25)', padding: '12px 14px', borderRadius: 10, fontSize: 13, marginBottom: 20}}>
+          {error}
+        </div>
+      )}
+
+      <div className="student-nav">
+        {step > 0 ? (
+          <button className="btn-ghost" onClick={() => go(step - 1)}>Zurück</button>
+        ) : (
+          <button className="btn-ghost" onClick={onExit}>Abbrechen</button>
+        )}
+        {step < 3 ? (
+          <button className="btn-primary" onClick={() => go(step + 1)}>Weiter</button>
+        ) : (
+          <button className="btn-submit" onClick={submit}>Reflexion abschicken</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { StudentView, MoodSmiley, MOOD_COLORS, MOOD_LABELS, HELP_OPTIONS, LEVELS });
+
+</script>
+<script type="text/babel">
+// Teacher view: live dashboard with 4 tiles
+
+function QRBlock({ code, size = 120 }) {
+  const grid = React.useMemo(() => window.__qrPattern(code, 25), [code]);
+  const cell = size / 25;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <rect width={size} height={size} fill="white" />
+      {grid.map((row, y) =>
+        row.map((v, x) =>
+          v ? <rect key={`${x}-${y}`} x={x * cell} y={y * cell} width={cell} height={cell} fill="#111" /> : null
+        )
+      )}
+    </svg>
+  );
+}
+
+// ---- Tile 1: word cloud + confidence ----
+function WordCloud({ responses }) {
+  const freq = {};
+  responses.forEach((r) => {
+    const text = (r.takeaway || '').toLowerCase();
+    text.split(/[\s.,;:!?"'„""()\-–—/]+/).forEach((w) => {
+      const clean = w.replace(/[^\wäöüß]/g, '').trim();
+      if (clean.length < 3) return;
+      if (window.__STOPWORDS.has(clean)) return;
+      freq[clean] = (freq[clean] || 0) + 1;
+    });
+  });
+  const entries = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 28);
+  if (entries.length === 0) {
+    return <div className="empty">Noch keine Antworten — warten wir auf die Klasse…</div>;
+  }
+  const max = entries[0][1];
+  return (
+    <div className="cloud">
+      {entries.map(([w, n]) => {
+        const scale = 0.6 + (n / max) * 1.8;
+        const tier = Math.min(5, Math.max(1, Math.round((n / max) * 5)));
+        return (
+          <span
+            key={w}
+            className={`w${tier}`}
+            style={{ fontSize: `${scale * 14 + 8}px`, lineHeight: 1.1 }}
+          >
+            {w}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+function ConfidenceBars({ responses, projection }) {
+  const counts = [0, 0, 0, 0, 0];
+  let total = 0, sum = 0;
+  responses.forEach((r) => {
+    if (r.confidence && r.confidence >= 1 && r.confidence <= 5) {
+      counts[r.confidence - 1]++;
+      total++;
+      sum += r.confidence;
+    }
+  });
+  const max = Math.max(1, ...counts);
+  const avg = total ? sum / total : 0;
+  return (
+    <div className="confidence-wrap">
+      <div className="confidence-head">
+        <div className="k">Sicherheit im Thema · Verteilung (1–5)</div>
+        <div className="avg">
+          {total ? avg.toFixed(1) : '–'}
+          <small>/ 5 · {total} Stimmen</small>
+        </div>
+      </div>
+      <div className="confidence-bars">
+        {counts.map((c, i) => (
+          <div
+            key={i}
+            className="confidence-bar"
+            style={{
+              height: `${(c / max) * 100}%`,
+              background: `oklch(${0.42 + i * 0.08} 0.07 ${260 - i * 20})`,
+            }}
+          >
+            <div className="count">{c || ''}</div>
+            <div className="lab">{i + 1}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---- Tile 2: help bar chart + stuck list ----
+function HelpBars({ responses }) {
+  const counts = {};
+  HELP_OPTIONS.forEach((o) => (counts[o] = 0));
+  responses.forEach((r) => { if (r.help && counts.hasOwnProperty(r.help)) counts[r.help]++; });
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  const max = Math.max(1, ...Object.values(counts));
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  if (total === 0) {
+    return <div className="empty">Noch keine Antworten zur Lernform.</div>;
+  }
+  return (
+    <div className="bars">
+      {sorted.map(([opt, n]) => (
+        <div key={opt} className="bar-row">
+          <div className="bar-row-inner" style={{gridColumn: '1 / -1'}}>
+            <span className="lab">{opt}</span>
+            <span className="count">{n}</span>
+          </div>
+          <div className="track">
+            <div className="fill" style={{ width: `${(n / max) * 100}%` }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function StuckList({ responses }) {
+  const [shown, setShown] = React.useState(false);
+  const items = responses.filter((r) => r.stuck && r.stuck.length > 0);
+  return (
+    <div className="private-section">
+      <div className="private-head">
+        <div className="k">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+          Stolpersteine · nur für Sie
+          <span className="lock-badge">privat</span>
+        </div>
+        <button className="t-btn" style={{padding: '5px 10px', fontSize: 12}} onClick={() => setShown((s) => !s)}>
+          {shown ? 'Verbergen' : 'Anzeigen'}
+        </button>
+      </div>
+      {!shown ? (
+        <div className="private-hidden">
+          Damit Schüler:innen beim Beamer nicht identifizierbar werden, bleiben diese Antworten verborgen.
+        </div>
+      ) : items.length === 0 ? (
+        <div className="private-hidden">Noch keine Stolpersteine gemeldet.</div>
+      ) : (
+        <div className="private-list">
+          {items.map((r, i) => (
+            <div key={r.id} className="private-item">
+              <span className="num">{String(i + 1).padStart(2, '0')}</span>
+              <span>{r.stuck}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---- Tile 3: mood distribution ----
+function MoodChart({ responses, projection }) {
+  const counts = [0, 0, 0, 0, 0];
+  let total = 0;
+  responses.forEach((r) => {
+    if (r.mood && r.mood >= 1 && r.mood <= 5) { counts[r.mood - 1]++; total++; }
+  });
+  if (total === 0) {
+    return <div className="empty">Noch keine Stimmungen — die Klasse reflektiert noch.</div>;
+  }
+  const max = Math.max(1, ...counts);
+  return (
+    <div className="mood-chart">
+      {counts.map((c, i) => (
+        <div key={i} className="mood-col">
+          <div className="track">
+            <div className="fill" style={{ height: `${(c / max) * 100}%`, background: MOOD_COLORS[i] }} />
+            <div className="count">{c || '·'}</div>
+          </div>
+          <div className="svg-wrap">
+            <MoodSmiley level={i + 1} color={MOOD_COLORS[i]} size={projection ? 52 : 36} />
+          </div>
+          <div className="pct">{Math.round((c / total) * 100)}%</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ---- Tile 4: open questions / transfer cards ----
+function QuestionCards({ responses, pickedUp, togglePickedUp, onOpen, kind }) {
+  const field = kind === 'openQ' ? 'openQ' : 'transfer';
+  const items = responses.filter((r) => r[field] && r[field].length > 0);
+  if (items.length === 0) {
+    return (
+      <div className="empty">
+        {kind === 'openQ'
+          ? 'Noch keine offenen Fragen — die Klasse überlegt noch.'
+          : 'Noch keine Transfer-Ideen.'}
+      </div>
+    );
+  }
+  return (
+    <div className="cards-grid">
+      {items.map((r, i) => {
+        const key = `${r.id}:${field}`;
+        const done = pickedUp.has(key);
+        return (
+          <button
+            key={key}
+            className={'q-card ' + (done ? 'done' : '')}
+            onClick={() => onOpen({ item: r, field, index: i + 1 })}
+          >
+            <span className="num">{kind === 'openQ' ? 'Q' : 'T'}{String(i + 1).padStart(2, '0')}</span>
+            <span className="text">{r[field]}</span>
+            {done && <span className="pickedup">aufgegriffen</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function TeacherView({ code, onExit }) {
+  const [responses, setResponses] = React.useState([]);
+  const [projection, setProjection] = React.useState(false);
+  const [tile4Tab, setTile4Tab] = React.useState('open'); // 'open' | 'transfer'
+  const [pickedUp, setPickedUp] = React.useState(new Set());
+  const [focus, setFocus] = React.useState(null); // {item, field, index}
+  const [showEnd, setShowEnd] = React.useState(false);
+
+  // polling
+  const load = React.useCallback(async () => {
+    try {
+      const list = await window.__reflectStorage.list(`session:${code}:response:`);
+      const vals = list.map((x) => x.value).sort((a, b) => a.createdAt - b.createdAt);
+      setResponses(vals);
+    } catch (e) { /* ignore */ }
+  }, [code]);
+
+  React.useEffect(() => {
+    load();
+    const poll = setInterval(load, 3000);
+    const handler = () => load();
+    window.addEventListener('__reflectit_storage', handler);
+    window.addEventListener('storage', handler);
+    return () => {
+      clearInterval(poll);
+      window.removeEventListener('__reflectit_storage', handler);
+      window.removeEventListener('storage', handler);
+    };
+  }, [load]);
+
+  const togglePickedUp = (key) => {
+    setPickedUp((s) => {
+      const n = new Set(s); n.has(key) ? n.delete(key) : n.add(key); return n;
+    });
+  };
+
+  const endSession = async () => {
+    await window.__reflectStorage.clearPrefix(`session:${code}:`);
+    await window.__reflectStorage.remove(`session:${code}:meta`);
+    onExit();
+  };
+
+  const count = responses.length;
+  const estimate = Math.max(25, Math.ceil(count * 1.3) || 25);
+
+  // Focus navigation for question cards
+  const openItems = responses.filter((r) => (focus?.field ? r[focus.field] : '') );
+  const focusNav = (dir) => {
+    if (!focus) return;
+    const idx = openItems.findIndex((r) => r.id === focus.item.id);
+    const next = openItems[(idx + dir + openItems.length) % openItems.length];
+    if (next) setFocus({ item: next, field: focus.field, index: openItems.indexOf(next) + 1 });
+  };
+
+  return (
+    <div className={`teacher ${projection ? 'projection' : ''}`}>
+      <div className="teacher-head">
+        <div className="brand">
+          <div className="brand-mark" />
+          ReflectIt
+        </div>
+        <div className="teacher-session">
+          <div>
+            <div className="label">Session</div>
+            <div className="code">{code}</div>
+          </div>
+        </div>
+        <div className="teacher-stats">
+          <div className="teacher-stat">
+            <div className="k">Rückmeldungen</div>
+            <div className="v">{count}<small>/ ~{estimate}</small></div>
+          </div>
+          <div className="teacher-head-btns">
+            <button className="t-btn" onClick={() => setProjection((p) => !p)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="12" rx="2" /><path d="M7 20h10M12 16v4" /></svg>
+              {projection ? 'Projektion aus' : 'Projektionsmodus'}
+            </button>
+            <button className="t-btn danger" onClick={() => setShowEnd(true)}>Session beenden</button>
+          </div>
+        </div>
+      </div>
+
+      <div className="tiles">
+        <div className="tile">
+          <div className="tile-head">
+            <div>
+              <div className="eyebrow">Ebene 1 · Kognitiv</div>
+              <h3>Was die Klasse mitnimmt</h3>
+            </div>
+          </div>
+          <div className="tile-body">
+            <WordCloud responses={responses} />
+            <ConfidenceBars responses={responses} projection={projection} />
+          </div>
+        </div>
+
+        <div className="tile">
+          <div className="tile-head">
+            <div>
+              <div className="eyebrow">Ebene 2 · Prozess</div>
+              <h3>Was heute geholfen hat</h3>
+            </div>
+          </div>
+          <div className="tile-body">
+            <HelpBars responses={responses} />
+            {!projection && <StuckList responses={responses} />}
+          </div>
+        </div>
+
+        <div className="tile">
+          <div className="tile-head">
+            <div>
+              <div className="eyebrow">Ebene 3 · Stimmung</div>
+              <h3>Wie es der Klasse geht</h3>
+            </div>
+          </div>
+          <div className="tile-body">
+            <MoodChart responses={responses} projection={projection} />
+          </div>
+        </div>
+
+        <div className="tile">
+          <div className="tile-head">
+            <div>
+              <div className="eyebrow">Ebene 4 · Transfer</div>
+              <h3>{tile4Tab === 'open' ? 'Offene Fragen' : 'Transfer-Ideen'}</h3>
+            </div>
+            <div className="tabs">
+              <button className={tile4Tab === 'open' ? 'active' : ''} onClick={() => setTile4Tab('open')}>Offene Fragen</button>
+              <button className={tile4Tab === 'transfer' ? 'active' : ''} onClick={() => setTile4Tab('transfer')}>Transfer</button>
+            </div>
+          </div>
+          <div className="tile-body">
+            <QuestionCards
+              responses={responses}
+              pickedUp={pickedUp}
+              togglePickedUp={togglePickedUp}
+              onOpen={setFocus}
+              kind={tile4Tab === 'open' ? 'openQ' : 'transfer'}
+            />
+          </div>
+        </div>
+      </div>
+
+      {!projection && (
+        <div className="qr-corner">
+          <div className="label">Nachzügler</div>
+          <div className="qr-box"><QRBlock code={code} size={76} /></div>
+          <div className="code">{code}</div>
+        </div>
+      )}
+
+      {/* Focus modal */}
+      {focus && (
+        <div className="modal-backdrop" onClick={() => setFocus(null)}>
+          <div className="question-focus" onClick={(e) => e.stopPropagation()}>
+            <div className="num">
+              {focus.field === 'openQ' ? 'Offene Frage' : 'Transfer-Idee'} · {String(focus.index).padStart(2, '0')}
+            </div>
+            <div className="text">{focus.item[focus.field]}</div>
+            <div className="focus-actions">
+              <button className="focus-nav" onClick={() => focusNav(-1)} aria-label="Zurück">‹</button>
+              <div className="right">
+                {pickedUp.has(`${focus.item.id}:${focus.field}`) ? (
+                  <button className="focus-mark-undo" onClick={() => togglePickedUp(`${focus.item.id}:${focus.field}`)}>
+                    Als offen markieren
+                  </button>
+                ) : (
+                  <button className="focus-mark-done" onClick={() => togglePickedUp(`${focus.item.id}:${focus.field}`)}>
+                    Als aufgegriffen markieren
+                  </button>
+                )}
+                <button className="focus-nav" onClick={() => focusNav(1)} aria-label="Weiter">›</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showEnd && (
+        <div className="modal-backdrop" onClick={() => setShowEnd(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Session beenden?</h3>
+            <p>Alle Antworten dieser Session ({code}) werden unwiderruflich aus dem Speicher gelöscht. Sie kehren zum Startbildschirm zurück.</p>
+            <div className="modal-actions">
+              <button className="ghost" onClick={() => setShowEnd(false)}>Abbrechen</button>
+              <button className="danger" onClick={endSession}>Beenden & Daten löschen</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+Object.assign(window, { TeacherView, QRBlock });
+
+</script>
+<script type="text/babel">
+// Main app shell + routing
+
+function App() {
+  // routes: 'landing' | 'create' | 'teacher' | 'student' | 'join'
+  const [route, setRoute] = React.useState('landing');
+  const [code, setCode] = React.useState(null);
+  const [seeded, setSeeded] = React.useState(false);
+
+  // Parse hash for join links
+  React.useEffect(() => {
+    const m = window.location.hash.match(/join=([A-Z0-9]{4})/i);
+    if (m) {
+      setCode(m[1].toUpperCase());
+      setRoute('student');
+    }
+  }, []);
+
+  const createSession = async () => {
+    const c = window.__genCode();
+    setCode(c);
+    await window.__reflectStorage.set(`session:${c}:meta`, { createdAt: Date.now() });
+    setRoute('create');
+  };
+
+  const startDashboard = async () => {
+    // Do not seed real Supabase with demo data.
+    setRoute('teacher');
+  };
+
+  const joinSession = (c) => {
+    setCode(c);
+    setRoute('student');
+  };
+
+  const reset = () => {
+    setRoute('landing');
+    setCode(null);
+    window.location.hash = '';
+  };
+
+  if (route === 'create') return <CreateSession code={code} onStart={startDashboard} onCancel={reset} />;
+  if (route === 'teacher') return <TeacherView code={code} onExit={reset} />;
+  if (route === 'student') return <StudentView code={code} onExit={reset} />;
+  return <Landing onCreate={createSession} onJoin={joinSession} />;
+}
+
+async function seedDemo(code) {
+  const demos = [
+    { takeaway: 'Ich verstehe jetzt, wie der Zinseszinseffekt über Jahre wirkt.', confidence: 4, help: 'Visualisierungen', stuck: 'Die Formel mit dem Exponenten ist mir noch unklar.', mood: 4, moodWhy: 'Die Grafik hat viel geholfen.', openQ: 'Wie rechne ich das bei wechselnden Zinssätzen?', transfer: 'Eigenes Sparkonto mal durchrechnen.' },
+    { takeaway: 'Zinseszins wächst exponentiell, nicht linear.', confidence: 4, help: 'Lehrer-Input', stuck: '', mood: 5, moodWhy: '', openQ: 'Gibt es Beispiele aus der Praxis von Banken?', transfer: 'Meiner Schwester das erklären.' },
+    { takeaway: 'Exponentielles Wachstum ist erst spät dramatisch.', confidence: 3, help: 'Eigenes Nachdenken', stuck: 'Umstellen der Formel nach n.', mood: 3, moodWhy: 'Ich war heute müde.', openQ: '', transfer: 'Den Effekt beim Kredit meiner Eltern prüfen.' },
+    { takeaway: 'Kapital verdoppelt sich bei 7% in ca. 10 Jahren.', confidence: 5, help: 'Lehrer-Input', stuck: '', mood: 5, moodWhy: '', openQ: 'Wie unterscheidet sich das vom Aktienmarkt?', transfer: 'ETF-Sparplan starten.' },
+    { takeaway: 'Je früher man spart, desto mehr lohnt es sich.', confidence: 4, help: 'Gruppenarbeit', stuck: '', mood: 4, moodWhy: 'Die Diskussion in der Gruppe war gut.', openQ: 'Was passiert bei Inflation?', transfer: 'Mit Eltern über Altersvorsorge sprechen.' },
+    { takeaway: '', confidence: 2, help: 'Gruppenarbeit', stuck: 'Ich bin beim Umformen hängen geblieben.', mood: 2, moodWhy: 'War zu schnell heute.', openQ: 'Können wir das nochmal langsam wiederholen?', transfer: '' },
+    { takeaway: 'Der Unterschied zwischen Zinsen und Zinseszinsen ist mir jetzt klar.', confidence: 4, help: 'Diskussion im Plenum', stuck: '', mood: 4, moodWhy: '', openQ: '', transfer: 'Eigene Kreditkarte verstehen.' },
+    { takeaway: 'Kleine Beträge werden mit der Zeit viel Geld.', confidence: 3, help: 'Visualisierungen', stuck: 'Logarithmen sind schwierig.', mood: 3, moodWhy: '', openQ: 'Wann lohnt sich ein Kredit trotz Zinsen?', transfer: 'Handyvertrag prüfen.' },
+    { takeaway: 'Geduld zahlt sich finanziell aus.', confidence: 5, help: 'Eigenes Nachdenken', stuck: '', mood: 5, moodWhy: '', openQ: 'Gibt es auch negative Zinseszinsen?', transfer: 'Schulden sind der umgekehrte Zinseszinseffekt.' },
+    { takeaway: 'Exponentialfunktionen sehen unschuldig aus, sind es aber nicht.', confidence: 3, help: 'Visualisierungen', stuck: '', mood: 4, moodWhy: '', openQ: 'Wie verdopple ich Kapital am schnellsten legal?', transfer: 'Sparplan berechnen.' },
+    { takeaway: '', confidence: 1, help: 'Etwas anderes', stuck: 'Ich habe den Einstieg verpasst.', mood: 1, moodWhy: 'Bin heute nicht gut reingekommen.', openQ: 'Können wir die Rechnung Schritt für Schritt nochmal machen?', transfer: '' },
+    { takeaway: 'Sparen lohnt sich früh, nicht spät.', confidence: 4, help: 'Lehrer-Input', stuck: '', mood: 4, moodWhy: '', openQ: '', transfer: 'Meinem Bruder davon erzählen.' },
+    { takeaway: 'Zinseszins ist eigentlich einfach wenn man das Prinzip sieht.', confidence: 4, help: 'Diskussion im Plenum', stuck: '', mood: 4, moodWhy: '', openQ: 'Warum rechnen Banken mit Monaten, nicht Jahren?', transfer: 'Tagesgeldvergleich machen.' },
+    { takeaway: 'Lernen fürs Leben — Thema betrifft mich direkt.', confidence: 3, help: 'Gruppenarbeit', stuck: 'Die vielen Variablen sind verwirrend.', mood: 3, moodWhy: '', openQ: 'Wie funktioniert das bei Aktien?', transfer: 'Depot einrichten.' },
+    { takeaway: 'Wachstum ist nicht gleich Wachstum.', confidence: 5, help: 'Visualisierungen', stuck: '', mood: 5, moodWhy: 'Endlich verstanden!', openQ: '', transfer: 'Freunden erklären.' },
+    { takeaway: 'Kleine Zinsunterschiede ergeben große Differenzen.', confidence: 3, help: 'Eigenes Nachdenken', stuck: '', mood: 3, moodWhy: '', openQ: 'Wie beeinflusst die Zentralbank die Zinsen?', transfer: 'Nachrichten besser verstehen.' },
+    { takeaway: '', confidence: 2, help: 'Gruppenarbeit', stuck: '', mood: 2, moodWhy: '', openQ: 'Können wir nächste Stunde üben?', transfer: '' },
+    { takeaway: 'Zeit ist beim Sparen das wichtigste Kapital.', confidence: 4, help: 'Lehrer-Input', stuck: '', mood: 4, moodWhy: '', openQ: '', transfer: 'Sparen früher beginnen.' },
+  ];
+
+  for (const d of demos) {
+    const id = 'demo_' + Math.random().toString(36).slice(2, 10);
+    await window.__reflectStorage.set(`session:${code}:response:${id}`, {
+      id, createdAt: Date.now() - Math.random() * 200000, ...d,
+    });
+  }
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+
+</script>
+</body>
+</html>
