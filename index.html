@@ -1314,28 +1314,27 @@ input:focus, textarea:focus, select:focus {
 
 .logo-icon-3d {
   display: inline-block;
-  perspective: 1000px;
+  perspective: 1200px;
   filter:
-    drop-shadow(0 12px 20px rgba(120, 40, 130, 0.28))
-    drop-shadow(0 3px 6px rgba(70, 20, 80, 0.18));
+    drop-shadow(0 14px 24px rgba(180, 50, 130, 0.32))
+    drop-shadow(0 4px 8px rgba(70, 20, 80, 0.18));
   flex: none;
   vertical-align: middle;
+  transition: filter 400ms ease;
 }
 .logo-icon-3d svg {
   display: block;
-  transform-style: preserve-3d;
-  backface-visibility: visible;
   will-change: transform;
 }
 .logo-icon-3d.is-rotating svg {
-  animation: logo-spin-y 22s linear infinite;
+  animation: logo-pearl-float 7s ease-in-out infinite;
 }
 .logo-icon-3d.is-paused svg {
   animation-play-state: paused;
 }
-@keyframes logo-spin-y {
-  from { transform: rotateY(0deg); }
-  to   { transform: rotateY(360deg); }
+@keyframes logo-pearl-float {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50%      { transform: translateY(-2.5%) rotate(1deg); }
 }
 
 .logo-wordmark {
@@ -1461,6 +1460,45 @@ input:focus, textarea:focus, select:focus {
 }
 @media (prefers-reduced-motion: reduce) {
   .breathing-dot__core { animation: none; transform: scale(1); opacity: 0.7; }
+}
+
+/* ─── Pearl Orb (Three.js canvas container) ─── */
+.pearl-orb {
+  width: clamp(180px, 24vw, 260px);
+  height: clamp(180px, 24vw, 260px);
+  position: relative;
+  filter:
+    drop-shadow(0 30px 60px rgba(150, 40, 130, 0.35))
+    drop-shadow(0 10px 24px rgba(80, 30, 100, 0.22));
+  will-change: transform, opacity;
+  isolation: isolate;
+}
+/* Atmender farbiger Glow (radial) — liegt hinter dem Canvas */
+.pearl-orb::before {
+  content: '';
+  position: absolute;
+  inset: -45%;
+  background:
+    radial-gradient(circle at 50% 50%,
+      rgba(255, 150, 110, 0.38) 0%,
+      rgba(216, 80, 150, 0.28) 22%,
+      rgba(120, 71, 191, 0.18) 45%,
+      rgba(120, 71, 191, 0) 72%);
+  filter: blur(14px);
+  z-index: -1;
+  pointer-events: none;
+  animation: orb-glow-breathe 6s ease-in-out infinite;
+}
+@keyframes orb-glow-breathe {
+  0%, 100% { opacity: 0.72; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.06); }
+}
+.pearl-orb canvas { display: block; width: 100%; height: 100%; border-radius: 50%; }
+@media (prefers-reduced-motion: reduce) {
+  .pearl-orb::before { animation: none; opacity: 0.8; transform: none; }
+}
+@media (max-width: 760px) {
+  .pearl-orb { width: 180px; height: 180px; }
 }
 
 /* ===================== Calm Landing (new centered composition) ===================== */
@@ -1930,6 +1968,7 @@ html.no-fx-anims .stagger > * { animation: none !important; opacity: 1 !importan
 <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.development.js"></script>
 <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.development.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.29.0/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
 <script>
 // ReflectIt — Supabase storage layer w/ method + payload support
 (function () {
@@ -2089,17 +2128,14 @@ window.__STOPWORDS = new Set([
 // plus ReflectIt wordmark. Icon rotates slowly on Y-axis.
 
 function LogoIcon({ size = 48, rotate = true, paused = false }) {
-  // Square (1:1) rounded rect with 3-stop diagonal gradient (orange → magenta → blue),
-  // strong 30% corner radius, soft 3D rim (highlight top, shadow bottom),
-  // centered near-square white inner "display".
+  // Glossy "pearl" orb: radial gradient body (orange → magenta → deep violet),
+  // bright specular highlight on top-left, soft rim shadow at the bottom.
+  // Feels like a 3D sphere lit from above.
   const w = size;
   const h = size;
-  const r = Math.round(w * 0.30);
-  const innerW = Math.round(w * 0.34);
-  const innerH = Math.round(h * 0.44);
-  const innerX = (w - innerW) / 2;
-  const innerY = (h - innerH) / 2;
-  const innerR = Math.round(innerW * 0.30);
+  const cx = w / 2;
+  const cy = h / 2;
+  const r = w / 2 - 0.5;
   const uid = `logo-${size}-${Math.round(Math.random() * 1e6)}`;
 
   return (
@@ -2110,61 +2146,52 @@ function LogoIcon({ size = 48, rotate = true, paused = false }) {
     >
       <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} xmlns="http://www.w3.org/2000/svg">
         <defs>
-          {/* Main body: TL orange → mid magenta → BR blue/violet */}
-          <linearGradient id={`${uid}-body`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%"   stopColor="#E86A3A" />
-            <stop offset="45%"  stopColor="#C8348C" />
-            <stop offset="100%" stopColor="#5C6FD1" />
-          </linearGradient>
-          {/* Top rim highlight */}
-          <linearGradient id={`${uid}-rim-top`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"  stopColor="rgba(255,255,255,0.55)" />
-            <stop offset="20%" stopColor="rgba(255,255,255,0.12)" />
-            <stop offset="55%" stopColor="rgba(255,255,255,0)" />
-          </linearGradient>
-          {/* Bottom shadow/vignette */}
-          <linearGradient id={`${uid}-rim-bot`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="55%" stopColor="rgba(0,0,0,0)" />
-            <stop offset="100%" stopColor="rgba(70,20,100,0.35)" />
-          </linearGradient>
-          {/* Soft inner-corner shine */}
-          <radialGradient id={`${uid}-shine`} cx="0.25" cy="0.18" r="0.65">
-            <stop offset="0%"  stopColor="rgba(255,255,255,0.45)" />
+          {/* Main sphere body — lit from upper-left */}
+          <radialGradient id={`${uid}-body`} cx="0.35" cy="0.30" r="0.85">
+            <stop offset="0%"   stopColor="#FFB38A" />
+            <stop offset="22%"  stopColor="#F27A5E" />
+            <stop offset="52%"  stopColor="#C8348C" />
+            <stop offset="82%"  stopColor="#6B42B8" />
+            <stop offset="100%" stopColor="#2E1E5C" />
+          </radialGradient>
+          {/* Bright specular highlight */}
+          <radialGradient id={`${uid}-spec`} cx="0.32" cy="0.22" r="0.32">
+            <stop offset="0%"   stopColor="rgba(255,255,255,0.95)" />
+            <stop offset="40%"  stopColor="rgba(255,255,255,0.35)" />
             <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+          </radialGradient>
+          {/* Secondary highlight — smaller, sharper */}
+          <radialGradient id={`${uid}-spec2`} cx="0.30" cy="0.20" r="0.12">
+            <stop offset="0%"   stopColor="rgba(255,255,255,1)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+          </radialGradient>
+          {/* Fresnel-style rim glow on the bottom-right */}
+          <radialGradient id={`${uid}-rim`} cx="0.72" cy="0.78" r="0.48">
+            <stop offset="0%"   stopColor="rgba(255,140,90,0)" />
+            <stop offset="70%"  stopColor="rgba(255,140,90,0)" />
+            <stop offset="92%"  stopColor="rgba(255,170,100,0.22)" />
+            <stop offset="100%" stopColor="rgba(255,170,100,0)" />
+          </radialGradient>
+          {/* Bottom shadow wash */}
+          <radialGradient id={`${uid}-shade`} cx="0.65" cy="0.80" r="0.55">
+            <stop offset="0%"   stopColor="rgba(20,10,40,0)" />
+            <stop offset="100%" stopColor="rgba(20,10,40,0.35)" />
           </radialGradient>
         </defs>
 
-        {/* Body */}
-        <rect x="0" y="0" width={w} height={h} rx={r} ry={r} fill={`url(#${uid}-body)`} />
-        {/* Bottom shadow fade */}
-        <rect x="0" y="0" width={w} height={h} rx={r} ry={r} fill={`url(#${uid}-rim-bot)`} />
-        {/* Top highlight shine */}
-        <rect x="0" y="0" width={w} height={h} rx={r} ry={r} fill={`url(#${uid}-rim-top)`} />
-        {/* Soft corner glow */}
-        <rect x="0" y="0" width={w} height={h} rx={r} ry={r} fill={`url(#${uid}-shine)`} />
+        {/* Sphere body */}
+        <circle cx={cx} cy={cy} r={r} fill={`url(#${uid}-body)`} />
+        {/* Bottom shade */}
+        <circle cx={cx} cy={cy} r={r} fill={`url(#${uid}-shade)`} />
+        {/* Fresnel rim */}
+        <circle cx={cx} cy={cy} r={r} fill={`url(#${uid}-rim)`} />
+        {/* Main specular */}
+        <circle cx={cx} cy={cy} r={r} fill={`url(#${uid}-spec)`} />
+        {/* Hot-spot */}
+        <circle cx={cx} cy={cy} r={r} fill={`url(#${uid}-spec2)`} />
 
-        {/* Inner white "display" — slightly warm white to feel like frosted glass */}
-        <rect x={innerX} y={innerY} width={innerW} height={innerH} rx={innerR} ry={innerR} fill="#FBF3F5" />
-        {/* Subtle inner highlight on the white rect */}
-        <rect
-          x={innerX + Math.max(1, Math.round(w * 0.015))}
-          y={innerY + Math.max(1, Math.round(h * 0.015))}
-          width={innerW - Math.max(2, Math.round(w * 0.03))}
-          height={Math.round(innerH * 0.45)}
-          rx={Math.round(innerR * 0.75)}
-          ry={Math.round(innerR * 0.75)}
-          fill="rgba(255,255,255,0.7)"
-        />
-
-        {/* Fine outer edge stroke to crisp the silhouette */}
-        <rect
-          x="0.5" y="0.5"
-          width={w - 1} height={h - 1}
-          rx={r - 0.5} ry={r - 0.5}
-          fill="none"
-          stroke="rgba(255,255,255,0.25)"
-          strokeWidth="1"
-        />
+        {/* Thin outer edge to crisp the silhouette */}
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="0.8" />
       </svg>
     </div>
   );
@@ -2215,11 +2242,215 @@ function IntroLogo({ onDone }) {
 }
 
 function BreathingDot({ noIntro = false } = {}) {
-  // A single soft glowing circle that pulses like a breath.
+  // Three.js glossy pearl orb — replaces the old breathing dot.
+  // Falls back to CSS orb if WebGL / THREE not available.
+  const mountRef = React.useRef(null);
+  const stateRef = React.useRef(null);
+  const [failed, setFailed] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof THREE === 'undefined') { setFailed(true); return; }
+    const mount = mountRef.current;
+    if (!mount) return;
+
+    const size = 200;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
+    } catch (e) { setFailed(true); return; }
+    renderer.setPixelRatio(dpr);
+    renderer.setSize(size, size, false);
+    renderer.domElement.style.width = '100%';
+    renderer.domElement.style.height = '100%';
+    renderer.domElement.style.display = 'block';
+    mount.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+    camera.position.set(0, 0, 3.6);
+
+    // Gradient-Textur — Peach → Orange → Magenta → Purple → Deep Violet
+    const gradCan = document.createElement('canvas');
+    gradCan.width = 2; gradCan.height = 256;
+    const gctx = gradCan.getContext('2d');
+    const gg = gctx.createLinearGradient(0, 0, 0, 256);
+    gg.addColorStop(0.00, '#E89060');
+    gg.addColorStop(0.22, '#B83560');
+    gg.addColorStop(0.50, '#7A2A7A');
+    gg.addColorStop(0.78, '#3E2370');
+    gg.addColorStop(1.00, '#15093A');
+    gctx.fillStyle = gg; gctx.fillRect(0, 0, 2, 256);
+    const gradTex = new THREE.CanvasTexture(gradCan);
+    if (THREE.SRGBColorSpace) gradTex.colorSpace = THREE.SRGBColorSpace;
+    else if (THREE.sRGBEncoding) gradTex.encoding = THREE.sRGBEncoding;
+    gradTex.needsUpdate = true;
+
+    // Nur schwaches Ambient — sonst wäre die Schattenseite komplett schwarz.
+    // KEINE statischen Directional Lights — die hatten störende feste Highlights
+    // auf der Kugel erzeugt.
+    scene.add(new THREE.AmbientLight(0x2a1848, 0.35));
+
+    // DIE EINZIGE LICHTQUELLE — ein PointLight, das dem Cursor 1:1 folgt
+    const cursorLamp = new THREE.PointLight(0xffffff, 3.2, 10, 1.0);
+    cursorLamp.position.set(0, 0, 2.2);
+    scene.add(cursorLamp);
+
+    const mat = new THREE.MeshPhysicalMaterial({
+      map: gradTex,
+      roughness: 0.28,
+      metalness: 0.35,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.06,
+      reflectivity: 0.9,
+    });
+    const geo = new THREE.SphereGeometry(1, 96, 96);
+    const mesh = new THREE.Mesh(geo, mat);
+    scene.add(mesh);
+
+    // Bodenreflex — flache Ellipse unter der Kugel mit radialer Fade-Textur
+    const reflCan = document.createElement('canvas');
+    reflCan.width = 256; reflCan.height = 256;
+    const rctx = reflCan.getContext('2d');
+    const rg = rctx.createRadialGradient(128, 128, 10, 128, 128, 120);
+    rg.addColorStop(0.0, 'rgba(216, 118, 180, 0.55)');
+    rg.addColorStop(0.4, 'rgba(120, 71, 191, 0.25)');
+    rg.addColorStop(1.0, 'rgba(46, 30, 92, 0)');
+    rctx.fillStyle = rg; rctx.fillRect(0, 0, 256, 256);
+    const reflTex = new THREE.CanvasTexture(reflCan);
+    const reflMat = new THREE.MeshBasicMaterial({
+      map: reflTex,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    const reflGeo = new THREE.PlaneGeometry(2.6, 1.0);
+    const reflMesh = new THREE.Mesh(reflGeo, reflMat);
+    reflMesh.position.set(0, -1.35, 0);
+    reflMesh.rotation.x = -Math.PI * 0.48;
+    scene.add(reflMesh);
+
+    // Cursor → Welt-Koordinaten (Hero-Bereich)
+    const hero = mount.closest('.pearl-hero, .hero') || mount.parentElement;
+    const target = { x: 0, y: 0 };
+    const current = { x: 0, y: 0 };
+    const onMove = (e) => {
+      const rect = mount.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      // normalized -1..1 relativ zur Kugel, mit Hero-Reichweite
+      const heroRect = hero ? hero.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight };
+      const reach = Math.max(heroRect.width, heroRect.height) / 2;
+      target.x = Math.max(-1.6, Math.min(1.6, (e.clientX - cx) / reach));
+      target.y = Math.max(-1.6, Math.min(1.6, -(e.clientY - cy) / reach));
+    };
+    window.addEventListener('pointermove', onMove, { passive: true });
+
+    let visible = true;
+    const io = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; }, { threshold: 0 });
+    io.observe(mount);
+
+    let raf;
+    const t0 = performance.now();
+    const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Intro-Parameter — 1600ms, "von oben herabsinken"
+    const INTRO_MS = reduced ? 400 : 1600;
+    const introStartY = 2.2;    // Start oberhalb
+    const introEndY = 0;
+
+    // Weiches Ease-Out mit "Settle" (kritisch gedämpft, kein Bounce)
+    // Analog zu einem Luftwiderstand-Settle: 1 - e^(-k*t) * (1 + k*t)
+    const criticalSettle = (x) => {
+      const k = 5.5;
+      return 1 - Math.exp(-k * x) * (1 + k * x);
+    };
+
+    const loop = () => {
+      raf = requestAnimationFrame(loop);
+      if (!visible) return;
+      const now = performance.now();
+      const t = (now - t0) / 1000;
+      const elapsed = now - t0;
+
+      // Critically-damped Cursor-Follow — träge, elegant, kein Bounce
+      // Gleiche Lerp-Rate für X und Y; Faktor klein = seidig
+      const follow = 0.055;
+      current.x += (target.x - current.x) * follow;
+      current.y += (target.y - current.y) * follow;
+
+      // Intro-Progress
+      const p = Math.min(1, elapsed / INTRO_MS);
+      const introEase = criticalSettle(p);
+      const introY = introStartY + (introEndY - introStartY) * introEase;
+      const introOpacity = Math.min(1, p * 1.4);
+      const introScale = 0.88 + 0.12 * introEase;
+
+      // Idle — fast still, nur minimales Atmen (±0.5% Scale, 6s-Zyklus)
+      const breath = reduced ? 0 : Math.sin(t * (Math.PI * 2 / 6)) * 0.005;
+      const scale = introScale + breath;
+      mesh.scale.setScalar(scale);
+
+      // Position: Intro-Fall + sehr sanfter Settle auf 0
+      mesh.position.y = introY;
+
+      // Rotation: nur minimale Neigung zum Cursor, kein Idle-Tumble
+      mesh.rotation.y = current.x * 0.22 * introEase;
+      mesh.rotation.x = -current.y * 0.18 * introEase;
+
+      // DIE LAMPE — folgt dem Cursor in Welt-Koordinaten
+      // Der Lichtpunkt sitzt auf einer Halb-Sphäre um die Kugel herum
+      // mit Radius 2.4, sodass das Specular-Highlight realistisch wandert
+      const lampX = current.x * 2.4;
+      const lampY = current.y * 2.4 + 0.3; // leicht nach oben verschoben
+      const lampZ = 2.0;
+      cursorLamp.position.set(lampX, lampY, lampZ);
+      cursorLamp.intensity = 2.6 * introOpacity;
+
+      // Bodenreflex folgt der Kugel sanft + Intro
+      reflMesh.position.y = -1.35 + introY * 0.15;
+      reflMat.opacity = 0.9 * introOpacity * (0.85 + breath * 20);
+      // Reflexion leicht mit Cursor verschieben (parallax)
+      reflMesh.position.x = current.x * 0.15;
+
+      // Gesamtopazität während Intro
+      mat.opacity = introOpacity;
+      mat.transparent = introOpacity < 1;
+
+      renderer.render(scene, camera);
+    };
+    loop();
+
+    stateRef.current = { renderer, scene, mesh, geo, mat, reflGeo, reflMat, io, onMove, raf };
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('pointermove', onMove);
+      io.disconnect();
+      geo.dispose();
+      mat.dispose();
+      reflGeo.dispose();
+      reflMat.dispose();
+      renderer.dispose();
+      if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
+    };
+  }, []);
+
+  if (failed) {
+    return (
+      <div className={'breathing-dot' + (noIntro ? ' no-intro' : '')} aria-hidden="true">
+        <div className="breathing-dot__core" />
+      </div>
+    );
+  }
+
   return (
-    <div className={'breathing-dot' + (noIntro ? ' no-intro' : '')} aria-hidden="true">
-      <div className="breathing-dot__core" />
-    </div>
+    <div
+      className={'pearl-orb' + (noIntro ? ' no-intro' : '')}
+      ref={mountRef}
+      aria-hidden="true"
+    />
   );
 }
 
