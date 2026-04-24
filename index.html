@@ -1,4 +1,3973 @@
-<!doctype html>
+<<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#f5f1e8" />
+<title>ReflectIt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: oklch(0.985 0.004 85);
+  --bg-soft: oklch(0.97 0.005 85);
+  --ink: oklch(0.22 0.01 260);
+  --ink-soft: oklch(0.45 0.01 260);
+  --ink-faint: oklch(0.68 0.008 260);
+  --line: oklch(0.9 0.006 260);
+  --line-soft: oklch(0.94 0.005 260);
+  --cool: oklch(0.52 0.09 245);
+  --cool-soft: oklch(0.93 0.03 245);
+  --warm: oklch(0.66 0.15 55);
+  --warm-soft: oklch(0.95 0.04 65);
+  --accent-a: oklch(0.66 0.17 55);   /* warm coral */
+  --accent-b: oklch(0.60 0.14 340);  /* magenta */
+  --accent-c: oklch(0.58 0.13 245);  /* cool blue */
+  --grad-hero: linear-gradient(135deg, oklch(0.97 0.035 65) 0%, oklch(0.96 0.04 340) 50%, oklch(0.95 0.04 245) 100%);
+  --grad-accent: linear-gradient(135deg, var(--accent-a), var(--accent-b) 60%, var(--accent-c));
+  --grad-warm: linear-gradient(135deg, oklch(0.72 0.16 45), oklch(0.64 0.18 25));
+  --grad-cool: linear-gradient(135deg, oklch(0.62 0.12 250), oklch(0.55 0.14 280));
+  --teacher-bg: oklch(0.19 0.025 265);
+  --teacher-bg-2: oklch(0.16 0.03 280);
+  --teacher-panel: oklch(0.24 0.025 265);
+  --teacher-line: oklch(0.34 0.02 265);
+  --teacher-ink: oklch(0.97 0.005 85);
+  --teacher-ink-soft: oklch(0.72 0.015 265);
+  --mood-1: oklch(0.62 0.18 25);
+  --mood-2: oklch(0.72 0.14 45);
+  --mood-3: oklch(0.78 0.04 90);
+  --mood-4: oklch(0.72 0.12 150);
+  --mood-5: oklch(0.62 0.15 160);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; overflow-x: hidden; width: 100%; max-width: 100%; }
+body { min-height: 100dvh; }
+img, svg, video { max-width: 100%; height: auto; }
+
+/* ===================== Motion tokens & reduced-motion ===================== */
+:root {
+  --dur-xs: 120ms;
+  --dur-sm: 220ms;
+  --dur-md: 320ms;
+  --dur-lg: 480ms;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.2, 0.5, 1);
+  /* Shadows with multi-layer depth */
+  --shadow-sm: 0 1px 2px oklch(0.2 0.02 260 / 0.05), 0 2px 6px -2px oklch(0.2 0.02 260 / 0.08);
+  --shadow-md: 0 1px 2px oklch(0.2 0.02 260 / 0.06), 0 8px 20px -8px oklch(0.2 0.02 260 / 0.18), 0 20px 40px -24px oklch(0.2 0.02 260 / 0.22);
+  --shadow-lg: 0 2px 4px oklch(0.2 0.02 260 / 0.08), 0 16px 32px -12px oklch(0.2 0.02 260 / 0.22), 0 36px 60px -28px oklch(0.2 0.02 260 / 0.28);
+  --inset-sheen: inset 0 1px 0 oklch(1 0 0 / 0.7);
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  --tilt-lift: 0px;
+}
+
+/* Feature flags toggleable via .no-fx-* classes on <html> (tweaks panel)  */
+html.no-fx-tilt { --tilt-x: 0deg !important; --tilt-y: 0deg !important; }
+html.no-fx-depth .card-depth, html.no-fx-depth .depth { box-shadow: var(--shadow-sm) !important; }
+html.no-fx-anims *, html.no-fx-anims *::before, html.no-fx-anims *::after {
+  animation-duration: 0.001ms !important; animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background:
+    radial-gradient(ellipse 900px 600px at 85% -10%, oklch(0.95 0.06 55 / 0.55), transparent 60%),
+    radial-gradient(ellipse 700px 500px at 0% 100%, oklch(0.94 0.05 280 / 0.4), transparent 55%),
+    var(--bg);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, textarea { font-family: inherit; color: inherit; }
+textarea { resize: none; }
+
+/* Shared */
+.app-root { min-height: 100vh; }
+
+/* Landing */
+.landing {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 32px 24px 48px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.landing-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 64px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-size: 17px;
+}
+.brand-mark {
+  width: 24px; height: 24px; border-radius: 7px;
+  background: var(--grad-accent);
+  position: relative;
+  box-shadow: 0 4px 14px -4px oklch(0.6 0.18 20 / 0.5), inset 0 1px 0 oklch(1 0 0 / 0.3);
+}
+.brand-mark::after {
+  content: ''; position: absolute; inset: 6px 5px 6px 12px;
+  background: oklch(1 0 0 / 0.9); border-radius: 2px;
+}
+.landing-meta {
+  font-size: 13px; color: var(--ink-soft);
+}
+.landing-hero {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 72px;
+  align-items: start;
+}
+.landing-hero h1 {
+  font-size: 64px;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  font-weight: 500;
+  margin: 0 0 24px;
+  text-wrap: balance;
+}
+.landing-hero h1 em {
+  font-style: normal;
+  background: var(--grad-accent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.landing-hero p.lede {
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  max-width: 42ch;
+  margin: 0 0 40px;
+}
+.landing-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.landing-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 22px 24px;
+  background: oklch(1 0 0 / 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+  text-align: left;
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+.landing-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--grad-accent);
+  opacity: 0;
+  transition: opacity .2s;
+}
+.landing-card:hover {
+  border-color: transparent;
+  box-shadow: 0 12px 32px -12px oklch(0.4 0.1 280 / 0.25), 0 0 0 1px oklch(0.7 0.1 20 / 0.3);
+  transform: translateY(-1px);
+}
+.landing-card:hover::before { opacity: 1; }
+.landing-card .tag {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 4px;
+}
+.landing-card h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.landing-card p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.landing-card .arrow {
+  margin-left: auto;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-soft);
+  transition: background .15s, color .15s, border-color .15s;
+  flex-shrink: 0;
+}
+.landing-card:hover .arrow { background: var(--grad-accent); color: white; border-color: transparent; }
+
+.join-inline {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.join-inline input {
+  flex: 1;
+  border: 1px solid var(--line);
+  background: var(--bg-soft);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 18px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  outline: none;
+  font-family: 'JetBrains Mono', monospace;
+}
+.join-inline input:focus { border-color: var(--ink); background: white; }
+.join-inline button {
+  padding: 12px 20px;
+  background: var(--grad-accent);
+  color: white;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px -4px oklch(0.6 0.18 20 / 0.45);
+  transition: transform .15s, box-shadow .15s;
+}
+.join-inline button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 18px -6px oklch(0.6 0.18 20 / 0.55); }
+.join-inline button:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; }
+
+.privacy-note {
+  margin-top: 48px;
+  padding: 20px 22px;
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  background: linear-gradient(135deg, oklch(0.98 0.015 65 / 0.7), oklch(0.97 0.015 280 / 0.5));
+  backdrop-filter: blur(6px);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  max-width: 640px;
+}
+.privacy-note strong { color: var(--ink); font-weight: 500; }
+
+/* ===== Student view ===== */
+.student {
+  min-height: 100vh;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 20px 18px 120px;
+  display: flex;
+  flex-direction: column;
+}
+.student-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.student-head .left { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink-soft); }
+.student-head .code { font-family: 'JetBrains Mono', monospace; letter-spacing: 0.12em; color: var(--ink); font-weight: 500; }
+
+.stepper {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 28px;
+}
+.stepper-pill {
+  padding: 10px 8px 9px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: white;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-align: center;
+  transition: all .15s;
+}
+.stepper-pill.active {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+.stepper-pill.done {
+  border-color: var(--ink);
+  color: var(--ink);
+  background: white;
+}
+.stepper-pill .num { display: block; font-size: 10px; margin-bottom: 2px; opacity: 0.7; }
+
+.level-header { margin-bottom: 24px; }
+.level-header .eyebrow {
+  font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 8px;
+}
+.level-header h2 {
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  margin: 0 0 10px;
+  text-wrap: balance;
+}
+.level-header p {
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin: 0;
+  line-height: 1.5;
+}
+.level-3 .level-header .eyebrow { color: var(--warm); }
+.level-3 .level-header h2 { }
+
+.field { margin-bottom: 28px; }
+.field label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 10px;
+  color: var(--ink);
+}
+.field .hint {
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin-top: 6px;
+  font-weight: 400;
+}
+.field .optional { color: var(--ink-faint); font-weight: 400; font-size: 13px; margin-left: 6px; }
+
+input.text, textarea.text {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 10px;
+  padding: 14px 14px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color .15s;
+  line-height: 1.5;
+}
+textarea.text { min-height: 92px; }
+input.text:focus, textarea.text:focus { border-color: var(--ink); }
+
+/* Scale 1-5 */
+.scale {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.scale button {
+  aspect-ratio: 1.2;
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 10px;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  transition: all .12s;
+}
+.scale button:hover { border-color: var(--ink-soft); }
+.scale button.sel {
+  background: var(--grad-cool);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 14px -4px oklch(0.55 0.14 260 / 0.5);
+}
+.scale-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+/* Single choice */
+.choices { display: flex; flex-direction: column; gap: 8px; }
+.choice {
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 10px;
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all .12s;
+  min-height: 50px;
+}
+.choice:hover { border-color: var(--ink-soft); }
+.choice .dot {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  flex-shrink: 0;
+  transition: all .12s;
+}
+.choice.sel { border-color: transparent; background: linear-gradient(135deg, oklch(0.97 0.02 260), oklch(0.96 0.025 280)); box-shadow: 0 0 0 1.5px oklch(0.55 0.14 260 / 0.5); }
+.choice.sel .dot { border-color: transparent; background: var(--grad-cool); box-shadow: inset 0 0 0 3px white; }
+
+/* Mood barometer */
+.mood {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.mood button {
+  aspect-ratio: 1;
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 14px;
+  transition: all .15s;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0;
+}
+.mood button svg { width: 60%; height: 60%; }
+.mood button:hover { border-color: var(--ink-soft); }
+.mood button.sel { border-color: transparent; background: linear-gradient(135deg, oklch(0.97 0.04 55), oklch(0.96 0.05 20)); box-shadow: 0 0 0 2px oklch(0.66 0.17 40 / 0.6), 0 6px 18px -6px oklch(0.66 0.17 40 / 0.4); }
+.mood-scale-labels {
+  display: flex; justify-content: space-between;
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+/* Footer nav on student */
+.student-nav {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  background: linear-gradient(to top, var(--bg) 65%, transparent);
+  padding: 16px 18px 22px;
+  display: flex; gap: 10px;
+  justify-content: space-between;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.student-nav button {
+  flex: 1;
+  padding: 15px 18px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all .15s;
+}
+.btn-ghost { border: 1px solid var(--line); background: white; color: var(--ink); }
+.btn-ghost:hover { border-color: var(--ink); }
+.btn-primary { background: var(--ink); color: var(--bg); box-shadow: 0 4px 14px -4px oklch(0.22 0.01 260 / 0.4); }
+.btn-primary:hover { background: oklch(0.15 0.01 260); transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.btn-submit { background: var(--grad-warm); color: white; box-shadow: 0 6px 18px -6px oklch(0.66 0.18 35 / 0.55); }
+.btn-submit:hover { transform: translateY(-1px); box-shadow: 0 10px 24px -8px oklch(0.66 0.18 35 / 0.65); }
+
+/* Submitted screen */
+.submitted {
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+  padding: 40px 24px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.submitted .check {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: var(--grad-warm);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 28px;
+  color: white;
+  box-shadow: 0 14px 34px -10px oklch(0.66 0.18 35 / 0.55);
+}
+.submitted h2 {
+  font-size: 34px; font-weight: 500; letter-spacing: -0.02em;
+  margin: 0 0 14px; line-height: 1.1;
+}
+.submitted p { color: var(--ink-soft); font-size: 16px; line-height: 1.55; margin: 0 0 8px; }
+
+/* ===== Teacher view ===== */
+.teacher {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 900px 500px at 90% 0%, oklch(0.35 0.12 25 / 0.25), transparent 60%),
+    radial-gradient(ellipse 800px 500px at 0% 100%, oklch(0.35 0.12 280 / 0.3), transparent 55%),
+    linear-gradient(180deg, var(--teacher-bg), var(--teacher-bg-2));
+  color: var(--teacher-ink);
+  padding: 28px 32px 40px;
+  display: flex; flex-direction: column;
+}
+.teacher-head {
+  display: flex; align-items: center; gap: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--teacher-line);
+  margin-bottom: 28px;
+}
+.teacher-head .brand { color: var(--teacher-ink); }
+.teacher-head .brand-mark { background: var(--grad-accent); }
+.teacher-head .brand-mark::after { background: oklch(0.18 0.02 265); }
+.teacher-session {
+  display: flex; align-items: baseline; gap: 14px; margin-left: 12px;
+}
+.teacher-session .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--teacher-ink-soft); }
+.teacher-session .code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 30px; font-weight: 500;
+  letter-spacing: 0.15em;
+  background: var(--grad-accent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.teacher-stats {
+  margin-left: auto;
+  display: flex; gap: 32px; align-items: center;
+}
+.teacher-stat .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--teacher-ink-soft); }
+.teacher-stat .v { font-size: 24px; font-weight: 500; letter-spacing: -0.01em; }
+.teacher-stat .v small { font-size: 14px; color: var(--teacher-ink-soft); font-weight: 400; margin-left: 4px; }
+.teacher-head-btns { display: flex; gap: 8px; }
+.t-btn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--teacher-line);
+  color: var(--teacher-ink);
+  background: var(--teacher-panel);
+  display: flex; align-items: center; gap: 6px;
+  transition: background .15s, border-color .15s;
+}
+.t-btn:hover { background: oklch(0.32 0.015 260); }
+.t-btn.danger:hover { background: oklch(0.35 0.08 25); border-color: oklch(0.55 0.15 25); }
+.t-btn.primary { background: var(--teacher-ink); color: var(--teacher-bg); border-color: var(--teacher-ink); }
+.t-btn.primary:hover { background: oklch(0.9 0.01 85); }
+
+/* Tile grid */
+.tiles {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 20px;
+  flex: 1;
+}
+.tile {
+  background: linear-gradient(180deg, oklch(0.26 0.025 265 / 0.9), oklch(0.22 0.025 270 / 0.9));
+  border: 1px solid var(--teacher-line);
+  border-radius: 18px;
+  padding: 24px 26px;
+  display: flex; flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 1px 0 oklch(1 0 0 / 0.04) inset, 0 20px 40px -20px oklch(0 0 0 / 0.4);
+}
+.tile::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 24px; right: 24px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, oklch(0.7 0.1 40 / 0.5), oklch(0.6 0.1 280 / 0.5), transparent);
+}
+.tile-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px; }
+.tile-head .eyebrow {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--teacher-ink-soft);
+  margin-bottom: 6px;
+}
+.tile-head h3 {
+  margin: 0; font-size: 20px; font-weight: 500; letter-spacing: -0.01em;
+}
+.tile-head .tabs { display: flex; gap: 2px; background: oklch(0.2 0.012 260); border-radius: 8px; padding: 3px; }
+.tile-head .tabs button {
+  font-size: 12px; padding: 6px 10px; border-radius: 6px;
+  color: var(--teacher-ink-soft);
+}
+.tile-head .tabs button.active { background: var(--teacher-panel); color: var(--teacher-ink); }
+
+.tile-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+.empty {
+  color: var(--teacher-ink-soft);
+  font-size: 14px;
+  text-align: center;
+  padding: 40px 20px;
+  border: 1px dashed var(--teacher-line);
+  border-radius: 12px;
+  margin: auto 0;
+}
+
+/* Word cloud */
+.cloud {
+  flex: 1;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: 4px 14px;
+  padding: 8px 0 20px;
+  line-height: 1.1;
+}
+.cloud span {
+  display: inline-block;
+  color: var(--teacher-ink);
+  letter-spacing: -0.01em;
+  font-weight: 500;
+  transition: color .2s;
+}
+.cloud span.w1 { color: var(--teacher-ink-soft); font-weight: 400; }
+.cloud span.w2 { color: oklch(0.82 0.03 250); }
+.cloud span.w3 { color: var(--teacher-ink); }
+.cloud span.w4 { color: oklch(0.88 0.08 40); }
+.cloud span.w5 { background: var(--grad-accent); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 600; }
+
+.confidence {
+  padding-top: 16px;
+  border-top: 1px solid var(--teacher-line);
+}
+.confidence-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+.confidence-head .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--teacher-ink-soft); }
+.confidence-head .avg { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; }
+.confidence-head .avg small { font-size: 13px; color: var(--teacher-ink-soft); margin-left: 4px; font-weight: 400; }
+.confidence-bars {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+  align-items: end;
+  height: 80px;
+}
+.confidence-bar {
+  background: linear-gradient(180deg, oklch(0.62 0.13 250), oklch(0.48 0.1 270));
+  border-radius: 6px 6px 0 0;
+  position: relative;
+  min-height: 4px;
+  transition: height .4s;
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.15);
+}
+.confidence-bar .count {
+  position: absolute; top: -18px; left: 0; right: 0; text-align: center;
+  font-size: 12px; color: var(--teacher-ink-soft);
+}
+.confidence-bar .lab {
+  position: absolute; bottom: -22px; left: 0; right: 0; text-align: center;
+  font-size: 12px; color: var(--teacher-ink-soft);
+}
+.confidence-wrap { padding-bottom: 24px; }
+
+/* Bar chart */
+.bars { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.bar-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+.bar-row .lab { font-size: 14px; color: var(--teacher-ink); }
+.bar-row .track {
+  grid-column: 1 / -1;
+  height: 10px; background: oklch(0.22 0.012 260); border-radius: 6px;
+  overflow: hidden;
+}
+.bar-row .fill { height: 100%; background: var(--grad-cool); border-radius: 6px; transition: width .5s; box-shadow: 0 0 12px oklch(0.6 0.14 260 / 0.3); }
+.bar-row-inner {
+  display: flex; justify-content: space-between; font-size: 13px; color: var(--teacher-ink-soft);
+  margin-bottom: 4px;
+}
+.bar-row-inner .count { font-variant-numeric: tabular-nums; }
+
+.private-section {
+  margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--teacher-line);
+}
+.private-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.private-head .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--teacher-ink-soft); display: flex; align-items: center; gap: 6px; }
+.private-head .lock-badge { padding: 2px 7px; border-radius: 4px; font-size: 10px; background: oklch(0.35 0.06 55 / 0.25); color: oklch(0.85 0.1 55); letter-spacing: 0.05em; }
+.private-list { max-height: 130px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px; }
+.private-list::-webkit-scrollbar { width: 6px; }
+.private-list::-webkit-scrollbar-thumb { background: var(--teacher-line); border-radius: 3px; }
+.private-item {
+  display: grid; grid-template-columns: 22px 1fr; gap: 10px;
+  padding: 8px 10px;
+  background: oklch(0.22 0.012 260);
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--teacher-ink);
+}
+.private-item .num { color: var(--teacher-ink-soft); font-family: 'JetBrains Mono', monospace; font-size: 11px; text-align: right; padding-top: 2px; }
+.private-hidden {
+  font-size: 13px; color: var(--teacher-ink-soft);
+  padding: 28px 12px; text-align: center;
+  border: 1px dashed var(--teacher-line); border-radius: 10px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.private-hidden button { font-size: 12px; padding: 6px 12px; border-radius: 6px; background: var(--teacher-line); color: var(--teacher-ink); }
+
+/* Mood */
+.mood-chart {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+  flex: 1; align-items: end;
+  padding: 10px 0 36px;
+}
+.mood-col {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  min-height: 60px;
+}
+.mood-col .svg-wrap { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; }
+.mood-col .track {
+  width: 100%;
+  height: 160px;
+  position: relative;
+  background: oklch(0.22 0.012 260);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.mood-col .fill {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  border-radius: 10px;
+  transition: height .5s;
+}
+.mood-col .count {
+  position: absolute; top: 8px; left: 0; right: 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--teacher-ink);
+}
+.mood-col .pct {
+  font-size: 11px; color: var(--teacher-ink-soft); font-variant-numeric: tabular-nums;
+}
+
+/* Cards */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+  overflow-y: auto;
+  align-content: start;
+  padding-right: 4px;
+  flex: 1;
+  min-height: 120px;
+}
+.cards-grid::-webkit-scrollbar { width: 6px; }
+.cards-grid::-webkit-scrollbar-thumb { background: var(--teacher-line); border-radius: 3px; }
+.q-card {
+  border: 1px solid var(--teacher-line);
+  background: linear-gradient(160deg, oklch(0.24 0.025 265), oklch(0.2 0.03 280));
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--teacher-ink);
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 84px;
+  overflow: hidden;
+}
+.q-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--grad-accent);
+  opacity: 0.5;
+}
+.q-card:hover { border-color: oklch(0.5 0.03 280); transform: translateY(-1px); box-shadow: 0 10px 24px -10px oklch(0 0 0 / 0.5); }
+.q-card .num { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--teacher-ink-soft); letter-spacing: 0.08em; }
+.q-card .text { flex: 1; }
+.q-card.done { opacity: 0.45; }
+.q-card.done .text { text-decoration: line-through; }
+.q-card .pickedup {
+  position: absolute; top: 8px; right: 8px;
+  font-size: 10px; color: var(--warm);
+  background: oklch(0.35 0.08 55 / 0.25);
+  padding: 2px 6px; border-radius: 4px;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+
+/* QR overlay */
+.qr-corner {
+  position: absolute;
+  right: 28px; bottom: 24px;
+  background: var(--teacher-panel);
+  border: 1px solid var(--teacher-line);
+  border-radius: 12px;
+  padding: 14px 14px 12px;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 8px;
+  z-index: 10;
+}
+.qr-corner .qr-box {
+  width: 88px; height: 88px;
+  background: white;
+  border-radius: 6px;
+  padding: 6px;
+}
+.qr-corner .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--teacher-ink-soft); }
+.qr-corner .code { font-family: 'JetBrains Mono', monospace; font-size: 15px; letter-spacing: 0.15em; color: var(--teacher-ink); font-weight: 500; }
+
+/* Session create */
+.create {
+  min-height: 100vh;
+  padding: 40px 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+.create-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  margin-top: 40px;
+  align-items: start;
+}
+.create-left h1 { font-size: 52px; letter-spacing: -0.03em; font-weight: 500; line-height: 1; margin: 0 0 20px; }
+.create-left p { font-size: 16px; color: var(--ink-soft); line-height: 1.55; margin: 0 0 24px; max-width: 42ch; }
+.create-code-row { display: flex; align-items: center; gap: 20px; padding: 20px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-bottom: 24px; }
+.create-code-row .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); margin-bottom: 8px; }
+.create-code-row .code { font-family: 'JetBrains Mono', monospace; font-size: 64px; letter-spacing: 0.12em; font-weight: 500; line-height: 1; background: var(--grad-accent); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.create-right {
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 28px;
+  background: oklch(1 0 0 / 0.75);
+  backdrop-filter: blur(10px);
+  display: flex; flex-direction: column; align-items: center;
+  box-shadow: 0 20px 50px -20px oklch(0.4 0.1 280 / 0.25);
+  position: relative;
+  overflow: hidden;
+}
+.create-right::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--grad-accent);
+}
+.create-right .qr-large {
+  width: 240px; height: 240px;
+  background: white;
+  border-radius: 8px;
+}
+.create-right .url { margin-top: 18px; font-size: 13px; color: var(--ink-soft); font-family: 'JetBrains Mono', monospace; word-break: break-all; text-align: center; }
+.create-actions { display: flex; gap: 12px; margin-top: 32px; }
+.create-actions button {
+  padding: 14px 22px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+}
+.create-actions .primary { background: var(--grad-accent); color: white; box-shadow: 0 6px 18px -6px oklch(0.6 0.18 20 / 0.5); transition: transform .15s, box-shadow .15s; }
+.create-actions .primary:hover { transform: translateY(-1px); box-shadow: 0 10px 24px -8px oklch(0.6 0.18 20 / 0.6); }
+.create-actions .secondary { border: 1px solid var(--line); color: var(--ink); background: white; }
+.create-actions .secondary:hover { border-color: var(--ink); }
+
+/* Modal */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: oklch(0.15 0.01 260 / 0.6);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; padding: 24px;
+}
+.modal {
+  background: white;
+  color: var(--ink);
+  border-radius: 16px;
+  padding: 28px 28px 22px;
+  max-width: 440px; width: 100%;
+}
+.modal h3 { margin: 0 0 12px; font-size: 22px; font-weight: 500; letter-spacing: -0.01em; }
+.modal p { margin: 0 0 20px; font-size: 14px; color: var(--ink-soft); line-height: 1.55; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.modal-actions button { padding: 11px 18px; border-radius: 10px; font-size: 14px; font-weight: 500; }
+.modal-actions .danger { background: oklch(0.55 0.18 25); color: white; }
+.modal-actions .danger:hover { background: oklch(0.5 0.18 25); }
+.modal-actions .ghost { border: 1px solid var(--line); color: var(--ink); }
+
+.question-focus {
+  background: white; color: var(--ink);
+  border-radius: 16px;
+  padding: 40px 36px 28px;
+  max-width: 680px; width: 100%;
+  display: flex; flex-direction: column;
+  gap: 24px;
+}
+.question-focus .num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-faint); letter-spacing: 0.1em; }
+.question-focus .text { font-size: 32px; line-height: 1.15; letter-spacing: -0.015em; font-weight: 500; text-wrap: balance; }
+.question-focus .focus-actions { display: flex; gap: 10px; justify-content: space-between; align-items: center; margin-top: 8px; }
+.question-focus .focus-actions .right { display: flex; gap: 10px; }
+.question-focus .focus-actions button { padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 500; }
+.focus-mark-done { background: var(--ink); color: var(--bg); }
+.focus-mark-undo { border: 1px solid var(--line); color: var(--ink); }
+.focus-nav { border: 1px solid var(--line); color: var(--ink-soft); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.focus-nav:hover { color: var(--ink); border-color: var(--ink); }
+
+/* Projection mode */
+.projection .tile { padding: 36px 40px; border-radius: 20px; }
+.projection .tile-head h3 { font-size: 30px; }
+.projection .tile-head .eyebrow { font-size: 14px; }
+.projection .cloud span { font-weight: 600; }
+.projection .confidence-head .avg { font-size: 36px; }
+.projection .confidence-bars { height: 140px; }
+.projection .mood-col .track { height: 260px; }
+.projection .mood-col .count { font-size: 24px; }
+.projection .bar-row .lab { font-size: 18px; }
+.projection .q-card { font-size: 18px; line-height: 1.3; padding: 18px 20px; min-height: 110px; }
+.projection .teacher-session .code { font-size: 44px; }
+
+/* Small screens */
+@media (max-width: 900px) {
+  .landing-hero { grid-template-columns: 1fr; gap: 40px; }
+  .landing-hero h1 { font-size: 46px; }
+  .create-content { grid-template-columns: 1fr; gap: 40px; }
+  .create-left h1 { font-size: 40px; }
+  .create-code-row .code { font-size: 48px; }
+  .tiles { grid-template-columns: 1fr; }
+  .teacher { padding: 20px 18px; }
+  .teacher-head { flex-wrap: wrap; gap: 14px; }
+  .teacher-stats { width: 100%; order: 3; margin-left: 0; justify-content: space-between; }
+  .qr-corner { display: none; }
+  .mt-cols { grid-template-columns: 1fr !important; }
+  .stw-grid { grid-template-columns: 1fr !important; }
+  .exam-grid { grid-template-columns: 1fr !important; }
+}
+
+/* ===================== Method-shared ===================== */
+.m-student {
+  min-height: 100vh; max-width: 560px; margin: 0 auto;
+  padding: 20px 18px 130px; display: flex; flex-direction: column;
+}
+.ms-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 22px; padding-bottom: 14px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.ms-head .code { font-family: 'JetBrains Mono', monospace; letter-spacing: 0.12em; font-weight: 500; }
+.ms-intro { margin-bottom: 22px; }
+.ms-intro .eyebrow {
+  font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-faint); margin-bottom: 8px;
+}
+.ms-intro .eyebrow.creative { color: oklch(0.6 0.12 65); }
+.ms-intro .eyebrow.perf { color: oklch(0.5 0.05 260); }
+.ms-intro h2 {
+  font-size: 28px; font-weight: 500; letter-spacing: -0.02em;
+  line-height: 1.1; margin: 0 0 10px; text-wrap: balance;
+}
+.ms-intro p { font-size: 15px; color: var(--ink-soft); margin: 0; line-height: 1.5; }
+.ms-nav {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(to top, var(--bg) 65%, transparent);
+  padding: 16px 18px 22px; display: flex; gap: 10px;
+  max-width: 560px; margin: 0 auto;
+}
+.ms-nav button {
+  flex: 1; padding: 15px 18px; border-radius: 12px;
+  font-size: 15px; font-weight: 500; transition: all .15s;
+}
+.m-err {
+  background: oklch(0.95 0.05 25); color: oklch(0.4 0.15 25);
+  padding: 12px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 16px;
+}
+.m-empty, .m-loading {
+  color: var(--teacher-ink-soft); font-size: 15px;
+  text-align: center; padding: 60px 20px;
+  border: 1px dashed var(--teacher-line); border-radius: 12px;
+  margin: 24px auto; max-width: 480px;
+}
+.m-loading { color: var(--ink-soft); border-color: var(--line); }
+
+.m-teacher { width: 100%; }
+.mt-cols { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; }
+.mt-main { display: flex; flex-direction: column; gap: 18px; }
+.mt-side {
+  background: linear-gradient(180deg, oklch(0.26 0.025 265 / 0.9), oklch(0.22 0.025 270 / 0.9));
+  border: 1px solid var(--teacher-line); border-radius: 18px;
+  padding: 22px 22px 18px; display: flex; flex-direction: column; gap: 12px;
+  min-height: 400px;
+}
+.mt-side-head { font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--teacher-ink-soft); display: flex; justify-content: space-between; align-items: center; }
+.mt-side-body { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; max-height: 500px; padding-right: 6px; }
+.mt-side-body::-webkit-scrollbar { width: 6px; } .mt-side-body::-webkit-scrollbar-thumb { background: var(--teacher-line); border-radius: 3px; }
+.mt-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--teacher-ink-soft); margin-bottom: 6px; }
+.hint-box {
+  font-size: 12px; color: var(--teacher-ink-soft);
+  padding: 10px 14px; border-radius: 8px;
+  background: oklch(0.22 0.012 260); margin-top: 16px;
+  border-left: 2px solid oklch(0.5 0.08 60);
+}
+.link-btn { color: var(--teacher-ink-soft); text-decoration: underline; background: none; font-size: 12px; padding: 4px 8px; }
+.link-btn:hover { color: var(--teacher-ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  padding: 10px 14px; border-radius: 999px; border: 1px solid var(--line);
+  background: white; font-size: 13px; color: var(--ink-soft); transition: all .12s;
+}
+.chip:hover { border-color: var(--ink-soft); }
+.chip.sel { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.teacher-body { flex: 1; min-height: 0; }
+
+/* Group picker */
+.group-picker {
+  min-height: 100vh; max-width: 1100px; margin: 0 auto;
+  padding: 48px 32px 60px; display: flex; flex-direction: column;
+}
+.gp-head { margin-bottom: 36px; }
+.gp-head h2 { font-size: 42px; font-weight: 500; letter-spacing: -0.025em; margin: 14px 0 10px; }
+.gp-sub { color: var(--ink-soft); font-size: 16px; line-height: 1.5; max-width: 56ch; margin: 0; }
+.gp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.gp-grid.gp-2 { grid-template-columns: repeat(2, 1fr); }
+.gp-card {
+  text-align: left; border: 1px solid var(--line); border-radius: 18px;
+  padding: 28px 26px 26px; background: oklch(1 0 0 / 0.75); backdrop-filter: blur(8px);
+  cursor: pointer; transition: all .2s; display: flex; flex-direction: column; gap: 12px;
+}
+.gp-card h3 { margin: 0; font-size: 22px; font-weight: 500; letter-spacing: -0.01em; }
+.gp-card p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--ink-soft); }
+.gp-card:hover { transform: translateY(-3px); box-shadow: 0 22px 40px -20px oklch(0.4 0.08 260 / 0.3); border-color: transparent; }
+.gp-icon {
+  width: 56px; height: 56px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  color: white;
+}
+.gp-blue .gp-icon { background: linear-gradient(135deg, oklch(0.62 0.14 250), oklch(0.52 0.16 275)); }
+.gp-ocker .gp-icon { background: linear-gradient(135deg, oklch(0.72 0.15 55), oklch(0.64 0.18 30)); }
+.gp-grey .gp-icon { background: linear-gradient(135deg, oklch(0.58 0.03 260), oklch(0.42 0.025 265)); }
+
+.method-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.method-card {
+  text-align: left; border: 1px solid var(--line); border-radius: 16px;
+  padding: 24px 22px; background: oklch(1 0 0 / 0.75); cursor: pointer;
+  display: flex; flex-direction: column; gap: 8px; transition: all .2s;
+}
+.method-card:hover { transform: translateY(-2px); box-shadow: 0 18px 36px -18px oklch(0.4 0.08 260 / 0.3); }
+.method-emoji { font-size: 34px; line-height: 1; }
+.method-card h3 { margin: 6px 0 0; font-size: 18px; font-weight: 500; }
+.method-desc { font-size: 13px; color: var(--ink-soft); margin: 0; line-height: 1.45; }
+.method-hint { font-size: 12px; color: var(--ink-faint); margin: 4px 0 0; line-height: 1.4; font-style: italic; }
+
+/* Dice stage */
+.dice-stage { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 40px 0; }
+.dice-card {
+  width: 100%; max-width: 460px; padding: 40px 36px 34px;
+  border-radius: 22px; background: linear-gradient(160deg, oklch(0.98 0.02 55), oklch(0.96 0.04 40));
+  border: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; align-items: center;
+  text-align: center; transition: transform .15s;
+}
+.dice-card.rolling { animation: dice-jitter 0.1s infinite alternate; }
+.dice-card.landed { animation: dice-pop 0.4s ease; }
+.dice-emoji { font-size: 72px; line-height: 1; }
+.dice-card h3 { margin: 6px 0 0; font-size: 26px; font-weight: 500; letter-spacing: -0.01em; }
+.dice-card p { margin: 4px 0 0; color: var(--ink-soft); font-size: 15px; max-width: 42ch; }
+@keyframes dice-jitter { from { transform: rotate(-2deg) translateY(0); } to { transform: rotate(2deg) translateY(-4px); } }
+@keyframes dice-pop { 0% { transform: scale(0.9); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
+.dice-actions { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.btn-big { padding: 16px 28px; font-size: 16px; border-radius: 14px; }
+
+/* Create session: chosen method pill + grading toggle */
+.chosen-method-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 14px; border-radius: 999px;
+  background: oklch(0.96 0.03 60); border: 1px solid oklch(0.9 0.04 60);
+  font-size: 13px; color: oklch(0.35 0.06 40); font-weight: 500;
+  margin-bottom: 18px;
+}
+.grading-toggle {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px 0; margin: -12px 0 14px;
+}
+.grading-toggle .k {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--ink-faint); margin-right: 8px;
+}
+.grading-toggle button {
+  padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line);
+  background: white; font-size: 13px; color: var(--ink-soft);
+}
+.grading-toggle button.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+.classsize-in { display: flex; flex-direction: column; gap: 4px; }
+.classsize-in span { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--teacher-ink-soft); }
+.classsize-in input {
+  width: 70px; padding: 6px 10px; border-radius: 8px;
+  background: var(--teacher-panel); border: 1px solid var(--teacher-line);
+  color: var(--teacher-ink); font-size: 14px; outline: none;
+}
+
+/* ===================== Weather ===================== */
+.weather-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px;
+}
+.weather-tile {
+  aspect-ratio: 1; border: 1px solid var(--line); border-radius: 16px;
+  background: white; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; padding: 8px; transition: all .15s;
+}
+.weather-tile:hover { border-color: var(--ink-soft); }
+.weather-tile.sel {
+  border-color: transparent;
+  background: linear-gradient(135deg, oklch(0.97 0.04 55), oklch(0.96 0.05 70));
+  box-shadow: 0 0 0 2px oklch(0.66 0.17 45 / 0.6);
+}
+.wemoji { font-size: 32px; line-height: 1; }
+.wlabel { font-size: 11px; color: var(--ink-soft); text-align: center; line-height: 1.2; }
+.temp-row { display: flex; align-items: center; gap: 12px; }
+.temp-end { font-size: 11px; color: var(--ink-faint); letter-spacing: 0.05em; text-transform: uppercase; }
+.temp-slider { flex: 1; accent-color: oklch(0.66 0.17 45); height: 4px; }
+.temp-read { text-align: center; font-size: 28px; font-weight: 500; margin-top: 6px; background: var(--grad-warm); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+.weather-hero { display: flex; gap: 20px; align-items: center; padding: 22px 24px; border-radius: 16px; background: linear-gradient(135deg, oklch(0.28 0.05 55 / 0.6), oklch(0.25 0.04 30 / 0.6)); }
+.weather-hero-emoji { font-size: 88px; line-height: 1; }
+.weather-hero-lab .label { font-size: 28px; font-weight: 500; color: var(--teacher-ink); }
+.weather-hero-lab .sub { font-size: 13px; color: var(--teacher-ink-soft); margin-top: 2px; }
+.weather-overview { display: flex; flex-direction: column; gap: 8px; padding: 18px 0; }
+.weather-bar { display: grid; grid-template-columns: 40px 1fr 30px; align-items: center; gap: 10px; }
+.weather-bar.dim { opacity: 0.35; }
+.wb-emoji { font-size: 24px; text-align: center; }
+.wb-bar { height: 10px; background: oklch(0.22 0.012 260); border-radius: 6px; overflow: hidden; }
+.wb-fill { height: 100%; background: linear-gradient(90deg, oklch(0.68 0.16 55), oklch(0.62 0.14 30)); transition: width .5s; }
+.wb-count { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--teacher-ink-soft); }
+.temp-gauge { padding: 14px 18px; border-radius: 12px; background: oklch(0.22 0.012 260); }
+.tg-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+.tg-head .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--teacher-ink-soft); }
+.tg-head .v { font-size: 24px; font-weight: 500; background: var(--grad-warm); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.tg-track { height: 8px; border-radius: 4px; background: linear-gradient(90deg, oklch(0.5 0.14 250), oklch(0.7 0.04 100) 45%, oklch(0.68 0.18 35)); position: relative; }
+.tg-ptr { position: absolute; top: -4px; width: 3px; height: 16px; background: white; border-radius: 2px; transform: translateX(-50%); box-shadow: 0 0 10px oklch(1 0 0 / 0.6); }
+.tg-lab { position: absolute; top: 14px; font-size: 10px; color: var(--teacher-ink-soft); text-transform: uppercase; letter-spacing: 0.1em; }
+.tg-lab.left { left: 0; } .tg-lab.right { right: 0; }
+.ws-group { border-top: 1px solid var(--teacher-line); padding-top: 10px; }
+.ws-group:first-child { border-top: none; padding-top: 0; }
+.ws-group-head { font-size: 12px; color: var(--teacher-ink-soft); margin-bottom: 6px; }
+.ws-group-head .e { font-size: 16px; margin-right: 4px; }
+.ws-item { padding: 8px 10px; background: oklch(0.22 0.012 260); border-radius: 8px; font-size: 13px; color: var(--teacher-ink); line-height: 1.4; margin-bottom: 4px; }
+.ws-empty { font-size: 13px; color: var(--teacher-ink-soft); padding: 20px; text-align: center; }
+
+/* ===================== Suitcase ===================== */
+.stw-boxes { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; }
+.stw-box {
+  padding: 20px 20px 18px; border-radius: 16px; border: 1px solid var(--line);
+  background: white; display: flex; flex-direction: column; gap: 8px;
+  position: relative;
+}
+.stw-box.stw-a { background: linear-gradient(135deg, oklch(0.98 0.02 150 / 0.9), white); border-color: oklch(0.88 0.04 150); }
+.stw-box.stw-b { background: linear-gradient(135deg, oklch(0.97 0.025 30 / 0.9), white); border-color: oklch(0.88 0.05 30); }
+.stw-box.stw-c { background: linear-gradient(135deg, oklch(0.97 0.025 240 / 0.9), white); border-color: oklch(0.88 0.04 240); }
+.stw-icon { font-size: 36px; line-height: 1; }
+.stw-title { font-size: 18px; font-weight: 500; letter-spacing: -0.01em; }
+.stw-prompt { font-size: 13px; color: var(--ink-soft); margin-bottom: 4px; line-height: 1.4; }
+.stw-box textarea { background: white; }
+
+.stw-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.stw-col {
+  background: linear-gradient(180deg, oklch(0.26 0.025 265 / 0.9), oklch(0.22 0.025 270 / 0.9));
+  border: 1px solid var(--teacher-line); border-radius: 18px; padding: 20px;
+  display: flex; flex-direction: column; gap: 14px; min-height: 400px;
+}
+.stw-col.stw-a { border-top: 3px solid oklch(0.6 0.14 150); }
+.stw-col.stw-b { border-top: 3px solid oklch(0.62 0.16 30); }
+.stw-col.stw-c { border-top: 3px solid oklch(0.58 0.13 240); }
+.stw-col-head { display: flex; align-items: center; gap: 12px; }
+.stw-col-head .emoji { font-size: 28px; }
+.stw-col-head .title { font-size: 18px; font-weight: 500; color: var(--teacher-ink); }
+.stw-col-head .sub { font-size: 12px; color: var(--teacher-ink-soft); }
+.stw-cards { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; max-height: 520px; padding-right: 4px; }
+.stw-card { padding: 12px 14px; border-radius: 10px; background: oklch(0.22 0.012 260); border: 1px solid var(--teacher-line); font-size: 13px; line-height: 1.45; color: var(--teacher-ink); cursor: pointer; transition: all .15s; position: relative; }
+.stw-card:hover { border-color: oklch(0.5 0.03 280); }
+.stw-card.picked { opacity: 0.5; }
+.stw-card.picked .stw-card-text { text-decoration: line-through; }
+.stw-card-tag { position: absolute; top: 6px; right: 8px; font-size: 9px; color: var(--warm); background: oklch(0.35 0.08 55 / 0.25); padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.08em; }
+.stw-empty { color: var(--teacher-ink-soft); font-size: 13px; text-align: center; padding: 20px; }
+
+/* ===================== Country ===================== */
+.country-search { margin-bottom: 14px; }
+.country-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
+.country-tile {
+  aspect-ratio: 1; border: 1px solid var(--line); border-radius: 12px;
+  background: white; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; padding: 6px; transition: all .12s;
+}
+.country-tile:hover { border-color: var(--ink-soft); }
+.country-tile.sel { border-color: transparent; background: linear-gradient(135deg, oklch(0.97 0.03 45), oklch(0.96 0.04 20)); box-shadow: 0 0 0 2px oklch(0.66 0.17 45 / 0.55); }
+.cf { font-size: 28px; line-height: 1; }
+.cn { font-size: 10px; color: var(--ink-soft); text-align: center; line-height: 1.1; }
+.chosen-country { display: flex; align-items: center; gap: 18px; padding: 16px 20px; border-radius: 14px; background: linear-gradient(135deg, oklch(0.97 0.025 45), oklch(0.95 0.04 20)); margin-bottom: 16px; }
+.cf-big { font-size: 48px; line-height: 1; }
+.cn-big { font-size: 22px; font-weight: 500; }
+
+.country-map { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; padding: 8px 0; }
+.ct-tile { position: relative; aspect-ratio: 1; border-radius: 10px; border: 1px solid var(--teacher-line); background: oklch(0.22 0.012 260); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px; transition: all .15s; color: var(--teacher-ink); }
+.ct-tile.off { opacity: 0.22; }
+.ct-tile.on { background: linear-gradient(135deg, oklch(0.32 0.08 55 / 0.6), oklch(0.28 0.06 30 / 0.6)); border-color: oklch(0.55 0.12 45); }
+.ct-tile.on.active { border-color: oklch(0.72 0.16 45); box-shadow: 0 0 0 2px oklch(0.66 0.18 45 / 0.5); }
+.ct-tile .cf { font-size: 22px; }
+.ct-tile .cn { font-size: 9px; color: var(--teacher-ink-soft); }
+.ct-tile .badge { position: absolute; top: 2px; right: 3px; font-size: 10px; background: oklch(0.66 0.17 45); color: white; padding: 1px 5px; border-radius: 6px; font-weight: 500; }
+.country-rat { padding: 10px 12px; background: oklch(0.22 0.012 260); border-radius: 10px; border: 1px solid var(--teacher-line); font-size: 13px; line-height: 1.45; color: var(--teacher-ink); }
+.cr-head { font-size: 12px; color: var(--teacher-ink-soft); margin-bottom: 4px; }
+.cr-head .cf { font-size: 16px; margin-right: 4px; }
+.cr-why { }
+.cr-detail { margin-top: 4px; font-size: 12px; color: var(--teacher-ink-soft); }
+
+/* ===================== Exam ===================== */
+.exam-progress { display: flex; gap: 4px; margin-bottom: 22px; }
+.ep-step { flex: 1; height: 3px; border-radius: 2px; background: var(--line); transition: background .2s; }
+.ep-step.on { background: var(--ink); }
+.diff-box { padding: 14px 18px; border-radius: 12px; background: linear-gradient(135deg, oklch(0.97 0.025 260), oklch(0.96 0.03 280)); font-size: 14px; font-weight: 500; text-align: center; }
+
+.exam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.exam-tile { background: linear-gradient(180deg, oklch(0.26 0.025 265 / 0.9), oklch(0.22 0.025 270 / 0.9)); border: 1px solid var(--teacher-line); border-radius: 16px; padding: 22px 24px; display: flex; flex-direction: column; gap: 12px; }
+.exam-tile.private { border-left: 3px solid oklch(0.55 0.12 55); }
+.et-head { font-size: 14px; font-weight: 500; color: var(--teacher-ink); display: flex; align-items: center; gap: 8px; }
+.et-head .pill { font-size: 10px; background: oklch(0.35 0.06 55 / 0.25); color: oklch(0.85 0.1 55); padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.08em; }
+.et-sub { font-size: 12px; color: var(--teacher-ink-soft); }
+.ev-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.evb { padding: 14px; border-radius: 10px; background: oklch(0.22 0.012 260); }
+.evb-lab { font-size: 11px; color: var(--teacher-ink-soft); text-transform: uppercase; letter-spacing: 0.1em; }
+.evb-v { font-size: 32px; font-weight: 500; letter-spacing: -0.02em; color: var(--teacher-ink); margin-top: 4px; }
+.ev-interp { font-size: 13px; color: var(--teacher-ink-soft); font-style: italic; }
+.et-bars { display: flex; flex-direction: column; gap: 6px; }
+.et-bar { display: grid; grid-template-columns: 140px 1fr 26px; gap: 10px; align-items: center; font-size: 12px; color: var(--teacher-ink); }
+.et-bar.hi .etb-lab { color: oklch(0.8 0.12 45); font-weight: 500; }
+.etb-lab { font-size: 12px; }
+.etb-track { height: 8px; background: oklch(0.22 0.012 260); border-radius: 4px; overflow: hidden; }
+.etb-fill { height: 100%; background: var(--grad-cool); transition: width .4s; }
+.et-bar.hi .etb-fill { background: linear-gradient(90deg, oklch(0.62 0.14 30), oklch(0.7 0.16 55)); }
+.etb-n { font-size: 12px; color: var(--teacher-ink-soft); font-variant-numeric: tabular-nums; }
+.support-list { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; padding-right: 4px; }
+.support-item { display: grid; grid-template-columns: 22px 1fr; gap: 10px; padding: 8px 10px; background: oklch(0.22 0.012 260); border-radius: 8px; font-size: 13px; line-height: 1.45; color: var(--teacher-ink); }
+.support-item .num { color: var(--teacher-ink-soft); font-family: 'JetBrains Mono', monospace; font-size: 11px; text-align: right; padding-top: 2px; }
+.support-empty { font-size: 13px; color: var(--teacher-ink-soft); padding: 18px; text-align: center; }
+
+
+
+/* ===================== PHASE A3: Räumliche Tiefe ===================== */
+/* Base interactive cards: landing-card, gp-card, method-card, dice-card, mod panels */
+.landing-card, .gp-card, .method-card, .dice-card {
+  transform: translateZ(0);
+  transition:
+    transform var(--dur-sm) var(--ease-out),
+    box-shadow var(--dur-sm) var(--ease-out),
+    border-color var(--dur-sm) var(--ease-out);
+  will-change: transform;
+  box-shadow: var(--shadow-sm), var(--inset-sheen);
+}
+.landing-card:hover, .gp-card:hover, .method-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg), var(--inset-sheen);
+}
+.landing-card:active, .gp-card:active, .method-card:active {
+  transform: translateY(-1px) scale(0.995);
+  transition-duration: var(--dur-xs);
+}
+
+/* Perspective wrapper for tilt-capable cards */
+.tilt-wrap { perspective: 1000px; }
+.tilt {
+  transition: transform var(--dur-sm) var(--ease-out);
+  transform: perspective(1000px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) translateY(var(--tilt-lift, 0px));
+  transform-style: preserve-3d;
+}
+
+/* Buttons — glow on hover */
+.primary, .cta, .join-btn, .pill-btn, .m-submit, .ms-nav button,
+.focus-mark-done, .focus-mark-undo, .focus-nav {
+  transition: box-shadow var(--dur-sm) var(--ease-out), transform var(--dur-xs) var(--ease-out), background var(--dur-sm) var(--ease-out);
+}
+.primary:hover, .cta:hover, .m-submit:hover {
+  box-shadow: 0 8px 22px -8px oklch(0.5 0.15 30 / 0.45), 0 2px 6px oklch(0.5 0.15 30 / 0.22);
+}
+.primary:active, .cta:active, .m-submit:active { transform: scale(0.98); }
+
+/* Input focus pulse */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  animation: focus-pulse 640ms var(--ease-out);
+}
+@keyframes focus-pulse {
+  0%   { box-shadow: 0 0 0 0 oklch(0.6 0.14 245 / 0.5); }
+  50%  { box-shadow: 0 0 0 6px oklch(0.6 0.14 245 / 0.18); }
+  100% { box-shadow: 0 0 0 3px oklch(0.6 0.14 245 / 0.25); }
+}
+
+/* ===================== PHASE B: Original logo + intro + mirror ===================== */
+
+.logo-icon-3d {
+  display: inline-block;
+  perspective: 1000px;
+  filter:
+    drop-shadow(0 12px 20px rgba(120, 40, 130, 0.28))
+    drop-shadow(0 3px 6px rgba(70, 20, 80, 0.18));
+  flex: none;
+  vertical-align: middle;
+}
+.logo-icon-3d svg {
+  display: block;
+  transform-style: preserve-3d;
+  backface-visibility: visible;
+  will-change: transform;
+}
+.logo-icon-3d.is-rotating svg {
+  animation: logo-spin-y 22s linear infinite;
+}
+.logo-icon-3d.is-paused svg {
+  animation-play-state: paused;
+}
+@keyframes logo-spin-y {
+  from { transform: rotateY(0deg); }
+  to   { transform: rotateY(360deg); }
+}
+
+.logo-wordmark {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  line-height: 1;
+}
+.brand-logo-xl { gap: 18px; }
+.brand-logo-header { gap: 12px; }
+
+/* Intro choreography */
+.intro-logo {
+  position: fixed;
+  z-index: 80;
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  pointer-events: none;
+  transform-origin: left center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 0;
+  animation: intro-in 700ms var(--ease-out) forwards;
+  transition:
+    top 1200ms cubic-bezier(0.4, 0.0, 0.2, 1),
+    left 1200ms cubic-bezier(0.4, 0.0, 0.2, 1),
+    transform 1200ms cubic-bezier(0.4, 0.0, 0.2, 1),
+    opacity 300ms ease-out 900ms,
+    gap 1200ms ease-in-out;
+}
+@keyframes intro-in {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.intro-logo.intro-phase-2,
+.intro-logo.intro-phase-3 {
+  top: 36px;
+  left: 40px;
+  transform: translate(0, 0) scale(0.3);
+  gap: 10px;
+  animation: none;
+  opacity: 1;
+}
+.intro-logo.intro-phase-3 {
+  opacity: 0;
+}
+
+.intro-logo.intro-phase-2 .logo-icon-3d.is-rotating svg,
+.intro-logo.intro-phase-3 .logo-icon-3d.is-rotating svg {
+  animation-duration: 60s;
+}
+
+/* ─── Hero Claim & Breathing Dot (stage center) ─── */
+.hero-claim {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-weight: 450;
+  font-size: clamp(24px, 4.2vw, 44px);
+  letter-spacing: -0.005em;
+  line-height: 1.2;
+  background: var(--grad-accent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 0;
+  text-align: center;
+  text-wrap: balance;
+  animation: claim-in 900ms var(--ease-out) both;
+  animation-delay: 2700ms;
+}
+.hero-claim.no-intro {
+  animation-delay: 0ms;
+}
+@keyframes claim-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.breathing-dot {
+  width: 80px;
+  height: 80px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: dot-in 1000ms var(--ease-out) both;
+  animation-delay: 3000ms;
+}
+.breathing-dot.no-intro {
+  animation-delay: 0ms;
+}
+@keyframes dot-in {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.breathing-dot__core {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(200, 52, 140, 0.38) 0%,
+    rgba(232, 90, 122, 0.22) 35%,
+    rgba(255, 138, 92, 0.08) 65%,
+    rgba(255, 138, 92, 0) 100%
+  );
+  animation: dot-breathe 4s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes dot-breathe {
+  0%, 100% { transform: scale(0.85); opacity: 0.5; }
+  50%      { transform: scale(1.15); opacity: 0.9; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .breathing-dot__core { animation: none; transform: scale(1); opacity: 0.7; }
+}
+
+/* ===================== Calm Landing (new centered composition) ===================== */
+.landing-calm {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding-top: max(24px, env(safe-area-inset-top));
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  padding-left: max(24px, env(safe-area-inset-left));
+  padding-right: max(24px, env(safe-area-inset-right));
+  max-width: 100%;
+}
+.landing-calm .landing-head {
+  padding-bottom: 0;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+.landing-calm-stage {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  padding: 40px 0;
+  text-align: center;
+}
+.landing-calm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 8px;
+  animation: calm-action-in 800ms var(--ease-out) both;
+  animation-delay: 3600ms;
+}
+.landing-calm-actions.no-intro { animation-delay: 0ms; }
+.landing-calm-actions > *:nth-child(2) { animation-delay: 3750ms; }
+.landing-calm-actions.no-intro > *:nth-child(2) { animation-delay: 0ms; }
+@keyframes calm-action-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.calm-btn {
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  padding: 16px 28px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  min-height: 52px;
+  transition: transform var(--dur-sm) var(--ease-out), box-shadow var(--dur-sm) var(--ease-out), background var(--dur-sm) var(--ease-out);
+}
+.calm-btn-primary {
+  color: #fff;
+  background: linear-gradient(135deg, #E86A3A 0%, #C8348C 55%, #5C6FD1 100%);
+  box-shadow: 0 6px 18px rgba(200, 52, 140, 0.28), 0 2px 6px rgba(70, 20, 80, 0.18), inset 0 1px 0 rgba(255,255,255,0.35);
+}
+.calm-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(200, 52, 140, 0.35), 0 3px 8px rgba(70, 20, 80, 0.22), inset 0 1px 0 rgba(255,255,255,0.4); }
+.calm-btn-primary:active { transform: translateY(0); }
+.calm-btn-secondary {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.8);
+  border-color: var(--line);
+  backdrop-filter: blur(6px);
+}
+.calm-btn-secondary:hover { background: #fff; border-color: var(--ink-faint); transform: translateY(-1px); }
+
+.landing-calm-join {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+  animation: calm-action-in 400ms var(--ease-out) both;
+}
+.landing-calm-join input {
+  font: inherit;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-align: center;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+  width: 160px;
+  text-transform: uppercase;
+}
+.landing-calm-join input:focus {
+  outline: none;
+  border-color: var(--accent-b);
+  box-shadow: 0 0 0 3px rgba(200, 52, 140, 0.15);
+}
+.landing-calm-join button {
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 14px 20px;
+  border-radius: 12px;
+  border: none;
+  background: var(--ink);
+  color: #fff;
+  cursor: pointer;
+  min-height: 48px;
+}
+.landing-calm-join button:disabled {
+  background: var(--line);
+  color: var(--ink-faint);
+  cursor: not-allowed;
+}
+
+.landing-calm-foot {
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  text-align: center;
+  padding-top: 24px;
+  animation: calm-action-in 800ms var(--ease-out) both;
+  animation-delay: 4000ms;
+}
+.landing-calm-foot.no-intro { animation-delay: 0ms; }
+
+/* Mobile */
+@media (max-width: 760px) {
+  .landing-calm-stage { gap: 28px; padding: 32px 0; }
+  .landing-calm-actions { flex-direction: column; width: 100%; max-width: 360px; }
+  .calm-btn { width: 100%; }
+  .landing-calm-join { width: 100%; max-width: 360px; flex-direction: row; }
+  .landing-calm-join input { flex: 1; width: auto; }
+}
+
+.hero-mirror {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+/* ===================== PHASE C1: Page transitions (method steps) ===================== */
+.step-enter { animation: step-in var(--dur-md) var(--ease-out) both; }
+@keyframes step-in {
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.step-enter-back { animation: step-in-back var(--dur-md) var(--ease-out) both; }
+@keyframes step-in-back {
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Staggered reveal for tile grids */
+.stagger > * {
+  animation: tile-in var(--dur-md) var(--ease-out) both;
+}
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 80ms; }
+.stagger > *:nth-child(3) { animation-delay: 160ms; }
+.stagger > *:nth-child(4) { animation-delay: 240ms; }
+.stagger > *:nth-child(5) { animation-delay: 320ms; }
+.stagger > *:nth-child(6) { animation-delay: 400ms; }
+.stagger > *:nth-child(7) { animation-delay: 480ms; }
+.stagger > *:nth-child(n+8) { animation-delay: 560ms; }
+@keyframes tile-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ===================== PHASE C2: Feedback animations ===================== */
+.submitted .check {
+  animation: check-in 540ms var(--ease-spring) both;
+}
+@keyframes check-in {
+  0%   { transform: scale(0.3) rotate(-15deg); opacity: 0; }
+  60%  { transform: scale(1.08) rotate(2deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+.submitted .check::after {
+  content: ''; position: absolute; inset: -6px; border-radius: 50%;
+  border: 2px solid oklch(0.7 0.16 35 / 0.45);
+  animation: check-ring 900ms var(--ease-out) both;
+}
+@keyframes check-ring {
+  from { transform: scale(0.6); opacity: 0.9; }
+  to   { transform: scale(1.5); opacity: 0; }
+}
+
+/* New-answer pop-in (teacher cards) */
+.pop-in { animation: pop-in var(--dur-lg) var(--ease-spring) both; }
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.6); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Loading spinner — slow & gentle */
+.spinner {
+  width: 22px; height: 22px;
+  border: 2px solid oklch(0.88 0.01 260);
+  border-top-color: oklch(0.5 0.14 245);
+  border-radius: 50%;
+  animation: spin 1.2s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Progress bar smooth */
+.ep-step { transition: background var(--dur-md) var(--ease-out); }
+
+/* ===================== PHASE C3: Method-specific micro-interactions ===================== */
+/* Weather: chosen tile pulses */
+.weather-tile { transition: transform var(--dur-sm) var(--ease-out), box-shadow var(--dur-sm) var(--ease-out); }
+.weather-tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.weather-tile.sel {
+  animation: weather-pulse 2.4s ease-in-out infinite;
+}
+@keyframes weather-pulse {
+  0%,100% { box-shadow: var(--shadow-md), 0 0 0 0 oklch(0.6 0.14 245 / 0.45); }
+  50%     { box-shadow: var(--shadow-md), 0 0 0 10px oklch(0.6 0.14 245 / 0); }
+}
+
+/* Country: flag tilt + chosen glow */
+.country-tile { transition: transform var(--dur-sm) var(--ease-out), box-shadow var(--dur-sm) var(--ease-out); }
+.country-tile:hover { transform: perspective(600px) rotateX(4deg) rotateY(-4deg) translateY(-2px); box-shadow: var(--shadow-md); }
+.country-tile.sel {
+  animation: chosen-glow 2.6s ease-in-out infinite;
+}
+@keyframes chosen-glow {
+  0%,100% { box-shadow: var(--shadow-md), 0 0 0 0 oklch(0.6 0.14 245 / 0.5); }
+  50%     { box-shadow: var(--shadow-md), 0 0 0 8px oklch(0.6 0.14 245 / 0); }
+}
+
+/* Scale slider snap feedback */
+.scale button, .mood button, .choice, .tg-btn {
+  transition: transform var(--dur-xs) var(--ease-out), background var(--dur-sm) var(--ease-out), border-color var(--dur-sm) var(--ease-out);
+}
+.scale button:hover, .mood button:hover { transform: translateY(-1px); }
+.scale button:active, .mood button:active { transform: scale(0.96); }
+.scale button.on, .mood button.on {
+  animation: snap-in var(--dur-sm) var(--ease-spring);
+}
+@keyframes snap-in {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* Image cards (suitcase/trash/washing) — chosen glow */
+.stw-box { transition: transform var(--dur-sm) var(--ease-out), box-shadow var(--dur-sm) var(--ease-out); }
+.stw-box:focus-within { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+/* ===================== PHASE A2+C3: MOBILE ===================== */
+/* Make everything truly fluid from 0 -> 900px. Anything fixed-width becomes max-width. */
+
+@media (max-width: 760px) {
+  /* === Global shell padding tightens === */
+  .landing, .teacher, .create-outer, .group-picker, .m-student, .student {
+    padding-left: 16px; padding-right: 16px;
+  }
+
+  /* === Landing === */
+  .landing { padding-top: 20px; padding-bottom: 40px; max-width: 100%; }
+  .landing-head { padding-bottom: 32px; }
+  .landing-hero { grid-template-columns: 1fr !important; gap: 28px; }
+  .landing-hero h1 { font-size: clamp(34px, 9vw, 44px); line-height: 1.02; }
+  .landing-hero p.lede { font-size: 16px; margin-bottom: 24px; }
+  .landing-cards { width: 100%; }
+  .landing-card { padding: 18px 18px; }
+
+  /* === Create/Teacher session === */
+  .create-outer { padding: 24px 18px 48px; max-width: 100%; }
+  .create-content { grid-template-columns: 1fr !important; gap: 32px; }
+  .create-left h1 { font-size: 34px; }
+  .create-code-row .code { font-size: 44px; letter-spacing: 0.1em; }
+  .create-right { width: 100%; display: flex; flex-direction: column; align-items: flex-start; }
+  .create-right .qr-large {
+    width: 100%; max-width: 260px; height: auto; aspect-ratio: 1;
+    align-self: center;
+  }
+
+  .teacher { padding: 16px 14px 40px; }
+  .teacher-head { flex-wrap: wrap; gap: 12px; }
+  .teacher-stats { width: 100%; order: 3; margin-left: 0 !important; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .qr-corner { display: none; }
+  .tiles { grid-template-columns: 1fr !important; gap: 14px; }
+
+  /* === Group picker === */
+  .group-picker { padding: 24px 16px 40px; max-width: 100%; }
+  .gp-head h2 { font-size: 30px; }
+  .gp-grid { grid-template-columns: 1fr !important; gap: 12px; }
+  .gp-grid.gp-2 { grid-template-columns: 1fr !important; }
+  .gp-card { padding: 18px; }
+  .method-grid { grid-template-columns: 1fr !important; gap: 12px; }
+
+  /* === Dice === */
+  .dice-card { padding: 24px 18px 22px; }
+
+  /* === Method shell (student) === */
+  .m-student { max-width: 100%; padding: 16px 14px 120px; }
+  .ms-nav { max-width: 100%; padding: 12px 14px 18px; }
+
+  /* === Stepper / scale / mood === */
+  .stepper { gap: 4px; margin-bottom: 20px; }
+  .scale, .mood { gap: 4px; }
+  .scale button, .mood button { min-height: 44px; }
+
+  /* === Weather === */
+  .weather-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 8px; }
+  .weather-tile { min-height: 76px; padding: 10px 6px; }
+
+  /* === Country — the 8-col map is the main culprit === */
+  .country-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 8px; }
+  .country-map { grid-template-columns: repeat(5, 1fr) !important; gap: 4px; }
+  .ct-tile { border-radius: 8px; }
+
+  /* === Suitcase / trash / washing === */
+  .stw-grid { grid-template-columns: 1fr !important; gap: 12px; }
+
+  /* === Exam === */
+  .exam-grid { grid-template-columns: 1fr !important; gap: 14px; }
+  .exam-tile { padding: 18px 16px; }
+  .ev-bars { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .et-bar { grid-template-columns: 100px 1fr 24px; font-size: 11px; }
+
+  /* === 4-levels teacher dashboard tiles === */
+  .mt-cols { grid-template-columns: 1fr !important; }
+  .confidence-bars { height: 64px; }
+
+  /* === Forms / inputs: avoid iOS auto-zoom === */
+  input, textarea, select { font-size: 16px !important; }
+  textarea { min-height: 110px; }
+
+  /* === Typography squeeze === */
+  h1 { text-wrap: balance; }
+  h2 { text-wrap: balance; }
+
+  /* === Tap targets === */
+  button, .btn, .tg-btn, .choice { min-height: 44px; }
+
+  /* === Modals / focus === */
+  .modal, .focus-modal { margin: 16px; padding: 20px 18px; }
+  .focus-nav { width: 40px; height: 40px; }
+
+  /* === Disable desktop tilt on touch === */
+  .tilt { transform: none !important; }
+}
+
+/* Very narrow (iPhone SE ≤ 360px) */
+@media (max-width: 360px) {
+  .landing-hero h1 { font-size: 30px; }
+  .create-code-row .code { font-size: 36px; }
+  .weather-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .country-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .country-map { grid-template-columns: repeat(4, 1fr) !important; }
+  .gp-head h2 { font-size: 26px; }
+  .scale button, .mood button { padding: 6px 4px; font-size: 13px; }
+}
+
+/* Tablet polish */
+@media (min-width: 761px) and (max-width: 1024px) {
+  .landing-hero { grid-template-columns: 1fr 1fr; gap: 40px; }
+  .method-grid { grid-template-columns: repeat(2, 1fr); }
+  .gp-grid { grid-template-columns: repeat(2, 1fr); }
+  .weather-grid { grid-template-columns: repeat(4, 1fr); }
+  .country-grid { grid-template-columns: repeat(4, 1fr); }
+  .country-map { grid-template-columns: repeat(6, 1fr); }
+}
+
+/* ===================== Safe areas (iOS notch/home-indicator) ===================== */
+@supports (padding: env(safe-area-inset-top)) {
+  .landing, .teacher, .create-outer, .group-picker, .m-student, .student {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+    padding-bottom: max(40px, env(safe-area-inset-bottom));
+  }
+  .ms-nav {
+    padding-bottom: max(22px, env(safe-area-inset-bottom));
+  }
+}
+
+/* ===================== PHASE C4: Tweaks panel ===================== */
+.tw-panel {
+  position: fixed; bottom: 16px; right: 16px; z-index: 9000;
+  background: oklch(0.99 0.004 85 / 0.95);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-size: 13px;
+  min-width: 220px;
+  animation: tw-in var(--dur-md) var(--ease-spring) both;
+}
+@keyframes tw-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.tw-panel h5 { margin: 0 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); font-weight: 600; }
+.tw-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 0; }
+.tw-row label { color: var(--ink); cursor: pointer; user-select: none; }
+.tw-toggle { position: relative; width: 34px; height: 20px; background: var(--line); border-radius: 10px; transition: background var(--dur-sm) var(--ease-out); flex: none; }
+.tw-toggle.on { background: oklch(0.6 0.14 245); }
+.tw-toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: white; box-shadow: 0 1px 3px oklch(0.2 0.02 260 / 0.3); transition: transform var(--dur-sm) var(--ease-spring); }
+.tw-toggle.on::after { transform: translateX(14px); }
+.tw-fab {
+  position: fixed; bottom: 16px; right: 16px; z-index: 9000;
+  width: 42px; height: 42px; border-radius: 50%;
+  background: oklch(0.99 0.004 85 / 0.95);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(10px);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: transform var(--dur-sm) var(--ease-spring), color var(--dur-sm);
+}
+.tw-fab:hover { color: var(--ink); transform: scale(1.06); }
+
+/* ===================== Brand header bar (sub-pages) ===================== */
+.sub-head-brand {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-weight: 600; letter-spacing: -0.01em; font-size: 15px; color: var(--ink);
+}
+
+
+/* ===================== Brand alignment polish ===================== */
+.brand { display: inline-flex; align-items: center; gap: 10px; }
+.ms-head .brand { font-size: 15px; font-weight: 600; color: var(--ink); }
+.student-head .brand { font-size: 15px; font-weight: 600; color: var(--ink); }
+.teacher-head .brand { font-size: 16px; font-weight: 600; }
+
+/* Teacher header wordmark color */
+.teacher-head .logo-wordmark { color: var(--teacher-ink); }
+
+/* Existing sub-page brand-mark was 24x24; mini-logo is 30x30 so shells need a pinch less air */
+.student-head, .ms-head {
+  padding-top: 8px;
+}
+
+/* Tweaks panel needs a little more breathing room on small screens */
+@media (max-width: 500px) {
+  .tw-panel { min-width: 0; width: calc(100vw - 32px); max-width: 280px; }
+}
+
+/* Fix: landing cards container should be flex-column to stack nicely */
+.landing-cards { display: flex; flex-direction: column; gap: 16px; }
+
+/* Intro shrinks on narrow viewports */
+@media (max-width: 760px) {
+  .intro-logo.intro-phase-2,
+  .intro-logo.intro-phase-3 {
+    top: 22px;
+    left: 20px;
+  }
+  .breathing-dot { width: 56px; height: 56px; }
+}
+
+/* Animation-free fallback for initial render (prevents flash of unstyled) */
+.stagger > * { opacity: 1; }
+html.no-fx-anims .stagger > * { animation: none !important; opacity: 1 !important; transform: none !important; }
+
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.development.js"></script>
+<script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.development.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.29.0/babel.min.js"></script>
+<script>
+// ReflectIt — Supabase storage layer w/ method + payload support
+(function () {
+  const SUPABASE_URL = 'https://rrmwucfjbebzsuwixibr.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_ZxesIBTttRfevo5BKJpiIA_8_VMa386';
+
+  if (!window.supabase || !window.supabase.createClient) {
+    console.error('[ReflectIt] Supabase JS client not loaded.');
+    return;
+  }
+  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    realtime: { params: { eventsPerSecond: 5 } },
+  });
+  window.__supabase = client;
+
+  const channels = new Map();
+  function ensureChannel(code) {
+    if (channels.has(code)) return;
+    const ch = client
+      .channel(`session:${code}`)
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'responses', filter: `session_code=eq.${code}` },
+        () => window.dispatchEvent(new CustomEvent('__reflectit_storage', { detail: { code } }))
+      )
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'sessions', filter: `code=eq.${code}` },
+        () => window.dispatchEvent(new CustomEvent('__reflectit_storage', { detail: { code, kind: 'session' } }))
+      )
+      .subscribe();
+    channels.set(code, ch);
+  }
+
+  function rowToRecord(row) {
+    // Backward compat: map legacy columns into payload if payload is null
+    const payload = row.payload || {
+      takeaway: row.takeaway || '',
+      confidence: row.confidence ?? null,
+      help: row.help || null,
+      stuck: row.stuck || '',
+      mood: row.mood ?? null,
+      moodWhy: row.mood_why || '',
+      openQ: row.open_q || '',
+      transfer: row.transfer || '',
+    };
+    return {
+      id: String(row.id),
+      createdAt: new Date(row.created_at).getTime(),
+      method: row.method || 'four_levels',
+      payload,
+    };
+  }
+
+  const storage = {
+    // Session metadata
+    async setSession(code, { method, imageSet = null, classSize = null }) {
+      ensureChannel(code);
+      const { error } = await client.from('sessions').upsert({
+        code, method, image_set: imageSet, class_size: classSize,
+      });
+      if (error) throw error;
+    },
+    async getSession(code) {
+      ensureChannel(code);
+      const { data } = await client.from('sessions').select('*').eq('code', code).maybeSingle();
+      if (!data) return null;
+      return { code: data.code, method: data.method, imageSet: data.image_set, classSize: data.class_size };
+    },
+
+    // Responses
+    async addResponse(code, method, payload) {
+      ensureChannel(code);
+      const { error } = await client.from('responses').insert({
+        session_code: code, method, payload,
+      });
+      if (error) throw error;
+    },
+    async listResponses(code) {
+      ensureChannel(code);
+      const { data, error } = await client.from('responses').select('*').eq('session_code', code).order('created_at', { ascending: true });
+      if (error) throw error;
+      return (data || []).map(rowToRecord);
+    },
+    async markPickedUp(id, picked) {
+      // Store pickup state in payload via merge
+      const { data: row } = await client.from('responses').select('payload').eq('id', id).maybeSingle();
+      const next = { ...(row?.payload || {}), _pickedUp: !!picked };
+      await client.from('responses').update({ payload: next }).eq('id', id);
+    },
+    async endSession(code) {
+      await client.from('responses').delete().eq('session_code', code);
+      await client.from('sessions').delete().eq('code', code);
+      const ch = channels.get(code);
+      if (ch) { client.removeChannel(ch); channels.delete(code); }
+    },
+  };
+
+  window.__store = storage;
+})();
+
+window.__qrPattern = function (text) {
+  if (typeof window.qrcode === 'function') {
+    try {
+      const q = window.qrcode(0, 'M');
+      q.addData(text); q.make();
+      const n = q.getModuleCount();
+      const grid = [];
+      for (let y = 0; y < n; y++) {
+        const row = [];
+        for (let x = 0; x < n; x++) row.push(q.isDark(y, x) ? 1 : 0);
+        grid.push(row);
+      }
+      return grid;
+    } catch (e) { console.warn('qr fail', e); }
+  }
+  // fallback 25x25 decorative
+  const size = 25; let h = 2166136261;
+  for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
+  const rand = () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return ((h >>> 0) % 1000) / 1000; };
+  const grid = [];
+  for (let y = 0; y < size; y++) { const row = []; for (let x = 0; x < size; x++) row.push(rand() > 0.5 ? 1 : 0); grid.push(row); }
+  return grid;
+};
+
+window.__genCode = function () {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = ''; for (let i = 0; i < 4; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
+};
+
+window.__STOPWORDS = new Set([
+  'der','die','das','und','oder','aber','doch','mit','ohne','für','in','im','auf','an','am','zu','zum','zur',
+  'ein','eine','einen','einem','einer','eines','ich','du','er','sie','es','wir','ihr','mir','mich','dich','uns','euch',
+  'ist','war','sind','sein','bin','bist','hat','hab','habe','hatte','werden','wird','wurde','wurden',
+  'nicht','kein','keine','keinen','keinem','keiner','auch','schon','noch','sehr','mehr','weniger','viel',
+  'wie','wo','was','wer','wann','warum','weil','dass','daß','ob','als','wenn','dann','denn','also',
+  'man','nur','so','da','dort','hier','heute','morgen','gestern','jetzt',
+  'von','vom','bei','nach','vor','über','unter','aus','durch',
+  'ja','nein','etwas','alles','nichts','viele','sowie','dabei',
+  'den','dem','des','ins','beim','habe','werde','können','konnte','soll','muss',
+]);
+
+</script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+// ReflectIt original logo: rounded-rect icon with gradient + white inner "display",
+// plus ReflectIt wordmark. Icon rotates slowly on Y-axis.
+
+function LogoIcon({ size = 48, rotate = true, paused = false }) {
+  // Square (1:1) rounded rect with 3-stop diagonal gradient (orange → magenta → blue),
+  // strong 30% corner radius, soft 3D rim (highlight top, shadow bottom),
+  // centered near-square white inner "display".
+  const w = size;
+  const h = size;
+  const r = Math.round(w * 0.30);
+  const innerW = Math.round(w * 0.34);
+  const innerH = Math.round(h * 0.44);
+  const innerX = (w - innerW) / 2;
+  const innerY = (h - innerH) / 2;
+  const innerR = Math.round(innerW * 0.30);
+  const uid = `logo-${size}-${Math.round(Math.random() * 1e6)}`;
+
+  return (
+    <div
+      className={'logo-icon-3d' + (rotate ? ' is-rotating' : '') + (paused ? ' is-paused' : '')}
+      style={{ width: w, height: h }}
+      aria-hidden="true"
+    >
+      <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          {/* Main body: TL orange → mid magenta → BR blue/violet */}
+          <linearGradient id={`${uid}-body`} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%"   stopColor="#E86A3A" />
+            <stop offset="45%"  stopColor="#C8348C" />
+            <stop offset="100%" stopColor="#5C6FD1" />
+          </linearGradient>
+          {/* Top rim highlight */}
+          <linearGradient id={`${uid}-rim-top`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"  stopColor="rgba(255,255,255,0.55)" />
+            <stop offset="20%" stopColor="rgba(255,255,255,0.12)" />
+            <stop offset="55%" stopColor="rgba(255,255,255,0)" />
+          </linearGradient>
+          {/* Bottom shadow/vignette */}
+          <linearGradient id={`${uid}-rim-bot`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="55%" stopColor="rgba(0,0,0,0)" />
+            <stop offset="100%" stopColor="rgba(70,20,100,0.35)" />
+          </linearGradient>
+          {/* Soft inner-corner shine */}
+          <radialGradient id={`${uid}-shine`} cx="0.25" cy="0.18" r="0.65">
+            <stop offset="0%"  stopColor="rgba(255,255,255,0.45)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+          </radialGradient>
+        </defs>
+
+        {/* Body */}
+        <rect x="0" y="0" width={w} height={h} rx={r} ry={r} fill={`url(#${uid}-body)`} />
+        {/* Bottom shadow fade */}
+        <rect x="0" y="0" width={w} height={h} rx={r} ry={r} fill={`url(#${uid}-rim-bot)`} />
+        {/* Top highlight shine */}
+        <rect x="0" y="0" width={w} height={h} rx={r} ry={r} fill={`url(#${uid}-rim-top)`} />
+        {/* Soft corner glow */}
+        <rect x="0" y="0" width={w} height={h} rx={r} ry={r} fill={`url(#${uid}-shine)`} />
+
+        {/* Inner white "display" — slightly warm white to feel like frosted glass */}
+        <rect x={innerX} y={innerY} width={innerW} height={innerH} rx={innerR} ry={innerR} fill="#FBF3F5" />
+        {/* Subtle inner highlight on the white rect */}
+        <rect
+          x={innerX + Math.max(1, Math.round(w * 0.015))}
+          y={innerY + Math.max(1, Math.round(h * 0.015))}
+          width={innerW - Math.max(2, Math.round(w * 0.03))}
+          height={Math.round(innerH * 0.45)}
+          rx={Math.round(innerR * 0.75)}
+          ry={Math.round(innerR * 0.75)}
+          fill="rgba(255,255,255,0.7)"
+        />
+
+        {/* Fine outer edge stroke to crisp the silhouette */}
+        <rect
+          x="0.5" y="0.5"
+          width={w - 1} height={h - 1}
+          rx={r - 0.5} ry={r - 0.5}
+          fill="none"
+          stroke="rgba(255,255,255,0.25)"
+          strokeWidth="1"
+        />
+      </svg>
+    </div>
+  );
+}
+
+function LogoWordmark({ size = 20, color = 'var(--ink)' }) {
+  return (
+    <span className="logo-wordmark" style={{ fontSize: size, color }} aria-label="ReflectIt">
+      ReflectIt
+    </span>
+  );
+}
+
+function BrandLogo({ size = 'mini', rotate = false }) {
+  const map = {
+    mini:   { icon: 26, text: 15 },
+    header: { icon: 34, text: 17 },
+    xl:     { icon: 120, text: 44 },
+  };
+  const s = map[size] || map.mini;
+  return (
+    <span className={`brand-logo brand-logo-${size}`}>
+      <LogoIcon size={s.icon} rotate={rotate} />
+      <LogoWordmark size={s.text} />
+    </span>
+  );
+}
+
+function IntroLogo({ onDone }) {
+  const [phase, setPhase] = React.useState(1);
+
+  React.useEffect(() => {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const id = setTimeout(() => { setPhase(3); onDone && onDone(); }, 50);
+      return () => clearTimeout(id);
+    }
+    const t1 = setTimeout(() => setPhase(2), 2000);
+    const t2 = setTimeout(() => { setPhase(3); onDone && onDone(); }, 3200);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
+  return (
+    <div className={`intro-logo intro-phase-${phase}`} aria-hidden={phase === 3}>
+      <LogoIcon size={120} rotate={true} />
+      <LogoWordmark size={44} />
+    </div>
+  );
+}
+
+function BreathingDot({ noIntro = false } = {}) {
+  // A single soft glowing circle that pulses like a breath.
+  return (
+    <div className={'breathing-dot' + (noIntro ? ' no-intro' : '')} aria-hidden="true">
+      <div className="breathing-dot__core" />
+    </div>
+  );
+}
+
+function Claim({ noIntro = false } = {}) {
+  return (
+    <p className={'hero-claim' + (noIntro ? ' no-intro' : '')}>
+      Am Ende der Stunde kurz innehalten.
+    </p>
+  );
+}
+
+// Backward-compat alias
+const MirrorSymbol = BreathingDot;
+
+Object.assign(window, { BrandLogo, LogoIcon, LogoWordmark, IntroLogo, MirrorSymbol, BreathingDot, Claim });
+
+</script>
+<script type="text/babel">
+// Tiny tweaks panel for toggling animation effects
+function TweaksPanel() {
+  const [open, setOpen] = React.useState(false);
+  const [flags, setFlags] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem('reflectit.tweaks') || '{}'); }
+    catch { return {}; }
+  });
+
+  React.useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle('no-fx-tilt', flags.noTilt === true);
+    root.classList.toggle('no-fx-depth', flags.noDepth === true);
+    root.classList.toggle('no-fx-anims', flags.noAnims === true);
+    try { localStorage.setItem('reflectit.tweaks', JSON.stringify(flags)); } catch {}
+  }, [flags]);
+
+  function toggle(k) { setFlags(f => ({ ...f, [k]: !f[k] })); }
+
+  if (!open) {
+    return (
+      <button className="tw-fab" onClick={() => setOpen(true)} title="Anzeige-Optionen" aria-label="Anzeige-Optionen">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    );
+  }
+
+  return (
+    <div className="tw-panel" role="dialog" aria-label="Anzeige-Einstellungen">
+      <h5>Anzeige</h5>
+      <div className="tw-row">
+        <label htmlFor="tw-tilt">3D-Neigung (Maus)</label>
+        <button id="tw-tilt" className={`tw-toggle ${!flags.noTilt ? 'on' : ''}`} onClick={() => toggle('noTilt')} aria-pressed={!flags.noTilt} />
+      </div>
+      <div className="tw-row">
+        <label htmlFor="tw-depth">Räumliche Tiefe</label>
+        <button id="tw-depth" className={`tw-toggle ${!flags.noDepth ? 'on' : ''}`} onClick={() => toggle('noDepth')} aria-pressed={!flags.noDepth} />
+      </div>
+      <div className="tw-row">
+        <label htmlFor="tw-anims">Animationen</label>
+        <button id="tw-anims" className={`tw-toggle ${!flags.noAnims ? 'on' : ''}`} onClick={() => toggle('noAnims')} aria-pressed={!flags.noAnims} />
+      </div>
+      <div style={{ marginTop: 10, textAlign: 'right' }}>
+        <button onClick={() => setOpen(false)} style={{ fontSize: 12, color: 'var(--ink-soft)', padding: '4px 8px' }}>Schließen</button>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { TweaksPanel });
+
+</script>
+<script type="text/babel">
+// Four-Levels method — original student + teacher views
+// (Was originally the whole app; now one method among many.)
+
+const MoodSmiley = ({ level, color, size = 40 }) => {
+  const mouths = { 1: 'M14 34 Q24 26 34 34', 2: 'M14 32 Q24 27 34 32', 3: 'M14 30 L34 30', 4: 'M14 28 Q24 33 34 28', 5: 'M14 26 Q24 36 34 26' };
+  const eyeY = level === 1 ? 20 : 19;
+  return (
+    <svg viewBox="0 0 48 48" width={size} height={size} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="24" cy="24" r="19" />
+      {level === 1 ? (
+        <>
+          <path d="M15 18 L21 22 M15 22 L21 18" />
+          <path d="M27 18 L33 22 M27 22 L33 18" />
+        </>
+      ) : (
+        <>
+          <circle cx="18" cy={eyeY} r="1.4" fill={color} stroke="none" />
+          <circle cx="30" cy={eyeY} r="1.4" fill={color} stroke="none" />
+        </>
+      )}
+      <path d={mouths[level]} />
+      {level === 5 && <path d="M14 26 Q24 36 34 26 L14 26 Z" fill={color} opacity="0.1" stroke="none" />}
+    </svg>
+  );
+};
+
+const MOOD_COLORS = ['var(--mood-1)','var(--mood-2)','var(--mood-3)','var(--mood-4)','var(--mood-5)'];
+const MOOD_LABELS = ['sehr frustriert','frustriert','neutral','motiviert','sehr motiviert'];
+const HELP_OPTIONS = ['Gruppenarbeit','Diskussion im Plenum','Visualisierungen','Eigenes Nachdenken','Lehrer-Input','Etwas anderes'];
+const LEVELS = [
+  { num: 1, key: 'Kognitiv', title: 'Was habe ich gelernt?' },
+  { num: 2, key: 'Prozess', title: 'Wie habe ich gelernt?' },
+  { num: 3, key: 'Gefühl', title: 'Wie ging es mir dabei?' },
+  { num: 4, key: 'Transfer', title: 'Wohin geht es?' },
+];
+
+function Stepper({ step, maxReached, onGo }) {
+  return (
+    <div className="stepper">
+      {LEVELS.map((l, i) => {
+        const active = step === i;
+        const done = i < maxReached && !active;
+        return (
+          <button key={i} className={'stepper-pill ' + (active ? 'active' : done ? 'done' : '')} onClick={() => onGo(i)}>
+            <span className="num">{String(l.num).padStart(2,'0')}</span>{l.key}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function ScaleInput({ value, onChange, lowLabel, highLabel }) {
+  return (
+    <div>
+      <div className="scale">
+        {[1,2,3,4,5].map(n => (
+          <button key={n} type="button" className={value === n ? 'sel' : ''} onClick={() => onChange(n)}>{n}</button>
+        ))}
+      </div>
+      <div className="scale-labels"><span>{lowLabel}</span><span>{highLabel}</span></div>
+    </div>
+  );
+}
+
+function MoodInput({ value, onChange }) {
+  return (
+    <div>
+      <div className="mood">
+        {[1,2,3,4,5].map(n => (
+          <button key={n} type="button" className={value === n ? 'sel' : ''} onClick={() => onChange(n)}>
+            <MoodSmiley level={n} color={value === n ? 'var(--warm)' : 'var(--ink-soft)'} size={56}/>
+          </button>
+        ))}
+      </div>
+      <div className="mood-scale-labels"><span>sehr frustriert</span><span>sehr motiviert</span></div>
+    </div>
+  );
+}
+
+function FourLevelsInnerStudent({ code, onSubmit, onExit }) {
+  const [step, setStep] = React.useState(0);
+  const [maxReached, setMaxReached] = React.useState(0);
+  const [data, setData] = React.useState({});
+  const [error, setError] = React.useState(null);
+  const update = patch => setData(d => ({...d, ...patch}));
+  const go = n => { const next = Math.max(0, Math.min(3, n)); setStep(next); setMaxReached(m => Math.max(m, next)); window.scrollTo({top:0, behavior:'smooth'}); };
+
+  const submit = async () => {
+    try {
+      const payload = {
+        takeaway: (data.takeaway||'').trim(),
+        confidence: data.confidence || null,
+        help: data.help || null,
+        stuck: (data.stuck||'').trim(),
+        mood: data.mood || null,
+        moodWhy: (data.moodWhy||'').trim(),
+        openQ: (data.openQ||'').trim(),
+        transfer: (data.transfer||'').trim(),
+      };
+      await window.__store.addResponse(code, 'four_levels', payload);
+      onSubmit();
+    } catch (e) {
+      setError('Beim Speichern ist ein Fehler aufgetreten. Bitte laden Sie die Seite neu.');
+    }
+  };
+
+  const levelEl = step === 0 ? (
+    <div className="level-body">
+      <div className="field">
+        <label>In einem Satz: Was nehmen Sie heute mit? <span className="optional">(optional)</span></label>
+        <textarea className="text" value={data.takeaway||''} onChange={e => update({takeaway:e.target.value})} placeholder="z. B. Ich verstehe jetzt, wie …" maxLength={280}/>
+      </div>
+      <div className="field">
+        <label>Wie sicher fühlen Sie sich im heutigen Thema?</label>
+        <ScaleInput value={data.confidence} onChange={v => update({confidence:v})} lowLabel="unsicher" highLabel="sehr sicher"/>
+      </div>
+    </div>
+  ) : step === 1 ? (
+    <div className="level-body">
+      <div className="field">
+        <label>Was hat Ihnen heute am meisten geholfen?</label>
+        <div className="choices">
+          {HELP_OPTIONS.map(opt => (
+            <button key={opt} type="button" className={'choice ' + (data.help === opt ? 'sel' : '')} onClick={() => update({help:opt})}>
+              <span className="dot"/>{opt}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="field">
+        <label>Wo sind Sie heute ins Stocken geraten? <span className="optional">(optional)</span></label>
+        <textarea className="text" value={data.stuck||''} onChange={e => update({stuck:e.target.value})} maxLength={280}/>
+        <div className="hint">Nur die Lehrkraft sieht diese Antwort — sie wird nicht projiziert.</div>
+      </div>
+    </div>
+  ) : step === 2 ? (
+    <div className="level-body">
+      <div className="field">
+        <label>Stimmungsbarometer</label>
+        <MoodInput value={data.mood} onChange={v => update({mood:v})}/>
+      </div>
+      <div className="field">
+        <label>Warum? <span className="optional">(freiwillig)</span></label>
+        <textarea className="text" value={data.moodWhy||''} onChange={e => update({moodWhy:e.target.value})} maxLength={200}/>
+      </div>
+    </div>
+  ) : (
+    <div className="level-body">
+      <div className="field">
+        <label>Welche Frage bleibt heute offen? <span className="optional">(optional)</span></label>
+        <textarea className="text" value={data.openQ||''} onChange={e => update({openQ:e.target.value})} maxLength={240}/>
+      </div>
+      <div className="field">
+        <label>Was möchten Sie im Alltag weiterdenken oder anwenden? <span className="optional">(optional)</span></label>
+        <textarea className="text" value={data.transfer||''} onChange={e => update({transfer:e.target.value})} maxLength={240}/>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className={`student level-${step+1}`}>
+      <div className="student-head">
+        <div className="left"><div className="brand"><window.BrandLogo size="mini" rotate={true}/></div></div>
+        <div className="code mono">{code}</div>
+      </div>
+      <Stepper step={step} maxReached={Math.max(maxReached, step)} onGo={go}/>
+      <div className="level-header">
+        <div className="eyebrow">Ebene {step+1} · {LEVELS[step].key}</div>
+        <h2>{LEVELS[step].title}</h2>
+        <p>Nehmen Sie sich einen Moment. Alle Felder sind freiwillig.</p>
+      </div>
+      {levelEl}
+      {error && <div className="m-err">{error}</div>}
+      <div className="student-nav">
+        {step > 0 ? <button className="btn-ghost" onClick={() => go(step-1)}>Zurück</button>
+          : <button className="btn-ghost" onClick={onExit}>Abbrechen</button>}
+        {step < 3 ? <button className="btn-primary" onClick={() => go(step+1)}>Weiter</button>
+          : <button className="btn-submit" onClick={submit}>Reflexion abschicken</button>}
+      </div>
+    </div>
+  );
+}
+
+// Teacher view: 4 tiles
+function WordCloud({ responses }) {
+  const freq = {};
+  responses.forEach(r => {
+    const text = ((r.payload?.takeaway)||'').toLowerCase();
+    text.split(/[\s.,;:!?"'„""()\-–—/]+/).forEach(w => {
+      const clean = w.replace(/[^\wäöüß]/g,'').trim();
+      if (clean.length < 3 || window.__STOPWORDS.has(clean)) return;
+      freq[clean] = (freq[clean]||0) + 1;
+    });
+  });
+  const entries = Object.entries(freq).sort((a,b) => b[1]-a[1]).slice(0,28);
+  if (entries.length === 0) return <div className="empty">Noch keine Antworten — warten wir auf die Klasse…</div>;
+  const max = entries[0][1];
+  return (
+    <div className="cloud">
+      {entries.map(([w,n]) => {
+        const scale = 0.6 + (n/max)*1.8;
+        const tier = Math.min(5, Math.max(1, Math.round((n/max)*5)));
+        return <span key={w} className={`w${tier}`} style={{fontSize:`${scale*14+8}px`, lineHeight:1.1}}>{w}</span>;
+      })}
+    </div>
+  );
+}
+
+function ConfidenceBars({ responses }) {
+  const counts = [0,0,0,0,0]; let total=0, sum=0;
+  responses.forEach(r => { const c = r.payload?.confidence; if (c >= 1 && c <= 5) { counts[c-1]++; total++; sum += c; } });
+  const max = Math.max(1, ...counts);
+  const avg = total ? sum/total : 0;
+  return (
+    <div className="confidence-wrap">
+      <div className="confidence-head">
+        <div className="k">Sicherheit im Thema · Verteilung (1–5)</div>
+        <div className="avg">{total ? avg.toFixed(1) : '–'}<small>/ 5 · {total} Stimmen</small></div>
+      </div>
+      <div className="confidence-bars">
+        {counts.map((c,i) => (
+          <div key={i} className="confidence-bar" style={{height:`${(c/max)*100}%`, background:`oklch(${0.42+i*0.08} 0.07 ${260-i*20})`}}>
+            <div className="count">{c || ''}</div><div className="lab">{i+1}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HelpBars({ responses }) {
+  const counts = {}; HELP_OPTIONS.forEach(o => counts[o] = 0);
+  responses.forEach(r => { const h = r.payload?.help; if (h && counts.hasOwnProperty(h)) counts[h]++; });
+  const total = Object.values(counts).reduce((a,b) => a+b, 0);
+  const max = Math.max(1, ...Object.values(counts));
+  const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+  if (total === 0) return <div className="empty">Noch keine Antworten zur Lernform.</div>;
+  return (
+    <div className="bars">
+      {sorted.map(([opt,n]) => (
+        <div key={opt} className="bar-row">
+          <div className="bar-row-inner" style={{gridColumn:'1 / -1'}}><span className="lab">{opt}</span><span className="count">{n}</span></div>
+          <div className="track"><div className="fill" style={{width:`${(n/max)*100}%`}}/></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function StuckList({ responses }) {
+  const [shown, setShown] = React.useState(false);
+  const items = responses.filter(r => r.payload?.stuck?.length > 0);
+  return (
+    <div className="private-section">
+      <div className="private-head">
+        <div className="k">🔒 Stolpersteine · nur für Sie<span className="lock-badge">privat</span></div>
+        <button className="t-btn" style={{padding:'5px 10px', fontSize:12}} onClick={() => setShown(s => !s)}>{shown ? 'Verbergen' : 'Anzeigen'}</button>
+      </div>
+      {!shown ? <div className="private-hidden">Damit Schüler:innen beim Beamer nicht identifizierbar werden, bleiben diese Antworten verborgen.</div>
+        : items.length === 0 ? <div className="private-hidden">Noch keine Stolpersteine gemeldet.</div>
+        : <div className="private-list">{items.map((r,i) => (<div key={r.id} className="private-item"><span className="num">{String(i+1).padStart(2,'0')}</span><span>{r.payload.stuck}</span></div>))}</div>}
+    </div>
+  );
+}
+
+function MoodChart({ responses, projection }) {
+  const counts = [0,0,0,0,0]; let total = 0;
+  responses.forEach(r => { const m = r.payload?.mood; if (m >= 1 && m <= 5) { counts[m-1]++; total++; } });
+  if (total === 0) return <div className="empty">Noch keine Stimmungen — die Klasse reflektiert noch.</div>;
+  const max = Math.max(1, ...counts);
+  return (
+    <div className="mood-chart">
+      {counts.map((c,i) => (
+        <div key={i} className="mood-col">
+          <div className="track"><div className="fill" style={{height:`${(c/max)*100}%`, background:MOOD_COLORS[i]}}/><div className="count">{c || '·'}</div></div>
+          <div className="svg-wrap"><MoodSmiley level={i+1} color={MOOD_COLORS[i]} size={projection ? 52 : 36}/></div>
+          <div className="pct">{Math.round((c/total)*100)}%</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function QuestionCards({ responses, pickedUp, onOpen, kind }) {
+  const field = kind === 'openQ' ? 'openQ' : 'transfer';
+  const items = responses.filter(r => r.payload?.[field]?.length > 0);
+  if (items.length === 0) return <div className="empty">{kind === 'openQ' ? 'Noch keine offenen Fragen.' : 'Noch keine Transfer-Ideen.'}</div>;
+  return (
+    <div className="cards-grid">
+      {items.map((r,i) => {
+        const key = `${r.id}:${field}`;
+        const done = pickedUp.has(key);
+        return (
+          <button key={key} className={'q-card ' + (done ? 'done' : '')} onClick={() => onOpen({ item: r, field, index: i+1 })}>
+            <span className="num">{kind === 'openQ' ? 'Q' : 'T'}{String(i+1).padStart(2,'0')}</span>
+            <span className="text">{r.payload[field]}</span>
+            {done && <span className="pickedup">aufgegriffen</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function FourLevelsInnerTeacher({ responses, projection }) {
+  const [tile4Tab, setTile4Tab] = React.useState('open');
+  const [pickedUp, setPickedUp] = React.useState(new Set());
+  const [focus, setFocus] = React.useState(null);
+  const toggle = key => setPickedUp(s => { const n = new Set(s); n.has(key) ? n.delete(key) : n.add(key); return n; });
+
+  const field = focus?.field;
+  const items = field ? responses.filter(r => r.payload?.[field]) : [];
+  const focusNav = dir => {
+    if (!focus) return;
+    const idx = items.findIndex(r => r.id === focus.item.id);
+    const next = items[(idx + dir + items.length) % items.length];
+    if (next) setFocus({ item: next, field: focus.field, index: items.indexOf(next) + 1 });
+  };
+
+  return (
+    <>
+      <div className="tiles stagger">
+        <div className="tile">
+          <div className="tile-head"><div><div className="eyebrow">Ebene 1 · Kognitiv</div><h3>Was die Klasse mitnimmt</h3></div></div>
+          <div className="tile-body"><WordCloud responses={responses}/><ConfidenceBars responses={responses}/></div>
+        </div>
+        <div className="tile">
+          <div className="tile-head"><div><div className="eyebrow">Ebene 2 · Prozess</div><h3>Was heute geholfen hat</h3></div></div>
+          <div className="tile-body"><HelpBars responses={responses}/>{!projection && <StuckList responses={responses}/>}</div>
+        </div>
+        <div className="tile">
+          <div className="tile-head"><div><div className="eyebrow">Ebene 3 · Stimmung</div><h3>Wie es der Klasse geht</h3></div></div>
+          <div className="tile-body"><MoodChart responses={responses} projection={projection}/></div>
+        </div>
+        <div className="tile">
+          <div className="tile-head">
+            <div><div className="eyebrow">Ebene 4 · Transfer</div><h3>{tile4Tab === 'open' ? 'Offene Fragen' : 'Transfer-Ideen'}</h3></div>
+            <div className="tabs">
+              <button className={tile4Tab === 'open' ? 'active' : ''} onClick={() => setTile4Tab('open')}>Offene Fragen</button>
+              <button className={tile4Tab === 'transfer' ? 'active' : ''} onClick={() => setTile4Tab('transfer')}>Transfer</button>
+            </div>
+          </div>
+          <div className="tile-body">
+            <QuestionCards responses={responses} pickedUp={pickedUp} onOpen={setFocus} kind={tile4Tab === 'open' ? 'openQ' : 'transfer'}/>
+          </div>
+        </div>
+      </div>
+      {focus && (
+        <div className="modal-backdrop" onClick={() => setFocus(null)}>
+          <div className="question-focus" onClick={e => e.stopPropagation()}>
+            <div className="num">{focus.field === 'openQ' ? 'Offene Frage' : 'Transfer-Idee'} · {String(focus.index).padStart(2,'0')}</div>
+            <div className="text">{focus.item.payload[focus.field]}</div>
+            <div className="focus-actions">
+              <button className="focus-nav" onClick={() => focusNav(-1)}>‹</button>
+              <div className="right">
+                {pickedUp.has(`${focus.item.id}:${focus.field}`)
+                  ? <button className="focus-mark-undo" onClick={() => toggle(`${focus.item.id}:${focus.field}`)}>Als offen markieren</button>
+                  : <button className="focus-mark-done" onClick={() => toggle(`${focus.item.id}:${focus.field}`)}>Als aufgegriffen markieren</button>}
+                <button className="focus-nav" onClick={() => focusNav(1)}>›</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+Object.assign(window, { FourLevelsInnerStudent, FourLevelsInnerTeacher });
+
+</script>
+<script type="text/babel">
+// Four-Levels method — registers the method using its inner student/teacher components
+// defined in methods/four-levels-inner.jsx
+
+window.METHOD_FOUR_LEVELS = {
+  id: 'four_levels',
+  title: 'Vier-Ebenen-Reflexion',
+  group: 'structured',
+  emoji: '🧭',
+  description: 'Kognitiv, Prozess, Gefühl, Transfer — vier aufeinander aufbauende Ebenen.',
+  didacticHint: 'Systematisch und ausführlich. Gut geeignet nach inhaltlich dichten oder komplexen Stunden.',
+  StudentView: (props) => <FourLevelsInnerStudent {...props} />,
+  TeacherView: (props) => <FourLevelsInnerTeacher {...props} />,
+};
+
+</script>
+<script type="text/babel">
+// Weather method — 8 icons, temperature slider, freetext
+const WEATHER = [
+  { id: 'sun', emoji: '☀️', label: 'Sonne', hint: 'klar, zuversichtlich' },
+  { id: 'part', emoji: '🌤️', label: 'Sonne mit Wolken', hint: 'grundsätzlich gut, aber nicht ungetrübt' },
+  { id: 'cloud', emoji: '☁️', label: 'Bewölkt', hint: 'gedämpft, ohne Richtung' },
+  { id: 'fog', emoji: '🌫️', label: 'Nebel', hint: 'orientierungslos, unklar' },
+  { id: 'rain', emoji: '🌧️', label: 'Regen', hint: 'mühsam, zäh' },
+  { id: 'storm', emoji: '⛈️', label: 'Gewitter', hint: 'aufgewühlt, überfordert' },
+  { id: 'snow', emoji: '❄️', label: 'Schnee', hint: 'still, gebremst' },
+  { id: 'rainbow', emoji: '🌈', label: 'Regenbogen', hint: 'nach Schwierigkeit aufklarend' },
+];
+
+function WeatherStudent({ code, onSubmit, onExit }) {
+  const [sel, setSel] = React.useState(null);
+  const [temp, setTemp] = React.useState(18);
+  const [text, setText] = React.useState('');
+  const [busy, setBusy] = React.useState(false);
+  const [err, setErr] = React.useState(null);
+
+  const canSubmit = !!sel && !busy;
+
+  const submit = async () => {
+    setBusy(true); setErr(null);
+    try {
+      await window.__store.addResponse(code, 'weather', {
+        weather: sel, temperature: temp, text: text.trim(),
+      });
+      onSubmit();
+    } catch (e) { setErr('Speichern fehlgeschlagen. Bitte Seite neu laden.'); setBusy(false); }
+  };
+
+  return (
+    <div className="m-student m-weather">
+      <div className="ms-head">
+        <div className="brand"><window.BrandLogo size="mini" rotate={true}/></div>
+        <div className="code mono">{code}</div>
+      </div>
+      <div className="ms-intro">
+        <div className="eyebrow creative">Kreativ-Reflexion · Wetter</div>
+        <h2>Wie war das Wetter heute für Sie?</h2>
+        <p>Wählen Sie ein Wetter, das zu Ihrem Erleben passt.</p>
+      </div>
+
+      <div className="weather-grid stagger">
+        {WEATHER.map(w => (
+          <button key={w.id}
+            className={'weather-tile ' + (sel === w.id ? 'sel' : '')}
+            onClick={() => setSel(w.id)}
+            title={w.hint}>
+            <div className="wemoji">{w.emoji}</div>
+            <div className="wlabel">{w.label}</div>
+          </button>
+        ))}
+      </div>
+
+      <div className="field">
+        <label>Temperatur · emotionale Intensität</label>
+        <div className="temp-row">
+          <span className="temp-end">kalt</span>
+          <input type="range" min="-10" max="40" value={temp}
+            onChange={e => setTemp(+e.target.value)} className="temp-slider" />
+          <span className="temp-end">heiß</span>
+        </div>
+        <div className="temp-read">{temp}°</div>
+      </div>
+
+      <div className="field">
+        <label>Was genau war das Wetter heute für Sie? <span className="optional">(optional)</span></label>
+        <textarea className="text" value={text} onChange={e => setText(e.target.value)}
+          placeholder="Ein Gedanke zu Ihrer Wetterwahl…" maxLength={280}/>
+      </div>
+
+      {err && <div className="m-err">{err}</div>}
+
+      <div className="ms-nav">
+        <button className="btn-ghost" onClick={onExit}>Abbrechen</button>
+        <button className="btn-submit" disabled={!canSubmit} onClick={submit}>Abschicken</button>
+      </div>
+    </div>
+  );
+}
+
+function WeatherTeacher({ responses, projection }) {
+  const counts = {};
+  WEATHER.forEach(w => counts[w.id] = 0);
+  const texts = {}; // per weather
+  let tempSum = 0, tempN = 0;
+  responses.forEach(r => {
+    const p = r.payload || {};
+    if (p.weather && counts[p.weather] !== undefined) counts[p.weather]++;
+    if (p.text) { (texts[p.weather] = texts[p.weather] || []).push({ id: r.id, text: p.text }); }
+    if (typeof p.temperature === 'number') { tempSum += p.temperature; tempN++; }
+  });
+  const total = responses.length;
+  const max = Math.max(1, ...Object.values(counts));
+  const top = Object.entries(counts).sort((a,b) => b[1]-a[1])[0];
+  const topWeather = top && top[1] > 0 ? WEATHER.find(w => w.id === top[0]) : null;
+  const avgTemp = tempN ? (tempSum / tempN) : null;
+
+  if (total === 0) return <div className="m-empty">Noch keine Rückmeldungen — warten wir auf die Klasse…</div>;
+
+  return (
+    <div className="m-teacher m-teacher-weather">
+      <div className="mt-cols">
+        <div className="mt-main">
+          <div className="mt-eyebrow">Wetterlage der Klasse</div>
+          <div className="weather-hero">
+            <div className="weather-hero-emoji">{topWeather?.emoji || '—'}</div>
+            <div className="weather-hero-lab">
+              <div className="label">{topWeather?.label}</div>
+              <div className="sub">{top[1]} von {total} · {topWeather?.hint}</div>
+            </div>
+          </div>
+          <div className="weather-overview">
+            {WEATHER.map(w => (
+              <div key={w.id} className={'weather-bar ' + (counts[w.id] === 0 ? 'dim' : '')}>
+                <div className="wb-emoji">{w.emoji}</div>
+                <div className="wb-bar"><div className="wb-fill" style={{width: `${(counts[w.id]/max)*100}%`}}/></div>
+                <div className="wb-count">{counts[w.id]}</div>
+              </div>
+            ))}
+          </div>
+          {avgTemp !== null && (
+            <div className="temp-gauge">
+              <div className="tg-head">
+                <div className="k">Durchschnittstemperatur</div>
+                <div className="v">{avgTemp.toFixed(1)}°</div>
+              </div>
+              <div className="tg-track">
+                <div className="tg-ptr" style={{left: `${((avgTemp + 10) / 50) * 100}%`}}/>
+                <div className="tg-lab left">kalt</div>
+                <div className="tg-lab right">heiß</div>
+              </div>
+            </div>
+          )}
+        </div>
+        {!projection && (
+          <div className="mt-side">
+            <div className="mt-side-head">Beschreibungen · nach Wetter</div>
+            <div className="mt-side-body">
+              {WEATHER.filter(w => texts[w.id]?.length).map(w => (
+                <div key={w.id} className="ws-group">
+                  <div className="ws-group-head"><span className="e">{w.emoji}</span> {w.label} · {texts[w.id].length}</div>
+                  {texts[w.id].map(t => (
+                    <div key={t.id} className="ws-item">{t.text}</div>
+                  ))}
+                </div>
+              ))}
+              {Object.keys(texts).length === 0 && <div className="ws-empty">Noch keine Kommentare.</div>}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+window.METHOD_WEATHER = {
+  id: 'weather',
+  title: 'Wetter-Reflexion',
+  group: 'creative',
+  emoji: '🌤️',
+  description: 'Ein Wetter als Metapher für das heutige Erleben.',
+  didacticHint: 'Niedrigschwellig, funktioniert auch bei Zurückhaltung. Gut für schnelle emotionale Rückmeldung.',
+  StudentView: WeatherStudent,
+  TeacherView: WeatherTeacher,
+};
+
+</script>
+<script type="text/babel">
+// Suitcase / trash / washing machine method
+
+const STW_BOXES = [
+  { id: 'suitcase', emoji: '🧳', title: 'Koffer', prompt: 'Was nehmen Sie aus der Stunde mit?', accent: 'a' },
+  { id: 'trash', emoji: '🗑️', title: 'Mülltonne', prompt: 'Was lassen Sie zurück? Was war nicht hilfreich?', accent: 'b' },
+  { id: 'washer', emoji: '🌀', title: 'Waschmaschine', prompt: 'Was muss sich noch klären?', accent: 'c' },
+];
+
+function SuitcaseStudent({ code, onSubmit, onExit }) {
+  const [texts, setTexts] = React.useState({ suitcase: '', trash: '', washer: '' });
+  const [busy, setBusy] = React.useState(false);
+  const [err, setErr] = React.useState(null);
+  const canSubmit = !busy && (texts.suitcase || texts.trash || texts.washer);
+
+  const submit = async () => {
+    setBusy(true); setErr(null);
+    try {
+      await window.__store.addResponse(code, 'suitcase', {
+        suitcase: texts.suitcase.trim(),
+        trash: texts.trash.trim(),
+        washer: texts.washer.trim(),
+      });
+      onSubmit();
+    } catch (e) { setErr('Speichern fehlgeschlagen.'); setBusy(false); }
+  };
+
+  return (
+    <div className="m-student m-suitcase">
+      <div className="ms-head">
+        <div className="brand"><window.BrandLogo size="mini" rotate={true}/></div>
+        <div className="code mono">{code}</div>
+      </div>
+      <div className="ms-intro">
+        <div className="eyebrow creative">Kreativ-Reflexion · Koffer · Mülltonne · Waschmaschine</div>
+        <h2>Was nehmen Sie mit, was lassen Sie, was klären Sie noch?</h2>
+        <p>Sie müssen nicht alle drei Felder ausfüllen. Konzentrieren Sie sich auf das, was für Sie heute relevant war.</p>
+      </div>
+
+      <div className="stw-boxes">
+        {STW_BOXES.map(b => (
+          <div key={b.id} className={`stw-box stw-${b.accent}`}>
+            <div className="stw-icon">{b.emoji}</div>
+            <div className="stw-title">{b.title}</div>
+            <div className="stw-prompt">{b.prompt}</div>
+            <textarea value={texts[b.id]}
+              onChange={e => setTexts(t => ({...t, [b.id]: e.target.value}))}
+              placeholder="Ein paar Sätze…" maxLength={320} className="text"/>
+          </div>
+        ))}
+      </div>
+
+      {err && <div className="m-err">{err}</div>}
+      <div className="ms-nav">
+        <button className="btn-ghost" onClick={onExit}>Abbrechen</button>
+        <button className="btn-submit" disabled={!canSubmit} onClick={submit}>Abschicken</button>
+      </div>
+    </div>
+  );
+}
+
+function SuitcaseTeacher({ responses, projection }) {
+  const [picked, setPicked] = React.useState(new Set());
+  const toggle = async (id, field) => {
+    const k = `${id}:${field}`;
+    const n = new Set(picked); n.has(k) ? n.delete(k) : n.add(k);
+    setPicked(n);
+  };
+
+  const byBox = { suitcase: [], trash: [], washer: [] };
+  responses.forEach(r => {
+    const p = r.payload || {};
+    STW_BOXES.forEach(b => { if (p[b.id]) byBox[b.id].push({ id: r.id, text: p[b.id] }); });
+  });
+
+  if (responses.length === 0) return <div className="m-empty">Noch keine Rückmeldungen…</div>;
+
+  return (
+    <div className="m-teacher stw-grid">
+      {STW_BOXES.map(b => (
+        <div key={b.id} className={`stw-col stw-${b.accent}`}>
+          <div className="stw-col-head">
+            <div className="emoji">{b.emoji}</div>
+            <div>
+              <div className="title">{b.title}</div>
+              <div className="sub">{byBox[b.id].length} Karten</div>
+            </div>
+          </div>
+          <div className="stw-cards">
+            {byBox[b.id]
+              .sort((a,b) => picked.has(`${b.id}:${b.title}`) ? -1 : 0)
+              .map(item => {
+                const k = `${item.id}:${b.id}`;
+                const on = picked.has(k);
+                return (
+                  <div key={item.id} className={'stw-card ' + (on ? 'picked' : '')}
+                    onClick={() => !projection && toggle(item.id, b.id)}>
+                    <div className="stw-card-text">{item.text}</div>
+                    {on && <div className="stw-card-tag">aufgegriffen</div>}
+                  </div>
+                );
+              })}
+            {byBox[b.id].length === 0 && <div className="stw-empty">—</div>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+window.METHOD_SUITCASE = {
+  id: 'suitcase',
+  title: 'Koffer · Mülltonne · Waschmaschine',
+  group: 'creative',
+  emoji: '🧳',
+  description: 'Was mitnehmen, was zurücklassen, was noch durchdenken?',
+  didacticHint: 'Klassische Reflexionsmethode. Gut am Ende von Unterrichtsreihen oder inhaltlich dichten Stunden.',
+  StudentView: SuitcaseStudent,
+  TeacherView: SuitcaseTeacher,
+};
+
+</script>
+<script type="text/babel">
+// Country metaphor method
+
+const COUNTRIES = [
+  { n: 'Deutschland', f: '🇩🇪' }, { n: 'Frankreich', f: '🇫🇷' }, { n: 'Italien', f: '🇮🇹' }, { n: 'Spanien', f: '🇪🇸' },
+  { n: 'Großbritannien', f: '🇬🇧' }, { n: 'Niederlande', f: '🇳🇱' }, { n: 'Schweden', f: '🇸🇪' }, { n: 'Norwegen', f: '🇳🇴' },
+  { n: 'Island', f: '🇮🇸' }, { n: 'Finnland', f: '🇫🇮' }, { n: 'Griechenland', f: '🇬🇷' }, { n: 'Polen', f: '🇵🇱' },
+  { n: 'Schweiz', f: '🇨🇭' }, { n: 'Portugal', f: '🇵🇹' }, { n: 'Irland', f: '🇮🇪' },
+  { n: 'Japan', f: '🇯🇵' }, { n: 'China', f: '🇨🇳' }, { n: 'Indien', f: '🇮🇳' }, { n: 'Südkorea', f: '🇰🇷' },
+  { n: 'Thailand', f: '🇹🇭' }, { n: 'Vietnam', f: '🇻🇳' }, { n: 'Indonesien', f: '🇮🇩' }, { n: 'Türkei', f: '🇹🇷' },
+  { n: 'Israel', f: '🇮🇱' }, { n: 'VAE', f: '🇦🇪' }, { n: 'Singapur', f: '🇸🇬' },
+  { n: 'USA', f: '🇺🇸' }, { n: 'Kanada', f: '🇨🇦' }, { n: 'Mexiko', f: '🇲🇽' }, { n: 'Brasilien', f: '🇧🇷' },
+  { n: 'Argentinien', f: '🇦🇷' }, { n: 'Chile', f: '🇨🇱' }, { n: 'Kuba', f: '🇨🇺' },
+  { n: 'Südafrika', f: '🇿🇦' }, { n: 'Ägypten', f: '🇪🇬' }, { n: 'Marokko', f: '🇲🇦' }, { n: 'Kenia', f: '🇰🇪' },
+  { n: 'Nigeria', f: '🇳🇬' }, { n: 'Madagaskar', f: '🇲🇬' },
+  { n: 'Australien', f: '🇦🇺' }, { n: 'Neuseeland', f: '🇳🇿' },
+];
+
+function CountryStudent({ code, onSubmit, onExit }) {
+  const [step, setStep] = React.useState(0);
+  const [query, setQuery] = React.useState('');
+  const [sel, setSel] = React.useState(null);
+  const [why, setWhy] = React.useState('');
+  const [detail, setDetail] = React.useState('');
+  const [busy, setBusy] = React.useState(false);
+  const [err, setErr] = React.useState(null);
+
+  const filtered = query.trim()
+    ? COUNTRIES.filter(c => c.n.toLowerCase().includes(query.toLowerCase()))
+    : COUNTRIES;
+
+  const submit = async () => {
+    setBusy(true); setErr(null);
+    try {
+      await window.__store.addResponse(code, 'country', {
+        country: sel.n, flag: sel.f, why: why.trim(), detail: detail.trim(),
+      });
+      onSubmit();
+    } catch (e) { setErr('Speichern fehlgeschlagen.'); setBusy(false); }
+  };
+
+  return (
+    <div className="m-student m-country">
+      <div className="ms-head">
+        <div className="brand"><window.BrandLogo size="mini" rotate={true}/></div>
+        <div className="code mono">{code}</div>
+      </div>
+
+      {step === 0 && (
+        <>
+          <div className="ms-intro">
+            <div className="eyebrow creative">Kreativ-Reflexion · Länder-Metapher</div>
+            <h2>Welches Land passt heute zu Ihrem Lernprozess?</h2>
+            <p>Wählen Sie per Tap.</p>
+          </div>
+          <input className="text country-search" placeholder="Land suchen…"
+            value={query} onChange={e => setQuery(e.target.value)} />
+          <div className="country-grid stagger">
+            {filtered.map(c => (
+              <button key={c.n} className={'country-tile ' + (sel?.n === c.n ? 'sel' : '')}
+                onClick={() => setSel(c)}>
+                <div className="cf">{c.f}</div>
+                <div className="cn">{c.n}</div>
+              </button>
+            ))}
+          </div>
+          <div className="ms-nav">
+            <button className="btn-ghost" onClick={onExit}>Abbrechen</button>
+            <button className="btn-primary" disabled={!sel} onClick={() => setStep(1)}>Weiter</button>
+          </div>
+        </>
+      )}
+
+      {step === 1 && (
+        <>
+          <div className="ms-intro">
+            <div className="chosen-country">
+              <div className="cf-big">{sel.f}</div>
+              <div className="cn-big">{sel.n}</div>
+            </div>
+          </div>
+          <div className="field">
+            <label>Warum dieses Land? Welche Eigenschaft passt zu Ihrem heutigen Lernprozess?</label>
+            <textarea className="text" value={why} onChange={e => setWhy(e.target.value)}
+              placeholder="z. B. kleine Schritte, aber immer in Bewegung…" maxLength={280}/>
+          </div>
+          <div className="field">
+            <label>Was bedeutet das konkret? <span className="optional">(optional)</span></label>
+            <textarea className="text" value={detail} onChange={e => setDetail(e.target.value)}
+              placeholder="Noch ein Gedanke…" maxLength={240}/>
+          </div>
+          {err && <div className="m-err">{err}</div>}
+          <div className="ms-nav">
+            <button className="btn-ghost" onClick={() => setStep(0)}>Zurück</button>
+            <button className="btn-submit" disabled={!why.trim() || busy} onClick={submit}>Abschicken</button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function CountryTeacher({ responses, projection }) {
+  const [focus, setFocus] = React.useState(null); // country name
+  const counts = {};
+  const byCountry = {};
+  responses.forEach(r => {
+    const p = r.payload || {};
+    if (!p.country) return;
+    counts[p.country] = (counts[p.country] || 0) + 1;
+    (byCountry[p.country] = byCountry[p.country] || []).push({ id: r.id, why: p.why, detail: p.detail, flag: p.flag });
+  });
+  const total = responses.length;
+  if (total === 0) return <div className="m-empty">Noch keine Rückmeldungen…</div>;
+
+  const top = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,5).map(([n]) => n);
+  const streamCountries = focus ? [focus] : top;
+
+  return (
+    <div className="m-teacher m-country-teacher">
+      <div className="mt-cols">
+        <div className="mt-main">
+          <div className="mt-eyebrow">Länder-Metaphern · {total} Stimmen</div>
+          <div className="country-map">
+            {COUNTRIES.map(c => {
+              const n = counts[c.n] || 0;
+              const on = n > 0;
+              const active = focus === c.n;
+              return (
+                <button key={c.n}
+                  className={'ct-tile ' + (on ? 'on ' : 'off ') + (active ? 'active' : '')}
+                  onClick={() => on && !projection && setFocus(focus === c.n ? null : c.n)}>
+                  <span className="cf">{c.f}</span>
+                  <span className="cn">{c.n}</span>
+                  {n > 0 && <span className="badge">{n}</span>}
+                </button>
+              );
+            })}
+          </div>
+          <div className="hint-box">Greifen Sie 2–3 besonders kreative oder kontrastierende Metaphern auf. Klicken Sie ein Land an, um Begründungen zu filtern.</div>
+        </div>
+        {!projection && (
+          <div className="mt-side">
+            <div className="mt-side-head">
+              {focus ? `Begründungen · ${focus}` : 'Begründungen · Top-Länder'}
+              {focus && <button className="link-btn" onClick={() => setFocus(null)}>alle</button>}
+            </div>
+            <div className="mt-side-body">
+              {streamCountries.map(name => (byCountry[name] || []).map(item => (
+                <div key={item.id} className="country-rat">
+                  <div className="cr-head"><span className="cf">{item.flag}</span> <b>{name}</b></div>
+                  <div className="cr-why">{item.why}</div>
+                  {item.detail && <div className="cr-detail">{item.detail}</div>}
+                </div>
+              )))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+window.METHOD_COUNTRY = {
+  id: 'country',
+  title: 'Länder-Metapher',
+  group: 'creative',
+  emoji: '🌍',
+  description: 'Welches Land passt heute zum Lernprozess?',
+  didacticHint: 'Aktiviert analoges Denken. Besonders gut nach komplexen Stunden oder um zurückhaltende Schüler:innen zu erreichen.',
+  StudentView: CountryStudent,
+  TeacherView: CountryTeacher,
+};
+
+</script>
+<script type="text/babel">
+// Exam reflection method — 4 sections
+
+const GRADES_DE = ['1', '2', '3', '4', '5', '6'];
+const POINTS = Array.from({length: 16}, (_, i) => String(15 - i));
+
+const PREP_STRATS = ['Zusammenfassungen', 'Karteikarten', 'Altklausuren', 'Lerngruppe', 'Unterlagen lesen', 'Lern-App', 'Nichts Spezielles', 'Etwas anderes'];
+const STUCK_ON = ['Zeitmanagement', 'Aufgabenverständnis', 'Fehlendes Wissen', 'Nervosität', 'Konzentration', 'Nichts', 'Etwas anderes'];
+
+function ExamStudent({ code, onSubmit, onExit, gradingMode = 'grades' }) {
+  const [step, setStep] = React.useState(0);
+  const [d, setD] = React.useState({
+    expected: '', got: '',
+    prepIntensity: null, prepStrats: [], prepReflect: '',
+    calm: null, stuckOn: [], stuckMoment: '',
+    nextTime: '', needSupport: '',
+  });
+  const [busy, setBusy] = React.useState(false);
+  const [err, setErr] = React.useState(null);
+  const update = p => setD(v => ({...v, ...p}));
+  const toggleIn = (key, val) => update({ [key]: d[key].includes(val) ? d[key].filter(x => x !== val) : [...d[key], val] });
+
+  const opts = gradingMode === 'points' ? POINTS : GRADES_DE;
+
+  const submit = async () => {
+    setBusy(true); setErr(null);
+    try {
+      await window.__store.addResponse(code, 'exam', {
+        ...d,
+        expected: d.expected ? Number(d.expected) : null,
+        got: d.got ? Number(d.got) : null,
+        gradingMode,
+        prepReflect: d.prepReflect.trim(),
+        stuckMoment: d.stuckMoment.trim(),
+        nextTime: d.nextTime.trim(),
+        needSupport: d.needSupport.trim(),
+      });
+      onSubmit();
+    } catch (e) { setErr('Speichern fehlgeschlagen.'); setBusy(false); }
+  };
+
+  const diff = (d.expected !== '' && d.got !== '')
+    ? (Number(d.expected) - Number(d.got))
+    : null;
+  let diffText = '';
+  if (diff !== null) {
+    if (gradingMode === 'grades') {
+      if (diff > 0) diffText = 'schlechter als erwartet';
+      else if (diff < 0) diffText = 'besser als erwartet';
+      else diffText = 'wie erwartet';
+    } else {
+      if (diff < 0) diffText = 'schlechter als erwartet';
+      else if (diff > 0) diffText = 'besser als erwartet';
+      else diffText = 'wie erwartet';
+    }
+  }
+
+  return (
+    <div className="m-student m-exam">
+      <div className="ms-head">
+        <div className="brand"><window.BrandLogo size="mini" rotate={true}/></div>
+        <div className="code mono">{code}</div>
+      </div>
+      <div className="exam-progress">
+        {[0,1,2,3].map(i => <div key={i} className={'ep-step ' + (i <= step ? 'on' : '')}/>)}
+      </div>
+
+      {step === 0 && (
+        <>
+          <div className="ms-intro">
+            <div className="eyebrow perf">Klausurreflexion · 1 / 4</div>
+            <h2>Erwartung vs. Realität</h2>
+          </div>
+          <div className="field">
+            <label>Welche {gradingMode === 'grades' ? 'Note' : 'Punktzahl'} hatten Sie erwartet?</label>
+            <select className="text" value={d.expected} onChange={e => update({expected: e.target.value})}>
+              <option value="">—</option>
+              {opts.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+          <div className="field">
+            <label>Welche {gradingMode === 'grades' ? 'Note' : 'Punktzahl'} haben Sie bekommen?</label>
+            <select className="text" value={d.got} onChange={e => update({got: e.target.value})}>
+              <option value="">—</option>
+              {opts.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+          {diffText && <div className="diff-box">{diffText}</div>}
+        </>
+      )}
+
+      {step === 1 && (
+        <>
+          <div className="ms-intro">
+            <div className="eyebrow perf">Klausurreflexion · 2 / 4</div>
+            <h2>Vorbereitung</h2>
+          </div>
+          <div className="field">
+            <label>Wie intensiv haben Sie sich vorbereitet?</label>
+            <div className="scale">
+              {[1,2,3,4,5].map(n => (
+                <button key={n} type="button"
+                  className={d.prepIntensity === n ? 'sel' : ''}
+                  onClick={() => update({prepIntensity: n})}>{n}</button>
+              ))}
+            </div>
+            <div className="scale-labels"><span>gar nicht</span><span>sehr intensiv</span></div>
+          </div>
+          <div className="field">
+            <label>Welche Lernstrategien haben Sie genutzt? <span className="optional">(Mehrfachauswahl)</span></label>
+            <div className="chips">
+              {PREP_STRATS.map(s => (
+                <button key={s}
+                  className={'chip ' + (d.prepStrats.includes(s) ? 'sel' : '')}
+                  onClick={() => toggleIn('prepStrats', s)}>{s}</button>
+              ))}
+            </div>
+          </div>
+          <div className="field">
+            <label>Was würden Sie bei der Vorbereitung wiederholen? Was nicht? <span className="optional">(optional)</span></label>
+            <textarea className="text" value={d.prepReflect} onChange={e => update({prepReflect: e.target.value})} maxLength={280}/>
+          </div>
+        </>
+      )}
+
+      {step === 2 && (
+        <>
+          <div className="ms-intro">
+            <div className="eyebrow perf">Klausurreflexion · 3 / 4</div>
+            <h2>Während der Klausur</h2>
+          </div>
+          <div className="field">
+            <label>Wie ruhig waren Sie während der Klausur?</label>
+            <div className="scale">
+              {[1,2,3,4,5].map(n => (
+                <button key={n} type="button"
+                  className={d.calm === n ? 'sel' : ''}
+                  onClick={() => update({calm: n})}>{n}</button>
+              ))}
+            </div>
+            <div className="scale-labels"><span>sehr nervös</span><span>sehr ruhig</span></div>
+          </div>
+          <div className="field">
+            <label>Wobei sind Sie ins Stocken geraten?</label>
+            <div className="chips">
+              {STUCK_ON.map(s => (
+                <button key={s}
+                  className={'chip ' + (d.stuckOn.includes(s) ? 'sel' : '')}
+                  onClick={() => toggleIn('stuckOn', s)}>{s}</button>
+              ))}
+            </div>
+          </div>
+          <div className="field">
+            <label>Welcher Moment war besonders schwierig oder entscheidend? <span className="optional">(optional)</span></label>
+            <textarea className="text" value={d.stuckMoment} onChange={e => update({stuckMoment: e.target.value})} maxLength={280}/>
+          </div>
+        </>
+      )}
+
+      {step === 3 && (
+        <>
+          <div className="ms-intro">
+            <div className="eyebrow perf">Klausurreflexion · 4 / 4</div>
+            <h2>Strategie für die nächste Klausur</h2>
+          </div>
+          <div className="field">
+            <label>Was nehmen Sie konkret für die nächste Klausur mit?</label>
+            <textarea className="text" value={d.nextTime} onChange={e => update({nextTime: e.target.value})} maxLength={280}/>
+          </div>
+          <div className="field">
+            <label>Wo möchten Sie Unterstützung?</label>
+            <textarea className="text" value={d.needSupport} onChange={e => update({needSupport: e.target.value})} maxLength={280}/>
+            <div className="hint">Nur Ihre Lehrkraft sieht diese Antwort — sie wird nicht projiziert.</div>
+          </div>
+        </>
+      )}
+
+      {err && <div className="m-err">{err}</div>}
+      <div className="ms-nav">
+        {step > 0 ? (
+          <button className="btn-ghost" onClick={() => setStep(s => s-1)}>Zurück</button>
+        ) : (
+          <button className="btn-ghost" onClick={onExit}>Abbrechen</button>
+        )}
+        {step < 3 ? (
+          <button className="btn-primary" onClick={() => setStep(s => s+1)}>Weiter</button>
+        ) : (
+          <button className="btn-submit" disabled={busy} onClick={submit}>Abschicken</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ExamTeacher({ responses, projection }) {
+  let exSum = 0, exN = 0, gotSum = 0, gotN = 0;
+  let prepSum = 0, prepN = 0;
+  const prepCounts = Object.fromEntries(PREP_STRATS.map(s => [s, 0]));
+  const stuckCounts = Object.fromEntries(STUCK_ON.map(s => [s, 0]));
+  const supports = [];
+  let gradingMode = 'grades';
+  responses.forEach(r => {
+    const p = r.payload || {};
+    if (p.gradingMode) gradingMode = p.gradingMode;
+    if (typeof p.expected === 'number') { exSum += p.expected; exN++; }
+    if (typeof p.got === 'number') { gotSum += p.got; gotN++; }
+    if (typeof p.prepIntensity === 'number') { prepSum += p.prepIntensity; prepN++; }
+    (p.prepStrats || []).forEach(s => { if (prepCounts[s] !== undefined) prepCounts[s]++; });
+    (p.stuckOn || []).forEach(s => { if (stuckCounts[s] !== undefined) stuckCounts[s]++; });
+    if (p.needSupport) supports.push({ id: r.id, text: p.needSupport });
+  });
+  const total = responses.length;
+  if (total === 0) return <div className="m-empty">Noch keine Rückmeldungen…</div>;
+
+  const avgEx = exN ? (exSum/exN) : null;
+  const avgGot = gotN ? (gotSum/gotN) : null;
+  const avgPrep = prepN ? (prepSum/prepN) : null;
+  const interp = avgEx !== null && avgGot !== null
+    ? (gradingMode === 'grades'
+        ? (avgGot > avgEx + 0.25 ? 'Klasse hat sich überschätzt' : avgGot < avgEx - 0.25 ? 'Klasse hat sich unterschätzt' : 'Realität ziemlich genau getroffen')
+        : (avgGot < avgEx - 0.5 ? 'Klasse hat sich überschätzt' : avgGot > avgEx + 0.5 ? 'Klasse hat sich unterschätzt' : 'Realität ziemlich genau getroffen'))
+    : '';
+
+  const maxPrep = Math.max(1, ...Object.values(prepCounts));
+  const maxStuck = Math.max(1, ...Object.values(stuckCounts));
+
+  return (
+    <div className="m-teacher m-exam-teacher">
+      <div className="exam-grid stagger">
+        <div className="exam-tile">
+          <div className="et-head">Erwartung vs. Realität</div>
+          <div className="ev-bars">
+            <div className="evb">
+              <div className="evb-lab">erwartet</div>
+              <div className="evb-v">{avgEx !== null ? avgEx.toFixed(1) : '–'}</div>
+            </div>
+            <div className="evb">
+              <div className="evb-lab">bekommen</div>
+              <div className="evb-v">{avgGot !== null ? avgGot.toFixed(1) : '–'}</div>
+            </div>
+          </div>
+          <div className="ev-interp">{interp}</div>
+        </div>
+
+        <div className="exam-tile">
+          <div className="et-head">Vorbereitung</div>
+          <div className="et-sub">Durchschnittliche Intensität: {avgPrep !== null ? avgPrep.toFixed(1) : '–'} / 5</div>
+          <div className="et-bars">
+            {Object.entries(prepCounts).sort((a,b) => b[1]-a[1]).map(([s, n]) => (
+              <div key={s} className="et-bar">
+                <div className="etb-lab">{s}</div>
+                <div className="etb-track"><div className="etb-fill" style={{width: `${(n/maxPrep)*100}%`}}/></div>
+                <div className="etb-n">{n}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="exam-tile">
+          <div className="et-head">Stolpersteine</div>
+          <div className="et-bars">
+            {Object.entries(stuckCounts).sort((a,b) => b[1]-a[1]).map(([s, n]) => {
+              const topHighlight = n > 0 && n === maxStuck;
+              return (
+                <div key={s} className={'et-bar ' + (topHighlight ? 'hi' : '')}>
+                  <div className="etb-lab">{s}</div>
+                  <div className="etb-track"><div className="etb-fill" style={{width: `${(n/maxStuck)*100}%`}}/></div>
+                  <div className="etb-n">{n}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {!projection && (
+          <div className="exam-tile private">
+            <div className="et-head">Unterstützungswünsche <span className="pill">vertraulich</span></div>
+            <div className="et-sub">Nur für Sie sichtbar · {supports.length} Einträge</div>
+            <div className="support-list">
+              {supports.map((s, i) => (
+                <div key={s.id} className="support-item">
+                  <span className="num">{String(i+1).padStart(2,'0')}</span>
+                  <span>{s.text}</span>
+                </div>
+              ))}
+              {supports.length === 0 && <div className="support-empty">Keine Unterstützungswünsche genannt.</div>}
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="hint-box">Die Unterstützungswünsche geben Hinweise auf didaktische Nacharbeit. Sie können Themen im nächsten Unterricht aufgreifen, ohne Schüler:innen zu nennen.</div>
+    </div>
+  );
+}
+
+window.METHOD_EXAM = {
+  id: 'exam',
+  title: 'Klausurreflexion',
+  group: 'performance',
+  emoji: '📝',
+  description: 'Strukturierte Reflexion nach Klausurrückgabe.',
+  didacticHint: 'Unterscheidet Vorbereitung, Prüfungsverhalten und Strategie.',
+  StudentView: ExamStudent,
+  TeacherView: ExamTeacher,
+};
+
+</script>
+<script type="text/babel">
+// Methods registry — central catalog
+// To add a new method:
+// 1. Create methods/<id>.jsx with StudentView + TeacherView components
+// 2. Define window.METHOD_<NAME> = { id, title, group, emoji, description, didacticHint, StudentView, TeacherView }
+// 3. Include it in ReflectIt.html before this file and add it to METHODS below
+
+const METHODS = {};
+[window.METHOD_FOUR_LEVELS, window.METHOD_WEATHER, window.METHOD_SUITCASE,
+ window.METHOD_COUNTRY, window.METHOD_EXAM].forEach(m => { if (m) METHODS[m.id] = m; });
+
+const METHOD_GROUPS = {
+  structured: { id: 'structured', title: 'Strukturierte Reflexion', color: 'blue',
+    description: 'Rational-kategoriale Reflexion über Lernprozess, Inhalte und Emotionen. Gut für systematisches Feedback.',
+    Icon: () => <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="4" y1="10" x2="20" y2="10"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="4" x2="10" y2="20"/></svg> },
+  creative: { id: 'creative', title: 'Kreativ-Reflexion', color: 'ocker',
+    description: 'Metaphorische und bildhafte Reflexion. Fördert analoges Denken und erzeugt oft unerwartet tiefe Einsichten.',
+    Icon: () => <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg> },
+  performance: { id: 'performance', title: 'Leistungsreflexion', color: 'grey',
+    description: 'Strukturierte Reflexion nach Klausuren oder anderen Leistungssituationen.',
+    Icon: () => <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg> },
+};
+
+function GroupPicker({ onPick, onCancel }) {
+  return (
+    <div className="group-picker">
+      <div className="gp-head">
+        <button className="link-btn" onClick={onCancel}>← zurück</button>
+        <h2>Welche Methode möchten Sie nutzen?</h2>
+        <p className="gp-sub">Wählen Sie eine Gruppe. Die Methode bestimmt, wie Ihre Klasse reflektiert.</p>
+      </div>
+      <div className="gp-grid stagger">
+        {Object.values(METHOD_GROUPS).map(g => (
+          <button key={g.id} className={`gp-card gp-${g.color}`} onClick={() => onPick(g.id)}>
+            <div className="gp-icon"><g.Icon/></div>
+            <h3>{g.title}</h3>
+            <p>{g.description}</p>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// After picking a group, either start directly (single-method groups) or offer creative picker
+function MethodPicker({ group, onPick, onCancel }) {
+  const inGroup = Object.values(METHODS).filter(m => m.group === group);
+
+  // Single-method groups: start immediately
+  React.useEffect(() => {
+    if (group !== 'creative' && inGroup.length === 1) onPick(inGroup[0].id);
+  }, [group]);
+
+  if (group !== 'creative') {
+    return <div className="m-empty" style={{margin: 40}}>Starte…</div>;
+  }
+
+  const [mode, setMode] = React.useState('choose');
+  const [spinId, setSpinId] = React.useState(inGroup[0].id);
+  const [rolled, setRolled] = React.useState(null);
+  const [rolling, setRolling] = React.useState(false);
+
+  const roll = () => {
+    setRolling(true); setRolled(null);
+    const start = Date.now(), dur = 1500;
+    const tick = () => {
+      const t = Date.now() - start;
+      setSpinId(inGroup[Math.floor(Math.random() * inGroup.length)].id);
+      if (t < dur) setTimeout(tick, 70 + (t / dur) * 140);
+      else {
+        const chosen = inGroup[Math.floor(Math.random() * inGroup.length)];
+        setSpinId(chosen.id); setRolled(chosen); setRolling(false);
+      }
+    };
+    tick();
+  };
+
+  if (mode === 'choose') return (
+    <div className="group-picker">
+      <div className="gp-head">
+        <button className="link-btn" onClick={onCancel}>← zurück</button>
+        <h2>Kreativ-Reflexion</h2>
+        <p className="gp-sub">Methode zufällig ziehen oder gezielt auswählen?</p>
+      </div>
+      <div className="gp-grid gp-2 stagger">
+        <button className="gp-card gp-ocker" onClick={() => { setMode('dice'); setRolled(null); }}>
+          <div className="gp-icon"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.3" fill="currentColor"/><circle cx="15" cy="15" r="1.3" fill="currentColor"/><circle cx="15" cy="9" r="1.3" fill="currentColor"/><circle cx="9" cy="15" r="1.3" fill="currentColor"/></svg></div>
+          <h3>Überraschung</h3>
+          <p>Wir würfeln eine Methode für Sie.</p>
+        </button>
+        <button className="gp-card gp-ocker" onClick={() => setMode('grid')}>
+          <div className="gp-icon"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg></div>
+          <h3>Gezielt wählen</h3>
+          <p>Alle Kreativmethoden im Überblick.</p>
+        </button>
+      </div>
+    </div>
+  );
+
+  if (mode === 'dice') {
+    const shown = METHODS[spinId];
+    return (
+      <div className="group-picker">
+        <div className="gp-head">
+          <button className="link-btn" onClick={() => setMode('choose')}>← zurück</button>
+          <h2>Methode würfeln</h2>
+        </div>
+        <div className="dice-stage">
+          <div className={'dice-card ' + (rolling ? 'rolling ' : '') + (rolled ? 'landed' : '')}>
+            <div className="dice-emoji">{shown.emoji}</div>
+            <h3>{shown.title}</h3>
+            <p>{shown.description}</p>
+          </div>
+          {!rolled && !rolling && (
+            <button className="btn-primary btn-big" onClick={roll}>Methode würfeln</button>
+          )}
+          {rolled && !rolling && (
+            <div className="dice-actions">
+              <button className="btn-primary btn-big" onClick={() => onPick(rolled.id)}>Mit dieser Methode starten</button>
+              <button className="link-btn" onClick={roll}>Neu würfeln</button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="group-picker">
+      <div className="gp-head">
+        <button className="link-btn" onClick={() => setMode('choose')}>← zurück</button>
+        <h2>Kreativmethoden</h2>
+      </div>
+      <div className="method-grid stagger">
+        {inGroup.map(m => (
+          <button key={m.id} className="method-card" onClick={() => onPick(m.id)}>
+            <div className="method-emoji">{m.emoji}</div>
+            <h3>{m.title}</h3>
+            <p className="method-desc">{m.description}</p>
+            <p className="method-hint">{m.didacticHint}</p>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { METHODS, METHOD_GROUPS, GroupPicker, MethodPicker });
+
+</script>
+<script type="text/babel">
+// Landing + session create
+
+function Landing({ onCreate, onJoin }) {
+  const [joinCode, setJoinCode] = React.useState('');
+  const [joinOpen, setJoinOpen] = React.useState(false);
+  const clean = joinCode.replace(/\s+/g,'').toUpperCase();
+  const canJoin = clean.length === 4;
+
+  // Intro plays once per browser session. Reload replays it.
+  const [introDone, setIntroDone] = React.useState(() => {
+    try { return sessionStorage.getItem('reflectit:introPlayed') === '1'; }
+    catch { return false; }
+  });
+  const [introPhase2, setIntroPhase2] = React.useState(introDone);
+
+  React.useEffect(() => {
+    if (introDone) return;
+    const t = setTimeout(() => setIntroPhase2(true), 2000);
+    return () => clearTimeout(t);
+  }, [introDone]);
+
+  const handleIntroDone = () => {
+    try { sessionStorage.setItem('reflectit:introPlayed', '1'); } catch {}
+    setIntroDone(true);
+  };
+
+  return (
+    <div className="landing landing-calm">
+      {!introDone && <window.IntroLogo onDone={handleIntroDone} />}
+
+      <div className="landing-head">
+        <div
+          className="brand"
+          style={{ opacity: introPhase2 ? 1 : 0, transition: 'opacity 500ms ease-out 200ms' }}
+        >
+          <window.BrandLogo size="mini" rotate={true}/>
+        </div>
+      </div>
+
+      <div className="landing-calm-stage">
+        <window.Claim noIntro={introDone} />
+        <window.BreathingDot noIntro={introDone} />
+
+        <div className={'landing-calm-actions' + (introDone ? ' no-intro' : '')}>
+          <button className="calm-btn calm-btn-primary" onClick={onCreate}>
+            Neue Session starten
+          </button>
+          <button className="calm-btn calm-btn-secondary" onClick={() => setJoinOpen(v => !v)}>
+            An Session teilnehmen
+          </button>
+        </div>
+
+        {joinOpen && (
+          <div className="landing-calm-join">
+            <input
+              autoFocus
+              value={joinCode}
+              onChange={e => setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4))}
+              placeholder="A4K9"
+              maxLength={6}
+              inputMode="text"
+              aria-label="Session-Code"
+            />
+            <button disabled={!canJoin} onClick={() => onJoin(clean)}>Beitreten</button>
+          </div>
+        )}
+      </div>
+
+      <div className={'landing-calm-foot' + (introDone ? ' no-intro' : '')}>
+        Keine Konten, keine Klarnamen. Rückmeldungen anonym, am Ende der Session gelöscht.
+      </div>
+    </div>
+  );
+}
+
+function QRBlock({ code, size = 120 }) {
+  const url = `${window.location.origin}${window.location.pathname}#join=${code}`;
+  const grid = React.useMemo(() => window.__qrPattern(url), [url]);
+  const n = grid.length, cell = size / n;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} shapeRendering="crispEdges">
+      <rect width={size} height={size} fill="white"/>
+      {grid.map((row,y) => row.map((v,x) => v ? <rect key={`${x}-${y}`} x={x*cell} y={y*cell} width={cell} height={cell} fill="#111"/> : null))}
+    </svg>
+  );
+}
+
+function CreateSession({ code, method, onStart, onCancel, onGradingModeChange, gradingMode }) {
+  const joinUrl = `${window.location.origin}${window.location.pathname}#join=${code}`;
+  const m = window.METHODS[method];
+  return (
+    <div className="create">
+      <div className="landing-head" style={{paddingBottom:0}}>
+        <div className="brand"><window.BrandLogo size="mini" rotate={true}/></div>
+        <button className="t-btn" style={{background:'white', color:'var(--ink)', borderColor:'var(--line)'}} onClick={onCancel}>Zurück</button>
+      </div>
+      <div className="create-content">
+        <div className="create-left">
+          <div className="chosen-method-pill"><span>{m.emoji}</span> {m.title}</div>
+          <h1>Session bereit.</h1>
+          <p>Teilen Sie den Code oder QR mit Ihrer Klasse. Die Schüler:innen gelangen direkt in die gewählte Methode — ohne Login.</p>
+          <div className="create-code-row">
+            <div><div className="k">Session-Code</div><div className="code mono">{code}</div></div>
+          </div>
+          {method === 'exam' && (
+            <div className="grading-toggle">
+              <span className="k">Notensystem</span>
+              <button className={gradingMode === 'grades' ? 'on' : ''} onClick={() => onGradingModeChange('grades')}>Noten 1–6</button>
+              <button className={gradingMode === 'points' ? 'on' : ''} onClick={() => onGradingModeChange('points')}>Punkte 0–15</button>
+            </div>
+          )}
+          <div className="create-actions">
+            <button className="primary" onClick={onStart}>Dashboard öffnen →</button>
+            <button className="secondary" onClick={() => navigator.clipboard?.writeText(joinUrl)}>Link kopieren</button>
+          </div>
+        </div>
+        <div className="create-right">
+          <QRBlock code={code} size={240}/>
+          <div className="url">{joinUrl}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { Landing, CreateSession, QRBlock });
+
+</script>
+<script type="text/babel">
+// Student dispatcher — reads session.method and renders the right StudentView
+// Reused the QRBlock from landing (window.QRBlock)
+
+function StudentView({ code, onExit }) {
+  const [session, setSession] = React.useState(null);
+  const [status, setStatus] = React.useState('loading'); // loading|ready|nosession|submitted|err
+  const [err, setErr] = React.useState('');
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const s = await window.__store.getSession(code);
+        if (cancelled) return;
+        if (!s) { setStatus('nosession'); return; }
+        setSession(s); setStatus('ready');
+      } catch (e) { setErr('Verbindung fehlgeschlagen. Bitte Seite neu laden.'); setStatus('err'); }
+    })();
+    return () => { cancelled = true; };
+  }, [code]);
+
+  if (status === 'loading') return <div className="m-loading">Session wird geladen …</div>;
+  if (status === 'nosession') return (
+    <div className="submitted">
+      <h2>Session nicht gefunden</h2>
+      <p>Der Code <b className="mono">{code}</b> ist nicht aktiv. Bitte prüfen Sie den Code oder fragen Sie die Lehrkraft.</p>
+      <button className="btn-primary" style={{marginTop:24, padding:'12px 20px', borderRadius:12}} onClick={onExit}>Zurück</button>
+    </div>
+  );
+  if (status === 'err') return <div className="m-err">{err}</div>;
+  if (status === 'submitted') return (
+    <div className="submitted">
+      <div className="check"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 13l4 4L19 7"/></svg></div>
+      <h2>Danke.</h2>
+      <p>Ihre Antworten fließen anonym in die Auswertung der Klasse ein.</p>
+      <p style={{marginTop:20, fontSize:13, color:'var(--ink-faint)'}}>Sie können dieses Fenster jetzt schließen.</p>
+    </div>
+  );
+
+  const m = window.METHODS[session.method];
+  if (!m) return <div className="m-err">Unbekannte Methode: {session.method}</div>;
+  const Comp = m.StudentView;
+  const extraProps = session.method === 'exam' ? { gradingMode: session.gradingMode || 'grades' } : {};
+
+  return <Comp code={code} onExit={onExit} onSubmit={() => setStatus('submitted')} session={session} {...extraProps}/>;
+}
+
+Object.assign(window, { StudentView });
+
+</script>
+<script type="text/babel">
+// Teacher dispatcher: fetches session.method + polls responses, dispatches to method's TeacherView
+
+function TeacherView({ code, onExit }) {
+  const [session, setSession] = React.useState(null);
+  const [responses, setResponses] = React.useState([]);
+  const [projection, setProjection] = React.useState(false);
+  const [classSize, setClassSize] = React.useState('');
+  const [showEnd, setShowEnd] = React.useState(false);
+
+  const load = React.useCallback(async () => {
+    try {
+      if (!session) {
+        const s = await window.__store.getSession(code);
+        if (s) setSession(s);
+      }
+      const list = await window.__store.listResponses(code);
+      setResponses(list);
+    } catch (e) { /* silent */ }
+  }, [code, session]);
+
+  React.useEffect(() => {
+    load();
+    const poll = setInterval(load, 3000);
+    const handler = () => load();
+    window.addEventListener('__reflectit_storage', handler);
+    return () => { clearInterval(poll); window.removeEventListener('__reflectit_storage', handler); };
+  }, [load]);
+
+  const endSession = async () => {
+    await window.__store.endSession(code);
+    onExit();
+  };
+
+  const count = responses.length;
+  const estimate = classSize ? Number(classSize) : Math.max(25, Math.ceil(count * 1.3) || 25);
+
+  const method = session?.method;
+  const methodMeta = method ? window.METHODS[method] : null;
+
+  return (
+    <div className={`teacher ${projection ? 'projection' : ''}`}>
+      <div className="teacher-head">
+        <div className="brand"><window.BrandLogo size="mini" rotate={true}/></div>
+        <div className="teacher-session">
+          <div>
+            <div className="label">Session · {methodMeta?.title || '—'}</div>
+            <div className="code">{code}</div>
+          </div>
+        </div>
+        <div className="teacher-stats">
+          <div className="teacher-stat">
+            <div className="k">Rückmeldungen</div>
+            <div className="v">{count}<small>/ ~{estimate}</small></div>
+          </div>
+          {!projection && (
+            <label className="classsize-in">
+              <span>Klassengröße</span>
+              <input type="number" min="1" max="60" value={classSize} onChange={e => setClassSize(e.target.value)} placeholder="–"/>
+            </label>
+          )}
+          <div className="teacher-head-btns">
+            <button className="t-btn" onClick={() => setProjection(p => !p)}>{projection ? 'Projektion aus' : 'Projektionsmodus'}</button>
+            <button className="t-btn danger" onClick={() => setShowEnd(true)}>Session beenden</button>
+          </div>
+        </div>
+      </div>
+
+      <div className="teacher-body">
+        {!methodMeta ? <div className="m-empty">Session wird geladen …</div>
+          : <methodMeta.TeacherView code={code} responses={responses} projection={projection}/>}
+      </div>
+
+      {!projection && (
+        <div className="qr-corner">
+          <div className="label">Nachzügler</div>
+          <div className="qr-box"><window.QRBlock code={code} size={76}/></div>
+          <div className="code">{code}</div>
+        </div>
+      )}
+
+      {showEnd && (
+        <div className="modal-backdrop" onClick={() => setShowEnd(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>Session beenden?</h3>
+            <p>Alle Antworten dieser Session ({code}) werden unwiderruflich gelöscht.</p>
+            <div className="modal-actions">
+              <button className="ghost" onClick={() => setShowEnd(false)}>Abbrechen</button>
+              <button className="danger" onClick={endSession}>Beenden &amp; Daten löschen</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+Object.assign(window, { TeacherView });
+
+</script>
+<script type="text/babel">
+// App shell + routing
+
+function App() {
+  // routes: 'landing' | 'groupPick' | 'methodPick' | 'create' | 'teacher' | 'student'
+  const [route, setRoute] = React.useState('landing');
+  const [code, setCode] = React.useState(null);
+  const [group, setGroup] = React.useState(null);
+  const [method, setMethod] = React.useState(null);
+  const [gradingMode, setGradingMode] = React.useState('grades');
+
+  // Parse hash for join links
+  React.useEffect(() => {
+    const m = window.location.hash.match(/join=([A-Z0-9]{4})/i);
+    if (m) { setCode(m[1].toUpperCase()); setRoute('student'); }
+  }, []);
+
+  const startGroupPick = () => setRoute('groupPick');
+
+  const onPickGroup = (g) => {
+    setGroup(g);
+    // structured / performance groups only have one method — go straight
+    const inGroup = Object.values(window.METHODS).filter(mm => mm.group === g);
+    if (g !== 'creative' && inGroup.length === 1) {
+      pickMethod(inGroup[0].id);
+    } else {
+      setRoute('methodPick');
+    }
+  };
+
+  const pickMethod = async (mid) => {
+    const c = window.__genCode();
+    setCode(c);
+    setMethod(mid);
+    try {
+      await window.__store.setSession(c, { method: mid });
+    } catch (e) {
+      alert('Session konnte nicht angelegt werden. Prüfen Sie die Datenbankverbindung.');
+      return;
+    }
+    setRoute('create');
+  };
+
+  const startDashboard = async () => {
+    // If exam, re-save session with gradingMode in payload (store as imageSet for now OR extend)
+    if (method === 'exam') {
+      // Persist gradingMode inside payload of session row? sessions table doesn't have a json col.
+      // Quick workaround: stash in localStorage keyed to code, student dispatcher reads it.
+      try { localStorage.setItem(`reflectit:${code}:gradingMode`, gradingMode); } catch {}
+    }
+    setRoute('teacher');
+  };
+
+  const joinSession = (c) => { setCode(c); setRoute('student'); };
+
+  const reset = () => {
+    setRoute('landing'); setCode(null); setGroup(null); setMethod(null);
+    window.location.hash = '';
+  };
+
+  let view;
+  if (route === 'groupPick') view = <window.GroupPicker onPick={onPickGroup} onCancel={reset}/>;
+  else if (route === 'methodPick') view = <window.MethodPicker group={group} onPick={pickMethod} onCancel={() => setRoute('groupPick')}/>;
+  else if (route === 'create') view = <window.CreateSession code={code} method={method} gradingMode={gradingMode} onGradingModeChange={setGradingMode} onStart={startDashboard} onCancel={reset}/>;
+  else if (route === 'teacher') view = <window.TeacherView code={code} onExit={reset}/>;
+  else if (route === 'student') view = <window.StudentView code={code} onExit={reset}/>;
+  else view = <window.Landing onCreate={startGroupPick} onJoin={joinSession}/>;
+
+  return (
+    <React.Fragment>
+      {view}
+      <window.TweaksPanel/>
+    </React.Fragment>
+  );
+}
+
+// Hook for student-side gradingMode read
+(function patchStore() {
+  const origGet = window.__store.getSession;
+  window.__store.getSession = async function(code) {
+    const s = await origGet.call(this, code);
+    if (s && s.method === 'exam') {
+      try { s.gradingMode = localStorage.getItem(`reflectit:${code}:gradingMode`) || 'grades'; } catch {}
+    }
+    return s;
+  };
+})();
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+
+</script>
+</body>
+</html>!doctype html>
 <html lang="de">
 <head>
 <meta charset="utf-8" />
