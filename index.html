@@ -1312,31 +1312,24 @@ input:focus, textarea:focus, select:focus {
 
 /* ===================== PHASE B: Original logo + intro + mirror ===================== */
 
-.logo-icon-3d {
+/* ─── Pearl (brand mark) ─── */
+.pearl-wrap {
   display: inline-block;
-  perspective: 1200px;
-  filter:
-    drop-shadow(0 14px 24px rgba(180, 50, 130, 0.32))
-    drop-shadow(0 4px 8px rgba(70, 20, 80, 0.18));
-  flex: none;
+  line-height: 0;
   vertical-align: middle;
-  transition: filter 400ms ease;
+  filter: drop-shadow(0 4px 10px oklch(0.35 0.12 20 / 0.25));
 }
-.logo-icon-3d svg {
-  display: block;
-  will-change: transform;
+.pearl-wrap svg { display: block; }
+.pearl-wrap.is-floating svg {
+  /* No CPU float — the cursor-tracked light is the live element now. */
 }
-.logo-icon-3d.is-rotating svg {
-  animation: logo-pearl-float 7s ease-in-out infinite;
-}
-.logo-icon-3d.is-paused svg {
-  animation-play-state: paused;
-}
-@keyframes logo-pearl-float {
-  0%, 100% { transform: translateY(0) rotate(-1deg); }
-  50%      { transform: translateY(-2.5%) rotate(1deg); }
+.pearl-wrap.is-paused svg { animation-play-state: paused; }
+@keyframes pearl-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
 }
 
+/* Wordmark */
 .logo-wordmark {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   font-weight: 700;
@@ -1346,6 +1339,7 @@ input:focus, textarea:focus, select:focus {
   line-height: 1;
 }
 
+/* Composite */
 .brand-logo {
   display: inline-flex;
   align-items: center;
@@ -1355,7 +1349,7 @@ input:focus, textarea:focus, select:focus {
 .brand-logo-xl { gap: 18px; }
 .brand-logo-header { gap: 12px; }
 
-/* Intro choreography */
+/* ─── Intro choreography (in-place only) ─── */
 .intro-logo {
   position: fixed;
   z-index: 80;
@@ -1363,281 +1357,47 @@ input:focus, textarea:focus, select:focus {
   align-items: center;
   gap: 18px;
   pointer-events: none;
-  transform-origin: left center;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%) scale(1);
+  transform: translate(-50%, -50%) scale(0.9);
   opacity: 0;
-  animation: intro-in 700ms var(--ease-out) forwards;
-  transition:
-    top 1200ms cubic-bezier(0.4, 0.0, 0.2, 1),
-    left 1200ms cubic-bezier(0.4, 0.0, 0.2, 1),
-    transform 1200ms cubic-bezier(0.4, 0.0, 0.2, 1),
-    opacity 300ms ease-out 900ms,
-    gap 1200ms ease-in-out;
+  animation: intro-in 900ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 @keyframes intro-in {
-  from { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
-  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.88); filter: blur(6px); }
+  60%  { opacity: 1; transform: translate(-50%, -50%) scale(1);   filter: blur(0); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1);   filter: blur(0); }
 }
 
-.intro-logo.intro-phase-2,
-.intro-logo.intro-phase-3 {
-  top: 36px;
-  left: 40px;
-  transform: translate(0, 0) scale(0.3);
-  gap: 10px;
-  animation: none;
-  opacity: 1;
+/* Phase 2 — fade out in place, no movement */
+.intro-logo.intro-phase-2 {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(1.02);
+  transition:
+    opacity 700ms ease-out,
+    transform 700ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 .intro-logo.intro-phase-3 {
   opacity: 0;
+  pointer-events: none;
 }
 
-.intro-logo.intro-phase-2 .logo-icon-3d.is-rotating svg,
-.intro-logo.intro-phase-3 .logo-icon-3d.is-rotating svg {
-  animation-duration: 60s;
-}
+/* Hide intro on reduced motion — CSS overrides don't help here; handled in JS */
 
-/* ─── Hero Claim & Breathing Dot (stage center) ─── */
-.hero-claim {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  font-weight: 450;
-  font-size: clamp(24px, 4.2vw, 44px);
-  letter-spacing: -0.005em;
-  line-height: 1.2;
-  background: var(--grad-accent);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  margin: 0;
-  text-align: center;
-  text-wrap: balance;
-  animation: claim-in 1200ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: 500ms;
+/* ─── Stage centerpiece (hero pearl) ─── */
+.mirror-symbol {
+  display: inline-block;
+  animation: mirror-in 800ms var(--ease-out) both;
+  animation-delay: 2700ms; /* matches Phase 3 trigger */
 }
-.hero-claim.no-intro {
-  animation-delay: 0ms;
-}
-@keyframes claim-in {
-  from { opacity: 0; transform: translateY(8px); filter: blur(8px); }
-  to   { opacity: 1; transform: translateY(0);   filter: blur(0); }
-}
-
-.breathing-dot {
-  width: 80px;
-  height: 80px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  animation: dot-in 1000ms var(--ease-out) both;
-  animation-delay: 3000ms;
-}
-.breathing-dot.no-intro {
-  animation-delay: 0ms;
-}
-@keyframes dot-in {
-  from { opacity: 0; transform: scale(0.8); }
+@keyframes mirror-in {
+  from { opacity: 0; transform: scale(0.9); }
   to   { opacity: 1; transform: scale(1); }
 }
-.breathing-dot__core {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 50% 50%,
-    rgba(200, 52, 140, 0.38) 0%,
-    rgba(232, 90, 122, 0.22) 35%,
-    rgba(255, 138, 92, 0.08) 65%,
-    rgba(255, 138, 92, 0) 100%
-  );
-  animation: dot-breathe 4s ease-in-out infinite;
-  transform-origin: center;
-}
-@keyframes dot-breathe {
-  0%, 100% { transform: scale(0.85); opacity: 0.5; }
-  50%      { transform: scale(1.15); opacity: 0.9; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .breathing-dot__core { animation: none; transform: scale(1); opacity: 0.7; }
-}
 
-/* ─── Pearl Orb (Three.js canvas container) ─── */
-.pearl-orb {
-  width: clamp(180px, 24vw, 260px);
-  height: clamp(180px, 24vw, 260px);
-  position: relative;
-  filter:
-    drop-shadow(0 30px 60px rgba(150, 40, 130, 0.35))
-    drop-shadow(0 10px 24px rgba(80, 30, 100, 0.22));
-  will-change: transform, opacity;
-  isolation: isolate;
-}
-/* Atmender farbiger Glow (radial) — liegt hinter dem Canvas */
-.pearl-orb::before {
-  content: '';
-  position: absolute;
-  inset: -45%;
-  background:
-    radial-gradient(circle at 50% 50%,
-      rgba(255, 150, 110, 0.38) 0%,
-      rgba(216, 80, 150, 0.28) 22%,
-      rgba(120, 71, 191, 0.18) 45%,
-      rgba(120, 71, 191, 0) 72%);
-  filter: blur(14px);
-  z-index: -1;
-  pointer-events: none;
-  animation: orb-glow-breathe 6s ease-in-out infinite;
-}
-@keyframes orb-glow-breathe {
-  0%, 100% { opacity: 0.72; transform: scale(1); }
-  50%      { opacity: 1;    transform: scale(1.06); }
-}
-.pearl-orb canvas { display: block; width: 100%; height: 100%; border-radius: 50%; }
-@media (prefers-reduced-motion: reduce) {
-  .pearl-orb::before { animation: none; opacity: 0.8; transform: none; }
-}
-@media (max-width: 760px) {
-  .pearl-orb { width: 180px; height: 180px; }
-}
-
-/* ===================== Calm Landing (new centered composition) ===================== */
-.landing-calm {
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  padding-top: max(24px, env(safe-area-inset-top));
-  padding-bottom: max(24px, env(safe-area-inset-bottom));
-  padding-left: max(24px, env(safe-area-inset-left));
-  padding-right: max(24px, env(safe-area-inset-right));
-  max-width: 100%;
-}
-.landing-calm .landing-head {
-  padding-bottom: 0;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-}
-.landing-calm-stage {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 36px;
-  padding: 40px 0;
-  text-align: center;
-}
-.landing-calm-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  justify-content: center;
-  margin-top: 8px;
-  animation: calm-action-in 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: 900ms;
-}
-.landing-calm-actions.no-intro { animation-delay: 0ms; }
-.landing-calm-actions > *:nth-child(2) { animation-delay: 980ms; }
-.landing-calm-actions.no-intro > *:nth-child(2) { animation-delay: 0ms; }
-@keyframes calm-action-in {
-  from { opacity: 0; transform: translateY(10px); filter: blur(6px); }
-  to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
-}
-
-.calm-btn {
-  font: inherit;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: -0.005em;
-  padding: 16px 28px;
-  border-radius: 14px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  min-height: 52px;
-  transition: transform var(--dur-sm) var(--ease-out), box-shadow var(--dur-sm) var(--ease-out), background var(--dur-sm) var(--ease-out);
-}
-.calm-btn-primary {
-  color: #fff;
-  background: linear-gradient(135deg, #E86A3A 0%, #C8348C 55%, #5C6FD1 100%);
-  box-shadow: 0 6px 18px rgba(200, 52, 140, 0.28), 0 2px 6px rgba(70, 20, 80, 0.18), inset 0 1px 0 rgba(255,255,255,0.35);
-}
-.calm-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(200, 52, 140, 0.35), 0 3px 8px rgba(70, 20, 80, 0.22), inset 0 1px 0 rgba(255,255,255,0.4); }
-.calm-btn-primary:active { transform: translateY(0); }
-.calm-btn-secondary {
-  color: var(--ink);
-  background: rgba(255, 255, 255, 0.8);
-  border-color: var(--line);
-  backdrop-filter: blur(6px);
-}
-.calm-btn-secondary:hover { background: #fff; border-color: var(--ink-faint); transform: translateY(-1px); }
-
-.landing-calm-join {
-  display: flex;
-  gap: 10px;
-  margin-top: 4px;
-  animation: calm-action-in 400ms var(--ease-out) both;
-}
-.landing-calm-join input {
-  font: inherit;
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  text-align: center;
-  padding: 14px 18px;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-  background: #fff;
-  width: 160px;
-  text-transform: uppercase;
-}
-.landing-calm-join input:focus {
-  outline: none;
-  border-color: var(--accent-b);
-  box-shadow: 0 0 0 3px rgba(200, 52, 140, 0.15);
-}
-.landing-calm-join button {
-  font: inherit;
-  font-size: 15px;
-  font-weight: 600;
-  padding: 14px 20px;
-  border-radius: 12px;
-  border: none;
-  background: var(--ink);
-  color: #fff;
-  cursor: pointer;
-  min-height: 48px;
-}
-.landing-calm-join button:disabled {
-  background: var(--line);
-  color: var(--ink-faint);
-  cursor: not-allowed;
-}
-
-.landing-calm-foot {
-  font-size: 12.5px;
-  color: var(--ink-faint);
-  text-align: center;
-  padding-top: 24px;
-  animation: calm-action-in 800ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: 1200ms;
-}
-.landing-calm-foot.no-intro { animation-delay: 0ms; }
-
-/* Mobile */
-@media (max-width: 760px) {
-  .landing-calm-stage { gap: 28px; padding: 32px 0; }
-  .landing-calm-actions { flex-direction: column; width: 100%; max-width: 360px; }
-  .calm-btn { width: 100%; }
-  .landing-calm-join { width: 100%; max-width: 360px; flex-direction: row; }
-  .landing-calm-join input { flex: 1; width: auto; }
-}
-
-.hero-mirror {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto;
+/* When user returns and intro is skipped, the pearl appears immediately */
+.mirror-symbol.no-intro {
+  animation-delay: 0ms;
 }
 
 /* ===================== PHASE C1: Page transitions (method steps) ===================== */
@@ -1932,7 +1692,7 @@ input:focus, textarea:focus, select:focus {
 .student-head .brand { font-size: 15px; font-weight: 600; color: var(--ink); }
 .teacher-head .brand { font-size: 16px; font-weight: 600; }
 
-/* Teacher header wordmark color */
+/* Teacher header: wordmark should remain light */
 .teacher-head .logo-wordmark { color: var(--teacher-ink); }
 
 /* Existing sub-page brand-mark was 24x24; mini-logo is 30x30 so shells need a pinch less air */
@@ -1950,12 +1710,8 @@ input:focus, textarea:focus, select:focus {
 
 /* Intro shrinks on narrow viewports */
 @media (max-width: 760px) {
-  .intro-logo.intro-phase-2,
-  .intro-logo.intro-phase-3 {
-    top: 22px;
-    left: 20px;
-  }
-  .breathing-dot { width: 56px; height: 56px; }
+  .mirror-symbol .pearl-wrap { width: 140px !important; height: 140px !important; }
+  .mirror-symbol .pearl-wrap svg { width: 140px !important; height: 140px !important; }
 }
 
 /* Animation-free fallback for initial render (prevents flash of unstyled) */
@@ -1963,6 +1719,9 @@ input:focus, textarea:focus, select:focus {
 html.no-fx-anims .stagger > * { animation: none !important; opacity: 1 !important; transform: none !important; }
 
 </style>
+</head>
+<body>
+<div id="root"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.development.js"></script>
@@ -2119,79 +1878,113 @@ window.__STOPWORDS = new Set([
 ]);
 
 </script>
-</head>
-<body>
-<div id="root"></div>
-
 <script type="text/babel">
-// ReflectIt original logo: rounded-rect icon with gradient + white inner "display",
-// plus ReflectIt wordmark. Icon rotates slowly on Y-axis.
+// ReflectIt: 3D "Perle" (glass sphere) as the sole brand mark.
+// No rectangular icon, no mirror.
 
-function LogoIcon({ size = 48, rotate = true, paused = false }) {
-  // Glossy "pearl" orb: radial gradient body (orange → magenta → deep violet),
-  // bright specular highlight on top-left, soft rim shadow at the bottom.
-  // Feels like a 3D sphere lit from above.
-  const w = size;
-  const h = size;
-  const cx = w / 2;
-  const cy = h / 2;
-  const r = w / 2 - 0.5;
-  const uid = `logo-${size}-${Math.round(Math.random() * 1e6)}`;
+function Pearl({ size = 48, floating = true, paused = false }) {
+  const s = size;
+  const id = React.useId ? React.useId().replace(/:/g, '') : `p${Math.random().toString(36).slice(2, 8)}`;
+  const coreId   = `pearl-core-${id}`;
+  const rimId    = `pearl-rim-${id}`;
+  const shineId  = `pearl-shine-${id}`;
+  const shadowId = `pearl-shadow-${id}`;
+
+  const pad = s * 0.08;
+  const d = s - pad * 2;
+  const cx = s / 2, cy = s / 2;
+  const r = d / 2;
+
+  // Cursor-tracked specular highlight.
+  // Light position is normalized to [0..1] inside the SVG box, but it can extend
+  // BEYOND the box (we clamp to [-0.4 .. 1.4]) so the catchlight slides naturally
+  // toward the cursor even when the cursor is well outside the pearl — like a
+  // real light source moving around it.
+  const wrapRef = React.useRef(null);
+  const [light, setLight] = React.useState({ x: 0.32, y: 0.28 });
+
+  React.useEffect(() => {
+    if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return;
+    let raf = 0, pending = null;
+    const onMove = (e) => {
+      pending = e;
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const el = wrapRef.current;
+        if (!el || !pending) return;
+        const rect = el.getBoundingClientRect();
+        const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        // Vector from pearl center to cursor.
+        const dx = pending.clientX - center.x;
+        const dy = pending.clientY - center.y;
+        const dist = Math.hypot(dx, dy);
+        // Specular position is OPPOSITE to where the light comes from?
+        // No — the bright spot appears on the side facing the light. So highlight
+        // moves TOWARD the cursor. Map cursor offset (in units of pearl radius) to
+        // a normalized 0..1 position, soft-clamped so it slows as it approaches edge.
+        const norm = Math.min(dist / (r * 2.5), 1); // 1 when cursor is far away
+        const ux = dist === 0 ? 0 : dx / dist;
+        const uy = dist === 0 ? 0 : dy / dist;
+        // Highlight offset from center, in normalized SVG space (0..1).
+        // Max offset = 0.42 from center (0.5), so range ~[0.08 .. 0.92].
+        const offset = norm * 0.42;
+        setLight({ x: 0.5 + ux * offset, y: 0.5 + uy * offset });
+      });
+    };
+    window.addEventListener('pointermove', onMove, { passive: true });
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [r]);
+
+  // Core gradient also subtly shifts so the shaded side rotates with the light.
+  const coreCx = (1 - light.x) * 0.5 + light.x * 0.7; // tug toward light
+  const coreCy = (1 - light.y) * 0.5 + light.y * 0.7;
 
   return (
     <div
-      className={'logo-icon-3d' + (rotate ? ' is-rotating' : '') + (paused ? ' is-paused' : '')}
-      style={{ width: w, height: h }}
+      ref={wrapRef}
+      className={'pearl-wrap' + (floating ? ' is-floating' : '') + (paused ? ' is-paused' : '')}
+      style={{ width: s, height: s }}
       aria-hidden="true"
     >
-      <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} xmlns="http://www.w3.org/2000/svg">
+      <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} xmlns="http://www.w3.org/2000/svg">
         <defs>
-          {/* Main sphere body — lit from upper-left */}
-          <radialGradient id={`${uid}-body`} cx="0.35" cy="0.30" r="0.85">
-            <stop offset="0%"   stopColor="#FFB38A" />
-            <stop offset="22%"  stopColor="#F27A5E" />
-            <stop offset="52%"  stopColor="#C8348C" />
-            <stop offset="82%"  stopColor="#6B42B8" />
-            <stop offset="100%" stopColor="#2E1E5C" />
+          <radialGradient id={coreId} cx={coreCx} cy={coreCy} r="0.9">
+            <stop offset="0%"   stopColor="#FFC8A8" />
+            <stop offset="28%"  stopColor="#FF8A5C" />
+            <stop offset="62%"  stopColor="#E85A7A" />
+            <stop offset="100%" stopColor="#7A1F4A" />
           </radialGradient>
-          {/* Bright specular highlight */}
-          <radialGradient id={`${uid}-spec`} cx="0.32" cy="0.22" r="0.32">
+          <radialGradient id={rimId} cx={1 - light.x} cy={1 - light.y} r="0.55">
+            <stop offset="0%"   stopColor="rgba(255,150,120,0.55)" />
+            <stop offset="60%"  stopColor="rgba(255,150,120,0)" />
+          </radialGradient>
+          <radialGradient id={shineId} cx={light.x} cy={light.y} r="0.28">
             <stop offset="0%"   stopColor="rgba(255,255,255,0.95)" />
-            <stop offset="40%"  stopColor="rgba(255,255,255,0.35)" />
+            <stop offset="60%"  stopColor="rgba(255,255,255,0.15)" />
             <stop offset="100%" stopColor="rgba(255,255,255,0)" />
           </radialGradient>
-          {/* Secondary highlight — smaller, sharper */}
-          <radialGradient id={`${uid}-spec2`} cx="0.30" cy="0.20" r="0.12">
-            <stop offset="0%"   stopColor="rgba(255,255,255,1)" />
-            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-          </radialGradient>
-          {/* Fresnel-style rim glow on the bottom-right */}
-          <radialGradient id={`${uid}-rim`} cx="0.72" cy="0.78" r="0.48">
-            <stop offset="0%"   stopColor="rgba(255,140,90,0)" />
-            <stop offset="70%"  stopColor="rgba(255,140,90,0)" />
-            <stop offset="92%"  stopColor="rgba(255,170,100,0.22)" />
-            <stop offset="100%" stopColor="rgba(255,170,100,0)" />
-          </radialGradient>
-          {/* Bottom shadow wash */}
-          <radialGradient id={`${uid}-shade`} cx="0.65" cy="0.80" r="0.55">
-            <stop offset="0%"   stopColor="rgba(20,10,40,0)" />
-            <stop offset="100%" stopColor="rgba(20,10,40,0.35)" />
+          <radialGradient id={shadowId} cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0%"   stopColor="rgba(40,10,25,0.35)" />
+            <stop offset="100%" stopColor="rgba(40,10,25,0)" />
           </radialGradient>
         </defs>
 
-        {/* Sphere body */}
-        <circle cx={cx} cy={cy} r={r} fill={`url(#${uid}-body)`} />
-        {/* Bottom shade */}
-        <circle cx={cx} cy={cy} r={r} fill={`url(#${uid}-shade)`} />
-        {/* Fresnel rim */}
-        <circle cx={cx} cy={cy} r={r} fill={`url(#${uid}-rim)`} />
-        {/* Main specular */}
-        <circle cx={cx} cy={cy} r={r} fill={`url(#${uid}-spec)`} />
-        {/* Hot-spot */}
-        <circle cx={cx} cy={cy} r={r} fill={`url(#${uid}-spec2)`} />
-
-        {/* Thin outer edge to crisp the silhouette */}
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="0.8" />
+        <ellipse cx={cx} cy={cy + r * 0.92} rx={r * 0.72} ry={r * 0.12} fill={`url(#${shadowId})`} />
+        <circle cx={cx} cy={cy} r={r} fill={`url(#${coreId})`} />
+        <circle cx={cx} cy={cy} r={r} fill={`url(#${rimId})`} />
+        <circle cx={cx} cy={cy} r={r} fill={`url(#${shineId})`} />
+        {/* Catchlight — small bright dot that tracks the cursor more aggressively */}
+        <circle
+          cx={cx + (light.x - 0.5) * d * 0.85}
+          cy={cy + (light.y - 0.5) * d * 0.85}
+          r={r * 0.06}
+          fill="rgba(255,255,255,0.9)"
+          style={{ transition: 'cx 80ms linear, cy 80ms linear' }}
+        />
       </svg>
     </div>
   );
@@ -2199,7 +1992,11 @@ function LogoIcon({ size = 48, rotate = true, paused = false }) {
 
 function LogoWordmark({ size = 20, color = 'var(--ink)' }) {
   return (
-    <span className="logo-wordmark" style={{ fontSize: size, color }} aria-label="ReflectIt">
+    <span
+      className="logo-wordmark"
+      style={{ fontSize: size, color }}
+      aria-label="ReflectIt"
+    >
       ReflectIt
     </span>
   );
@@ -2207,263 +2004,51 @@ function LogoWordmark({ size = 20, color = 'var(--ink)' }) {
 
 function BrandLogo({ size = 'mini', rotate = false }) {
   const map = {
-    mini:   { icon: 26, text: 15 },
-    header: { icon: 34, text: 17 },
-    xl:     { icon: 120, text: 44 },
+    mini:   { icon: 28, text: 15 },
+    header: { icon: 36, text: 17 },
+    xl:     { icon: 140, text: 44 },
   };
   const s = map[size] || map.mini;
   return (
     <span className={`brand-logo brand-logo-${size}`}>
-      <LogoIcon size={s.icon} rotate={rotate} />
+      <Pearl size={s.icon} floating={rotate} />
       <LogoWordmark size={s.text} />
     </span>
   );
 }
+
+const LogoIcon = Pearl;
 
 function IntroLogo({ onDone }) {
   const [phase, setPhase] = React.useState(1);
 
   React.useEffect(() => {
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      const id = setTimeout(() => { setPhase(3); onDone && onDone(); }, 50);
+      const id = setTimeout(() => { setPhase(3); onDone?.(); }, 50);
       return () => clearTimeout(id);
     }
-    const t1 = setTimeout(() => setPhase(2), 2000);
-    const t2 = setTimeout(() => { setPhase(3); onDone && onDone(); }, 3200);
+    const t1 = setTimeout(() => setPhase(2), 1400);
+    const t2 = setTimeout(() => { setPhase(3); onDone?.(); }, 2200);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   return (
     <div className={`intro-logo intro-phase-${phase}`} aria-hidden={phase === 3}>
-      <LogoIcon size={120} rotate={true} />
+      <Pearl size={140} floating={true} />
       <LogoWordmark size={44} />
     </div>
   );
 }
 
-function BreathingDot({ noIntro = false } = {}) {
-  // Three.js glossy pearl orb — replaces the old breathing dot.
-  // Falls back to CSS orb if WebGL / THREE not available.
-  const mountRef = React.useRef(null);
-  const stateRef = React.useRef(null);
-  const [failed, setFailed] = React.useState(false);
-
-  React.useEffect(() => {
-    if (typeof THREE === 'undefined') { setFailed(true); return; }
-    const mount = mountRef.current;
-    if (!mount) return;
-
-    const size = 200;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-
-    let renderer;
-    try {
-      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
-    } catch (e) { setFailed(true); return; }
-    renderer.setPixelRatio(dpr);
-    renderer.setSize(size, size, false);
-    renderer.domElement.style.width = '100%';
-    renderer.domElement.style.height = '100%';
-    renderer.domElement.style.display = 'block';
-    mount.appendChild(renderer.domElement);
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
-    camera.position.set(0, 0, 3.6);
-
-    // Gradient-Textur — Peach → Orange → Magenta → Purple → Deep Violet
-    const gradCan = document.createElement('canvas');
-    gradCan.width = 2; gradCan.height = 256;
-    const gctx = gradCan.getContext('2d');
-    const gg = gctx.createLinearGradient(0, 0, 0, 256);
-    gg.addColorStop(0.00, '#E89060');
-    gg.addColorStop(0.22, '#B83560');
-    gg.addColorStop(0.50, '#7A2A7A');
-    gg.addColorStop(0.78, '#3E2370');
-    gg.addColorStop(1.00, '#15093A');
-    gctx.fillStyle = gg; gctx.fillRect(0, 0, 2, 256);
-    const gradTex = new THREE.CanvasTexture(gradCan);
-    if (THREE.SRGBColorSpace) gradTex.colorSpace = THREE.SRGBColorSpace;
-    else if (THREE.sRGBEncoding) gradTex.encoding = THREE.sRGBEncoding;
-    gradTex.needsUpdate = true;
-
-    // Nur schwaches Ambient — sonst wäre die Schattenseite komplett schwarz.
-    // KEINE statischen Directional Lights — die hatten störende feste Highlights
-    // auf der Kugel erzeugt.
-    scene.add(new THREE.AmbientLight(0x2a1848, 0.35));
-
-    // DIE EINZIGE LICHTQUELLE — ein PointLight, das dem Cursor 1:1 folgt
-    const cursorLamp = new THREE.PointLight(0xffffff, 3.2, 10, 1.0);
-    cursorLamp.position.set(0, 0, 2.2);
-    scene.add(cursorLamp);
-
-    const mat = new THREE.MeshPhysicalMaterial({
-      map: gradTex,
-      roughness: 0.28,
-      metalness: 0.35,
-      clearcoat: 1.0,
-      clearcoatRoughness: 0.06,
-      reflectivity: 0.9,
-    });
-    const geo = new THREE.SphereGeometry(1, 96, 96);
-    const mesh = new THREE.Mesh(geo, mat);
-    scene.add(mesh);
-
-    // Bodenreflex — flache Ellipse unter der Kugel mit radialer Fade-Textur
-    const reflCan = document.createElement('canvas');
-    reflCan.width = 256; reflCan.height = 256;
-    const rctx = reflCan.getContext('2d');
-    const rg = rctx.createRadialGradient(128, 128, 10, 128, 128, 120);
-    rg.addColorStop(0.0, 'rgba(216, 118, 180, 0.55)');
-    rg.addColorStop(0.4, 'rgba(120, 71, 191, 0.25)');
-    rg.addColorStop(1.0, 'rgba(46, 30, 92, 0)');
-    rctx.fillStyle = rg; rctx.fillRect(0, 0, 256, 256);
-    const reflTex = new THREE.CanvasTexture(reflCan);
-    const reflMat = new THREE.MeshBasicMaterial({
-      map: reflTex,
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-    });
-    const reflGeo = new THREE.PlaneGeometry(2.6, 1.0);
-    const reflMesh = new THREE.Mesh(reflGeo, reflMat);
-    reflMesh.position.set(0, -1.35, 0);
-    reflMesh.rotation.x = -Math.PI * 0.48;
-    scene.add(reflMesh);
-
-    // Cursor → Welt-Koordinaten (Hero-Bereich)
-    const hero = mount.closest('.pearl-hero, .hero') || mount.parentElement;
-    const target = { x: 0, y: 0 };
-    const current = { x: 0, y: 0 };
-    const onMove = (e) => {
-      const rect = mount.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      // normalized -1..1 relativ zur Kugel, mit Hero-Reichweite
-      const heroRect = hero ? hero.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight };
-      const reach = Math.max(heroRect.width, heroRect.height) / 2;
-      target.x = Math.max(-1.6, Math.min(1.6, (e.clientX - cx) / reach));
-      target.y = Math.max(-1.6, Math.min(1.6, -(e.clientY - cy) / reach));
-    };
-    window.addEventListener('pointermove', onMove, { passive: true });
-
-    let visible = true;
-    const io = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; }, { threshold: 0 });
-    io.observe(mount);
-
-    let raf;
-    const t0 = performance.now();
-    const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    // Intro-Parameter — 1300ms, "von oben herabsinken", startet mit 200ms delay
-    const INTRO_DELAY = reduced ? 0 : 200;
-    const INTRO_MS = reduced ? 400 : 1300;
-    const introStartY = 1.6;    // Start oberhalb
-    const introEndY = 0;
-
-    // Sanfter Ease-Out (expo-out-ähnlich) — keine Überschwünge, seidig
-    const easeOutExpo = (x) => x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
-
-    const loop = () => {
-      raf = requestAnimationFrame(loop);
-      if (!visible) return;
-      const now = performance.now();
-      const t = (now - t0) / 1000;
-      const elapsed = now - t0;
-
-      // Critically-damped Cursor-Follow — träge, elegant, kein Bounce
-      // Gleiche Lerp-Rate für X und Y; Faktor klein = seidig
-      const follow = 0.055;
-      current.x += (target.x - current.x) * follow;
-      current.y += (target.y - current.y) * follow;
-
-      // Intro-Progress (mit Delay)
-      const elapsedAfterDelay = Math.max(0, elapsed - INTRO_DELAY);
-      const p = Math.min(1, elapsedAfterDelay / INTRO_MS);
-      const introEase = easeOutExpo(p);
-      const introY = introStartY + (introEndY - introStartY) * introEase;
-      const introOpacity = p < 0.001 ? 0 : Math.min(1, p * 1.6);
-      const introScale = 0.92 + 0.08 * introEase;
-
-      // Idle — fast still, nur minimales Atmen (±0.5% Scale, 6s-Zyklus)
-      const breath = reduced ? 0 : Math.sin(t * (Math.PI * 2 / 6)) * 0.005;
-      const scale = introScale + breath;
-      mesh.scale.setScalar(scale);
-
-      // Position: Intro-Fall + sehr sanfter Settle auf 0
-      mesh.position.y = introY;
-
-      // Rotation: nur minimale Neigung zum Cursor, kein Idle-Tumble
-      mesh.rotation.y = current.x * 0.22 * introEase;
-      mesh.rotation.x = -current.y * 0.18 * introEase;
-
-      // DIE LAMPE — folgt dem Cursor in Welt-Koordinaten
-      // Der Lichtpunkt sitzt auf einer Halb-Sphäre um die Kugel herum
-      // mit Radius 2.4, sodass das Specular-Highlight realistisch wandert
-      const lampX = current.x * 2.4;
-      const lampY = current.y * 2.4 + 0.3; // leicht nach oben verschoben
-      const lampZ = 2.0;
-      cursorLamp.position.set(lampX, lampY, lampZ);
-      cursorLamp.intensity = 2.6 * introOpacity;
-
-      // Bodenreflex folgt der Kugel sanft + Intro
-      reflMesh.position.y = -1.35 + introY * 0.15;
-      reflMat.opacity = 0.9 * introOpacity * (0.85 + breath * 20);
-      // Reflexion leicht mit Cursor verschieben (parallax)
-      reflMesh.position.x = current.x * 0.15;
-
-      // Gesamtopazität während Intro
-      mat.opacity = introOpacity;
-      mat.transparent = introOpacity < 1;
-
-      renderer.render(scene, camera);
-    };
-    loop();
-
-    stateRef.current = { renderer, scene, mesh, geo, mat, reflGeo, reflMat, io, onMove, raf };
-
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener('pointermove', onMove);
-      io.disconnect();
-      geo.dispose();
-      mat.dispose();
-      reflGeo.dispose();
-      reflMat.dispose();
-      renderer.dispose();
-      if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
-    };
-  }, []);
-
-  if (failed) {
-    return (
-      <div className={'breathing-dot' + (noIntro ? ' no-intro' : '')} aria-hidden="true">
-        <div className="breathing-dot__core" />
-      </div>
-    );
-  }
-
+function MirrorSymbol() {
   return (
-    <div
-      className={'pearl-orb' + (noIntro ? ' no-intro' : '')}
-      ref={mountRef}
-      aria-hidden="true"
-    />
+    <div className="mirror-symbol" aria-hidden="true">
+      <Pearl size={180} floating={true} />
+    </div>
   );
 }
 
-function Claim({ noIntro = false } = {}) {
-  return (
-    <p className={'hero-claim' + (noIntro ? ' no-intro' : '')}>
-      Am Ende der Stunde kurz innehalten.
-    </p>
-  );
-}
-
-// Backward-compat alias
-const MirrorSymbol = BreathingDot;
-
-Object.assign(window, { BrandLogo, LogoIcon, LogoWordmark, IntroLogo, MirrorSymbol, BreathingDot, Claim });
+Object.assign(window, { BrandLogo, LogoIcon, Pearl, LogoWordmark, IntroLogo, MirrorSymbol });
 
 </script>
 <script type="text/babel">
@@ -2516,1169 +2101,6 @@ function TweaksPanel() {
 }
 
 Object.assign(window, { TweaksPanel });
-
-</script>
-<script type="text/babel">
-// Four-Levels method — original student + teacher views
-// (Was originally the whole app; now one method among many.)
-
-const MoodSmiley = ({ level, color, size = 40 }) => {
-  const mouths = { 1: 'M14 34 Q24 26 34 34', 2: 'M14 32 Q24 27 34 32', 3: 'M14 30 L34 30', 4: 'M14 28 Q24 33 34 28', 5: 'M14 26 Q24 36 34 26' };
-  const eyeY = level === 1 ? 20 : 19;
-  return (
-    <svg viewBox="0 0 48 48" width={size} height={size} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="24" cy="24" r="19" />
-      {level === 1 ? (
-        <>
-          <path d="M15 18 L21 22 M15 22 L21 18" />
-          <path d="M27 18 L33 22 M27 22 L33 18" />
-        </>
-      ) : (
-        <>
-          <circle cx="18" cy={eyeY} r="1.4" fill={color} stroke="none" />
-          <circle cx="30" cy={eyeY} r="1.4" fill={color} stroke="none" />
-        </>
-      )}
-      <path d={mouths[level]} />
-      {level === 5 && <path d="M14 26 Q24 36 34 26 L14 26 Z" fill={color} opacity="0.1" stroke="none" />}
-    </svg>
-  );
-};
-
-const MOOD_COLORS = ['var(--mood-1)','var(--mood-2)','var(--mood-3)','var(--mood-4)','var(--mood-5)'];
-const MOOD_LABELS = ['sehr frustriert','frustriert','neutral','motiviert','sehr motiviert'];
-const HELP_OPTIONS = ['Gruppenarbeit','Diskussion im Plenum','Visualisierungen','Eigenes Nachdenken','Lehrer-Input','Etwas anderes'];
-const LEVELS = [
-  { num: 1, key: 'Kognitiv', title: 'Was habe ich gelernt?' },
-  { num: 2, key: 'Prozess', title: 'Wie habe ich gelernt?' },
-  { num: 3, key: 'Gefühl', title: 'Wie ging es mir dabei?' },
-  { num: 4, key: 'Transfer', title: 'Wohin geht es?' },
-];
-
-function Stepper({ step, maxReached, onGo }) {
-  return (
-    <div className="stepper">
-      {LEVELS.map((l, i) => {
-        const active = step === i;
-        const done = i < maxReached && !active;
-        return (
-          <button key={i} className={'stepper-pill ' + (active ? 'active' : done ? 'done' : '')} onClick={() => onGo(i)}>
-            <span className="num">{String(l.num).padStart(2,'0')}</span>{l.key}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function ScaleInput({ value, onChange, lowLabel, highLabel }) {
-  return (
-    <div>
-      <div className="scale">
-        {[1,2,3,4,5].map(n => (
-          <button key={n} type="button" className={value === n ? 'sel' : ''} onClick={() => onChange(n)}>{n}</button>
-        ))}
-      </div>
-      <div className="scale-labels"><span>{lowLabel}</span><span>{highLabel}</span></div>
-    </div>
-  );
-}
-
-function MoodInput({ value, onChange }) {
-  return (
-    <div>
-      <div className="mood">
-        {[1,2,3,4,5].map(n => (
-          <button key={n} type="button" className={value === n ? 'sel' : ''} onClick={() => onChange(n)}>
-            <MoodSmiley level={n} color={value === n ? 'var(--warm)' : 'var(--ink-soft)'} size={56}/>
-          </button>
-        ))}
-      </div>
-      <div className="mood-scale-labels"><span>sehr frustriert</span><span>sehr motiviert</span></div>
-    </div>
-  );
-}
-
-function FourLevelsInnerStudent({ code, onSubmit, onExit }) {
-  const [step, setStep] = React.useState(0);
-  const [maxReached, setMaxReached] = React.useState(0);
-  const [data, setData] = React.useState({});
-  const [error, setError] = React.useState(null);
-  const update = patch => setData(d => ({...d, ...patch}));
-  const go = n => { const next = Math.max(0, Math.min(3, n)); setStep(next); setMaxReached(m => Math.max(m, next)); window.scrollTo({top:0, behavior:'smooth'}); };
-
-  const submit = async () => {
-    try {
-      const payload = {
-        takeaway: (data.takeaway||'').trim(),
-        confidence: data.confidence || null,
-        help: data.help || null,
-        stuck: (data.stuck||'').trim(),
-        mood: data.mood || null,
-        moodWhy: (data.moodWhy||'').trim(),
-        openQ: (data.openQ||'').trim(),
-        transfer: (data.transfer||'').trim(),
-      };
-      await window.__store.addResponse(code, 'four_levels', payload);
-      onSubmit();
-    } catch (e) {
-      setError('Beim Speichern ist ein Fehler aufgetreten. Bitte laden Sie die Seite neu.');
-    }
-  };
-
-  const levelEl = step === 0 ? (
-    <div className="level-body">
-      <div className="field">
-        <label>In einem Satz: Was nehmen Sie heute mit? <span className="optional">(optional)</span></label>
-        <textarea className="text" value={data.takeaway||''} onChange={e => update({takeaway:e.target.value})} placeholder="z. B. Ich verstehe jetzt, wie …" maxLength={280}/>
-      </div>
-      <div className="field">
-        <label>Wie sicher fühlen Sie sich im heutigen Thema?</label>
-        <ScaleInput value={data.confidence} onChange={v => update({confidence:v})} lowLabel="unsicher" highLabel="sehr sicher"/>
-      </div>
-    </div>
-  ) : step === 1 ? (
-    <div className="level-body">
-      <div className="field">
-        <label>Was hat Ihnen heute am meisten geholfen?</label>
-        <div className="choices">
-          {HELP_OPTIONS.map(opt => (
-            <button key={opt} type="button" className={'choice ' + (data.help === opt ? 'sel' : '')} onClick={() => update({help:opt})}>
-              <span className="dot"/>{opt}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="field">
-        <label>Wo sind Sie heute ins Stocken geraten? <span className="optional">(optional)</span></label>
-        <textarea className="text" value={data.stuck||''} onChange={e => update({stuck:e.target.value})} maxLength={280}/>
-        <div className="hint">Nur die Lehrkraft sieht diese Antwort — sie wird nicht projiziert.</div>
-      </div>
-    </div>
-  ) : step === 2 ? (
-    <div className="level-body">
-      <div className="field">
-        <label>Stimmungsbarometer</label>
-        <MoodInput value={data.mood} onChange={v => update({mood:v})}/>
-      </div>
-      <div className="field">
-        <label>Warum? <span className="optional">(freiwillig)</span></label>
-        <textarea className="text" value={data.moodWhy||''} onChange={e => update({moodWhy:e.target.value})} maxLength={200}/>
-      </div>
-    </div>
-  ) : (
-    <div className="level-body">
-      <div className="field">
-        <label>Welche Frage bleibt heute offen? <span className="optional">(optional)</span></label>
-        <textarea className="text" value={data.openQ||''} onChange={e => update({openQ:e.target.value})} maxLength={240}/>
-      </div>
-      <div className="field">
-        <label>Was möchten Sie im Alltag weiterdenken oder anwenden? <span className="optional">(optional)</span></label>
-        <textarea className="text" value={data.transfer||''} onChange={e => update({transfer:e.target.value})} maxLength={240}/>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className={`student level-${step+1}`}>
-      <div className="student-head">
-        <div className="left"><div className="brand"><window.BrandLogo size="mini" rotate={true}/></div></div>
-        <div className="code mono">{code}</div>
-      </div>
-      <Stepper step={step} maxReached={Math.max(maxReached, step)} onGo={go}/>
-      <div className="level-header">
-        <div className="eyebrow">Ebene {step+1} · {LEVELS[step].key}</div>
-        <h2>{LEVELS[step].title}</h2>
-        <p>Nehmen Sie sich einen Moment. Alle Felder sind freiwillig.</p>
-      </div>
-      {levelEl}
-      {error && <div className="m-err">{error}</div>}
-      <div className="student-nav">
-        {step > 0 ? <button className="btn-ghost" onClick={() => go(step-1)}>Zurück</button>
-          : <button className="btn-ghost" onClick={onExit}>Abbrechen</button>}
-        {step < 3 ? <button className="btn-primary" onClick={() => go(step+1)}>Weiter</button>
-          : <button className="btn-submit" onClick={submit}>Reflexion abschicken</button>}
-      </div>
-    </div>
-  );
-}
-
-// Teacher view: 4 tiles
-function WordCloud({ responses }) {
-  const freq = {};
-  responses.forEach(r => {
-    const text = ((r.payload?.takeaway)||'').toLowerCase();
-    text.split(/[\s.,;:!?"'„""()\-–—/]+/).forEach(w => {
-      const clean = w.replace(/[^\wäöüß]/g,'').trim();
-      if (clean.length < 3 || window.__STOPWORDS.has(clean)) return;
-      freq[clean] = (freq[clean]||0) + 1;
-    });
-  });
-  const entries = Object.entries(freq).sort((a,b) => b[1]-a[1]).slice(0,28);
-  if (entries.length === 0) return <div className="empty">Noch keine Antworten — warten wir auf die Klasse…</div>;
-  const max = entries[0][1];
-  return (
-    <div className="cloud">
-      {entries.map(([w,n]) => {
-        const scale = 0.6 + (n/max)*1.8;
-        const tier = Math.min(5, Math.max(1, Math.round((n/max)*5)));
-        return <span key={w} className={`w${tier}`} style={{fontSize:`${scale*14+8}px`, lineHeight:1.1}}>{w}</span>;
-      })}
-    </div>
-  );
-}
-
-function ConfidenceBars({ responses }) {
-  const counts = [0,0,0,0,0]; let total=0, sum=0;
-  responses.forEach(r => { const c = r.payload?.confidence; if (c >= 1 && c <= 5) { counts[c-1]++; total++; sum += c; } });
-  const max = Math.max(1, ...counts);
-  const avg = total ? sum/total : 0;
-  return (
-    <div className="confidence-wrap">
-      <div className="confidence-head">
-        <div className="k">Sicherheit im Thema · Verteilung (1–5)</div>
-        <div className="avg">{total ? avg.toFixed(1) : '–'}<small>/ 5 · {total} Stimmen</small></div>
-      </div>
-      <div className="confidence-bars">
-        {counts.map((c,i) => (
-          <div key={i} className="confidence-bar" style={{height:`${(c/max)*100}%`, background:`oklch(${0.42+i*0.08} 0.07 ${260-i*20})`}}>
-            <div className="count">{c || ''}</div><div className="lab">{i+1}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function HelpBars({ responses }) {
-  const counts = {}; HELP_OPTIONS.forEach(o => counts[o] = 0);
-  responses.forEach(r => { const h = r.payload?.help; if (h && counts.hasOwnProperty(h)) counts[h]++; });
-  const total = Object.values(counts).reduce((a,b) => a+b, 0);
-  const max = Math.max(1, ...Object.values(counts));
-  const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
-  if (total === 0) return <div className="empty">Noch keine Antworten zur Lernform.</div>;
-  return (
-    <div className="bars">
-      {sorted.map(([opt,n]) => (
-        <div key={opt} className="bar-row">
-          <div className="bar-row-inner" style={{gridColumn:'1 / -1'}}><span className="lab">{opt}</span><span className="count">{n}</span></div>
-          <div className="track"><div className="fill" style={{width:`${(n/max)*100}%`}}/></div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function StuckList({ responses }) {
-  const [shown, setShown] = React.useState(false);
-  const items = responses.filter(r => r.payload?.stuck?.length > 0);
-  return (
-    <div className="private-section">
-      <div className="private-head">
-        <div className="k">🔒 Stolpersteine · nur für Sie<span className="lock-badge">privat</span></div>
-        <button className="t-btn" style={{padding:'5px 10px', fontSize:12}} onClick={() => setShown(s => !s)}>{shown ? 'Verbergen' : 'Anzeigen'}</button>
-      </div>
-      {!shown ? <div className="private-hidden">Damit Schüler:innen beim Beamer nicht identifizierbar werden, bleiben diese Antworten verborgen.</div>
-        : items.length === 0 ? <div className="private-hidden">Noch keine Stolpersteine gemeldet.</div>
-        : <div className="private-list">{items.map((r,i) => (<div key={r.id} className="private-item"><span className="num">{String(i+1).padStart(2,'0')}</span><span>{r.payload.stuck}</span></div>))}</div>}
-    </div>
-  );
-}
-
-function MoodChart({ responses, projection }) {
-  const counts = [0,0,0,0,0]; let total = 0;
-  responses.forEach(r => { const m = r.payload?.mood; if (m >= 1 && m <= 5) { counts[m-1]++; total++; } });
-  if (total === 0) return <div className="empty">Noch keine Stimmungen — die Klasse reflektiert noch.</div>;
-  const max = Math.max(1, ...counts);
-  return (
-    <div className="mood-chart">
-      {counts.map((c,i) => (
-        <div key={i} className="mood-col">
-          <div className="track"><div className="fill" style={{height:`${(c/max)*100}%`, background:MOOD_COLORS[i]}}/><div className="count">{c || '·'}</div></div>
-          <div className="svg-wrap"><MoodSmiley level={i+1} color={MOOD_COLORS[i]} size={projection ? 52 : 36}/></div>
-          <div className="pct">{Math.round((c/total)*100)}%</div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function QuestionCards({ responses, pickedUp, onOpen, kind }) {
-  const field = kind === 'openQ' ? 'openQ' : 'transfer';
-  const items = responses.filter(r => r.payload?.[field]?.length > 0);
-  if (items.length === 0) return <div className="empty">{kind === 'openQ' ? 'Noch keine offenen Fragen.' : 'Noch keine Transfer-Ideen.'}</div>;
-  return (
-    <div className="cards-grid">
-      {items.map((r,i) => {
-        const key = `${r.id}:${field}`;
-        const done = pickedUp.has(key);
-        return (
-          <button key={key} className={'q-card ' + (done ? 'done' : '')} onClick={() => onOpen({ item: r, field, index: i+1 })}>
-            <span className="num">{kind === 'openQ' ? 'Q' : 'T'}{String(i+1).padStart(2,'0')}</span>
-            <span className="text">{r.payload[field]}</span>
-            {done && <span className="pickedup">aufgegriffen</span>}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function FourLevelsInnerTeacher({ responses, projection }) {
-  const [tile4Tab, setTile4Tab] = React.useState('open');
-  const [pickedUp, setPickedUp] = React.useState(new Set());
-  const [focus, setFocus] = React.useState(null);
-  const toggle = key => setPickedUp(s => { const n = new Set(s); n.has(key) ? n.delete(key) : n.add(key); return n; });
-
-  const field = focus?.field;
-  const items = field ? responses.filter(r => r.payload?.[field]) : [];
-  const focusNav = dir => {
-    if (!focus) return;
-    const idx = items.findIndex(r => r.id === focus.item.id);
-    const next = items[(idx + dir + items.length) % items.length];
-    if (next) setFocus({ item: next, field: focus.field, index: items.indexOf(next) + 1 });
-  };
-
-  return (
-    <>
-      <div className="tiles stagger">
-        <div className="tile">
-          <div className="tile-head"><div><div className="eyebrow">Ebene 1 · Kognitiv</div><h3>Was die Klasse mitnimmt</h3></div></div>
-          <div className="tile-body"><WordCloud responses={responses}/><ConfidenceBars responses={responses}/></div>
-        </div>
-        <div className="tile">
-          <div className="tile-head"><div><div className="eyebrow">Ebene 2 · Prozess</div><h3>Was heute geholfen hat</h3></div></div>
-          <div className="tile-body"><HelpBars responses={responses}/>{!projection && <StuckList responses={responses}/>}</div>
-        </div>
-        <div className="tile">
-          <div className="tile-head"><div><div className="eyebrow">Ebene 3 · Stimmung</div><h3>Wie es der Klasse geht</h3></div></div>
-          <div className="tile-body"><MoodChart responses={responses} projection={projection}/></div>
-        </div>
-        <div className="tile">
-          <div className="tile-head">
-            <div><div className="eyebrow">Ebene 4 · Transfer</div><h3>{tile4Tab === 'open' ? 'Offene Fragen' : 'Transfer-Ideen'}</h3></div>
-            <div className="tabs">
-              <button className={tile4Tab === 'open' ? 'active' : ''} onClick={() => setTile4Tab('open')}>Offene Fragen</button>
-              <button className={tile4Tab === 'transfer' ? 'active' : ''} onClick={() => setTile4Tab('transfer')}>Transfer</button>
-            </div>
-          </div>
-          <div className="tile-body">
-            <QuestionCards responses={responses} pickedUp={pickedUp} onOpen={setFocus} kind={tile4Tab === 'open' ? 'openQ' : 'transfer'}/>
-          </div>
-        </div>
-      </div>
-      {focus && (
-        <div className="modal-backdrop" onClick={() => setFocus(null)}>
-          <div className="question-focus" onClick={e => e.stopPropagation()}>
-            <div className="num">{focus.field === 'openQ' ? 'Offene Frage' : 'Transfer-Idee'} · {String(focus.index).padStart(2,'0')}</div>
-            <div className="text">{focus.item.payload[focus.field]}</div>
-            <div className="focus-actions">
-              <button className="focus-nav" onClick={() => focusNav(-1)}>‹</button>
-              <div className="right">
-                {pickedUp.has(`${focus.item.id}:${focus.field}`)
-                  ? <button className="focus-mark-undo" onClick={() => toggle(`${focus.item.id}:${focus.field}`)}>Als offen markieren</button>
-                  : <button className="focus-mark-done" onClick={() => toggle(`${focus.item.id}:${focus.field}`)}>Als aufgegriffen markieren</button>}
-                <button className="focus-nav" onClick={() => focusNav(1)}>›</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
-Object.assign(window, { FourLevelsInnerStudent, FourLevelsInnerTeacher });
-
-</script>
-<script type="text/babel">
-// Four-Levels method — registers the method using its inner student/teacher components
-// defined in methods/four-levels-inner.jsx
-
-window.METHOD_FOUR_LEVELS = {
-  id: 'four_levels',
-  title: 'Vier-Ebenen-Reflexion',
-  group: 'structured',
-  emoji: '🧭',
-  description: 'Kognitiv, Prozess, Gefühl, Transfer — vier aufeinander aufbauende Ebenen.',
-  didacticHint: 'Systematisch und ausführlich. Gut geeignet nach inhaltlich dichten oder komplexen Stunden.',
-  StudentView: (props) => <FourLevelsInnerStudent {...props} />,
-  TeacherView: (props) => <FourLevelsInnerTeacher {...props} />,
-};
-
-</script>
-<script type="text/babel">
-// Weather method — 8 icons, temperature slider, freetext
-const WEATHER = [
-  { id: 'sun', emoji: '☀️', label: 'Sonne', hint: 'klar, zuversichtlich' },
-  { id: 'part', emoji: '🌤️', label: 'Sonne mit Wolken', hint: 'grundsätzlich gut, aber nicht ungetrübt' },
-  { id: 'cloud', emoji: '☁️', label: 'Bewölkt', hint: 'gedämpft, ohne Richtung' },
-  { id: 'fog', emoji: '🌫️', label: 'Nebel', hint: 'orientierungslos, unklar' },
-  { id: 'rain', emoji: '🌧️', label: 'Regen', hint: 'mühsam, zäh' },
-  { id: 'storm', emoji: '⛈️', label: 'Gewitter', hint: 'aufgewühlt, überfordert' },
-  { id: 'snow', emoji: '❄️', label: 'Schnee', hint: 'still, gebremst' },
-  { id: 'rainbow', emoji: '🌈', label: 'Regenbogen', hint: 'nach Schwierigkeit aufklarend' },
-];
-
-function WeatherStudent({ code, onSubmit, onExit }) {
-  const [sel, setSel] = React.useState(null);
-  const [temp, setTemp] = React.useState(18);
-  const [text, setText] = React.useState('');
-  const [busy, setBusy] = React.useState(false);
-  const [err, setErr] = React.useState(null);
-
-  const canSubmit = !!sel && !busy;
-
-  const submit = async () => {
-    setBusy(true); setErr(null);
-    try {
-      await window.__store.addResponse(code, 'weather', {
-        weather: sel, temperature: temp, text: text.trim(),
-      });
-      onSubmit();
-    } catch (e) { setErr('Speichern fehlgeschlagen. Bitte Seite neu laden.'); setBusy(false); }
-  };
-
-  return (
-    <div className="m-student m-weather">
-      <div className="ms-head">
-        <div className="brand"><window.BrandLogo size="mini" rotate={true}/></div>
-        <div className="code mono">{code}</div>
-      </div>
-      <div className="ms-intro">
-        <div className="eyebrow creative">Kreativ-Reflexion · Wetter</div>
-        <h2>Wie war das Wetter heute für Sie?</h2>
-        <p>Wählen Sie ein Wetter, das zu Ihrem Erleben passt.</p>
-      </div>
-
-      <div className="weather-grid stagger">
-        {WEATHER.map(w => (
-          <button key={w.id}
-            className={'weather-tile ' + (sel === w.id ? 'sel' : '')}
-            onClick={() => setSel(w.id)}
-            title={w.hint}>
-            <div className="wemoji">{w.emoji}</div>
-            <div className="wlabel">{w.label}</div>
-          </button>
-        ))}
-      </div>
-
-      <div className="field">
-        <label>Temperatur · emotionale Intensität</label>
-        <div className="temp-row">
-          <span className="temp-end">kalt</span>
-          <input type="range" min="-10" max="40" value={temp}
-            onChange={e => setTemp(+e.target.value)} className="temp-slider" />
-          <span className="temp-end">heiß</span>
-        </div>
-        <div className="temp-read">{temp}°</div>
-      </div>
-
-      <div className="field">
-        <label>Was genau war das Wetter heute für Sie? <span className="optional">(optional)</span></label>
-        <textarea className="text" value={text} onChange={e => setText(e.target.value)}
-          placeholder="Ein Gedanke zu Ihrer Wetterwahl…" maxLength={280}/>
-      </div>
-
-      {err && <div className="m-err">{err}</div>}
-
-      <div className="ms-nav">
-        <button className="btn-ghost" onClick={onExit}>Abbrechen</button>
-        <button className="btn-submit" disabled={!canSubmit} onClick={submit}>Abschicken</button>
-      </div>
-    </div>
-  );
-}
-
-function WeatherTeacher({ responses, projection }) {
-  const counts = {};
-  WEATHER.forEach(w => counts[w.id] = 0);
-  const texts = {}; // per weather
-  let tempSum = 0, tempN = 0;
-  responses.forEach(r => {
-    const p = r.payload || {};
-    if (p.weather && counts[p.weather] !== undefined) counts[p.weather]++;
-    if (p.text) { (texts[p.weather] = texts[p.weather] || []).push({ id: r.id, text: p.text }); }
-    if (typeof p.temperature === 'number') { tempSum += p.temperature; tempN++; }
-  });
-  const total = responses.length;
-  const max = Math.max(1, ...Object.values(counts));
-  const top = Object.entries(counts).sort((a,b) => b[1]-a[1])[0];
-  const topWeather = top && top[1] > 0 ? WEATHER.find(w => w.id === top[0]) : null;
-  const avgTemp = tempN ? (tempSum / tempN) : null;
-
-  if (total === 0) return <div className="m-empty">Noch keine Rückmeldungen — warten wir auf die Klasse…</div>;
-
-  return (
-    <div className="m-teacher m-teacher-weather">
-      <div className="mt-cols">
-        <div className="mt-main">
-          <div className="mt-eyebrow">Wetterlage der Klasse</div>
-          <div className="weather-hero">
-            <div className="weather-hero-emoji">{topWeather?.emoji || '—'}</div>
-            <div className="weather-hero-lab">
-              <div className="label">{topWeather?.label}</div>
-              <div className="sub">{top[1]} von {total} · {topWeather?.hint}</div>
-            </div>
-          </div>
-          <div className="weather-overview">
-            {WEATHER.map(w => (
-              <div key={w.id} className={'weather-bar ' + (counts[w.id] === 0 ? 'dim' : '')}>
-                <div className="wb-emoji">{w.emoji}</div>
-                <div className="wb-bar"><div className="wb-fill" style={{width: `${(counts[w.id]/max)*100}%`}}/></div>
-                <div className="wb-count">{counts[w.id]}</div>
-              </div>
-            ))}
-          </div>
-          {avgTemp !== null && (
-            <div className="temp-gauge">
-              <div className="tg-head">
-                <div className="k">Durchschnittstemperatur</div>
-                <div className="v">{avgTemp.toFixed(1)}°</div>
-              </div>
-              <div className="tg-track">
-                <div className="tg-ptr" style={{left: `${((avgTemp + 10) / 50) * 100}%`}}/>
-                <div className="tg-lab left">kalt</div>
-                <div className="tg-lab right">heiß</div>
-              </div>
-            </div>
-          )}
-        </div>
-        {!projection && (
-          <div className="mt-side">
-            <div className="mt-side-head">Beschreibungen · nach Wetter</div>
-            <div className="mt-side-body">
-              {WEATHER.filter(w => texts[w.id]?.length).map(w => (
-                <div key={w.id} className="ws-group">
-                  <div className="ws-group-head"><span className="e">{w.emoji}</span> {w.label} · {texts[w.id].length}</div>
-                  {texts[w.id].map(t => (
-                    <div key={t.id} className="ws-item">{t.text}</div>
-                  ))}
-                </div>
-              ))}
-              {Object.keys(texts).length === 0 && <div className="ws-empty">Noch keine Kommentare.</div>}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-window.METHOD_WEATHER = {
-  id: 'weather',
-  title: 'Wetter-Reflexion',
-  group: 'creative',
-  emoji: '🌤️',
-  description: 'Ein Wetter als Metapher für das heutige Erleben.',
-  didacticHint: 'Niedrigschwellig, funktioniert auch bei Zurückhaltung. Gut für schnelle emotionale Rückmeldung.',
-  StudentView: WeatherStudent,
-  TeacherView: WeatherTeacher,
-};
-
-</script>
-<script type="text/babel">
-// Suitcase / trash / washing machine method
-
-const STW_BOXES = [
-  { id: 'suitcase', emoji: '🧳', title: 'Koffer', prompt: 'Was nehmen Sie aus der Stunde mit?', accent: 'a' },
-  { id: 'trash', emoji: '🗑️', title: 'Mülltonne', prompt: 'Was lassen Sie zurück? Was war nicht hilfreich?', accent: 'b' },
-  { id: 'washer', emoji: '🌀', title: 'Waschmaschine', prompt: 'Was muss sich noch klären?', accent: 'c' },
-];
-
-function SuitcaseStudent({ code, onSubmit, onExit }) {
-  const [texts, setTexts] = React.useState({ suitcase: '', trash: '', washer: '' });
-  const [busy, setBusy] = React.useState(false);
-  const [err, setErr] = React.useState(null);
-  const canSubmit = !busy && (texts.suitcase || texts.trash || texts.washer);
-
-  const submit = async () => {
-    setBusy(true); setErr(null);
-    try {
-      await window.__store.addResponse(code, 'suitcase', {
-        suitcase: texts.suitcase.trim(),
-        trash: texts.trash.trim(),
-        washer: texts.washer.trim(),
-      });
-      onSubmit();
-    } catch (e) { setErr('Speichern fehlgeschlagen.'); setBusy(false); }
-  };
-
-  return (
-    <div className="m-student m-suitcase">
-      <div className="ms-head">
-        <div className="brand"><window.BrandLogo size="mini" rotate={true}/></div>
-        <div className="code mono">{code}</div>
-      </div>
-      <div className="ms-intro">
-        <div className="eyebrow creative">Kreativ-Reflexion · Koffer · Mülltonne · Waschmaschine</div>
-        <h2>Was nehmen Sie mit, was lassen Sie, was klären Sie noch?</h2>
-        <p>Sie müssen nicht alle drei Felder ausfüllen. Konzentrieren Sie sich auf das, was für Sie heute relevant war.</p>
-      </div>
-
-      <div className="stw-boxes">
-        {STW_BOXES.map(b => (
-          <div key={b.id} className={`stw-box stw-${b.accent}`}>
-            <div className="stw-icon">{b.emoji}</div>
-            <div className="stw-title">{b.title}</div>
-            <div className="stw-prompt">{b.prompt}</div>
-            <textarea value={texts[b.id]}
-              onChange={e => setTexts(t => ({...t, [b.id]: e.target.value}))}
-              placeholder="Ein paar Sätze…" maxLength={320} className="text"/>
-          </div>
-        ))}
-      </div>
-
-      {err && <div className="m-err">{err}</div>}
-      <div className="ms-nav">
-        <button className="btn-ghost" onClick={onExit}>Abbrechen</button>
-        <button className="btn-submit" disabled={!canSubmit} onClick={submit}>Abschicken</button>
-      </div>
-    </div>
-  );
-}
-
-function SuitcaseTeacher({ responses, projection }) {
-  const [picked, setPicked] = React.useState(new Set());
-  const toggle = async (id, field) => {
-    const k = `${id}:${field}`;
-    const n = new Set(picked); n.has(k) ? n.delete(k) : n.add(k);
-    setPicked(n);
-  };
-
-  const byBox = { suitcase: [], trash: [], washer: [] };
-  responses.forEach(r => {
-    const p = r.payload || {};
-    STW_BOXES.forEach(b => { if (p[b.id]) byBox[b.id].push({ id: r.id, text: p[b.id] }); });
-  });
-
-  if (responses.length === 0) return <div className="m-empty">Noch keine Rückmeldungen…</div>;
-
-  return (
-    <div className="m-teacher stw-grid">
-      {STW_BOXES.map(b => (
-        <div key={b.id} className={`stw-col stw-${b.accent}`}>
-          <div className="stw-col-head">
-            <div className="emoji">{b.emoji}</div>
-            <div>
-              <div className="title">{b.title}</div>
-              <div className="sub">{byBox[b.id].length} Karten</div>
-            </div>
-          </div>
-          <div className="stw-cards">
-            {byBox[b.id]
-              .sort((a,b) => picked.has(`${b.id}:${b.title}`) ? -1 : 0)
-              .map(item => {
-                const k = `${item.id}:${b.id}`;
-                const on = picked.has(k);
-                return (
-                  <div key={item.id} className={'stw-card ' + (on ? 'picked' : '')}
-                    onClick={() => !projection && toggle(item.id, b.id)}>
-                    <div className="stw-card-text">{item.text}</div>
-                    {on && <div className="stw-card-tag">aufgegriffen</div>}
-                  </div>
-                );
-              })}
-            {byBox[b.id].length === 0 && <div className="stw-empty">—</div>}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-window.METHOD_SUITCASE = {
-  id: 'suitcase',
-  title: 'Koffer · Mülltonne · Waschmaschine',
-  group: 'creative',
-  emoji: '🧳',
-  description: 'Was mitnehmen, was zurücklassen, was noch durchdenken?',
-  didacticHint: 'Klassische Reflexionsmethode. Gut am Ende von Unterrichtsreihen oder inhaltlich dichten Stunden.',
-  StudentView: SuitcaseStudent,
-  TeacherView: SuitcaseTeacher,
-};
-
-</script>
-<script type="text/babel">
-// Country metaphor method
-
-const COUNTRIES = [
-  { n: 'Deutschland', f: '🇩🇪' }, { n: 'Frankreich', f: '🇫🇷' }, { n: 'Italien', f: '🇮🇹' }, { n: 'Spanien', f: '🇪🇸' },
-  { n: 'Großbritannien', f: '🇬🇧' }, { n: 'Niederlande', f: '🇳🇱' }, { n: 'Schweden', f: '🇸🇪' }, { n: 'Norwegen', f: '🇳🇴' },
-  { n: 'Island', f: '🇮🇸' }, { n: 'Finnland', f: '🇫🇮' }, { n: 'Griechenland', f: '🇬🇷' }, { n: 'Polen', f: '🇵🇱' },
-  { n: 'Schweiz', f: '🇨🇭' }, { n: 'Portugal', f: '🇵🇹' }, { n: 'Irland', f: '🇮🇪' },
-  { n: 'Japan', f: '🇯🇵' }, { n: 'China', f: '🇨🇳' }, { n: 'Indien', f: '🇮🇳' }, { n: 'Südkorea', f: '🇰🇷' },
-  { n: 'Thailand', f: '🇹🇭' }, { n: 'Vietnam', f: '🇻🇳' }, { n: 'Indonesien', f: '🇮🇩' }, { n: 'Türkei', f: '🇹🇷' },
-  { n: 'Israel', f: '🇮🇱' }, { n: 'VAE', f: '🇦🇪' }, { n: 'Singapur', f: '🇸🇬' },
-  { n: 'USA', f: '🇺🇸' }, { n: 'Kanada', f: '🇨🇦' }, { n: 'Mexiko', f: '🇲🇽' }, { n: 'Brasilien', f: '🇧🇷' },
-  { n: 'Argentinien', f: '🇦🇷' }, { n: 'Chile', f: '🇨🇱' }, { n: 'Kuba', f: '🇨🇺' },
-  { n: 'Südafrika', f: '🇿🇦' }, { n: 'Ägypten', f: '🇪🇬' }, { n: 'Marokko', f: '🇲🇦' }, { n: 'Kenia', f: '🇰🇪' },
-  { n: 'Nigeria', f: '🇳🇬' }, { n: 'Madagaskar', f: '🇲🇬' },
-  { n: 'Australien', f: '🇦🇺' }, { n: 'Neuseeland', f: '🇳🇿' },
-];
-
-function CountryStudent({ code, onSubmit, onExit }) {
-  const [step, setStep] = React.useState(0);
-  const [query, setQuery] = React.useState('');
-  const [sel, setSel] = React.useState(null);
-  const [why, setWhy] = React.useState('');
-  const [detail, setDetail] = React.useState('');
-  const [busy, setBusy] = React.useState(false);
-  const [err, setErr] = React.useState(null);
-
-  const filtered = query.trim()
-    ? COUNTRIES.filter(c => c.n.toLowerCase().includes(query.toLowerCase()))
-    : COUNTRIES;
-
-  const submit = async () => {
-    setBusy(true); setErr(null);
-    try {
-      await window.__store.addResponse(code, 'country', {
-        country: sel.n, flag: sel.f, why: why.trim(), detail: detail.trim(),
-      });
-      onSubmit();
-    } catch (e) { setErr('Speichern fehlgeschlagen.'); setBusy(false); }
-  };
-
-  return (
-    <div className="m-student m-country">
-      <div className="ms-head">
-        <div className="brand"><window.BrandLogo size="mini" rotate={true}/></div>
-        <div className="code mono">{code}</div>
-      </div>
-
-      {step === 0 && (
-        <>
-          <div className="ms-intro">
-            <div className="eyebrow creative">Kreativ-Reflexion · Länder-Metapher</div>
-            <h2>Welches Land passt heute zu Ihrem Lernprozess?</h2>
-            <p>Wählen Sie per Tap.</p>
-          </div>
-          <input className="text country-search" placeholder="Land suchen…"
-            value={query} onChange={e => setQuery(e.target.value)} />
-          <div className="country-grid stagger">
-            {filtered.map(c => (
-              <button key={c.n} className={'country-tile ' + (sel?.n === c.n ? 'sel' : '')}
-                onClick={() => setSel(c)}>
-                <div className="cf">{c.f}</div>
-                <div className="cn">{c.n}</div>
-              </button>
-            ))}
-          </div>
-          <div className="ms-nav">
-            <button className="btn-ghost" onClick={onExit}>Abbrechen</button>
-            <button className="btn-primary" disabled={!sel} onClick={() => setStep(1)}>Weiter</button>
-          </div>
-        </>
-      )}
-
-      {step === 1 && (
-        <>
-          <div className="ms-intro">
-            <div className="chosen-country">
-              <div className="cf-big">{sel.f}</div>
-              <div className="cn-big">{sel.n}</div>
-            </div>
-          </div>
-          <div className="field">
-            <label>Warum dieses Land? Welche Eigenschaft passt zu Ihrem heutigen Lernprozess?</label>
-            <textarea className="text" value={why} onChange={e => setWhy(e.target.value)}
-              placeholder="z. B. kleine Schritte, aber immer in Bewegung…" maxLength={280}/>
-          </div>
-          <div className="field">
-            <label>Was bedeutet das konkret? <span className="optional">(optional)</span></label>
-            <textarea className="text" value={detail} onChange={e => setDetail(e.target.value)}
-              placeholder="Noch ein Gedanke…" maxLength={240}/>
-          </div>
-          {err && <div className="m-err">{err}</div>}
-          <div className="ms-nav">
-            <button className="btn-ghost" onClick={() => setStep(0)}>Zurück</button>
-            <button className="btn-submit" disabled={!why.trim() || busy} onClick={submit}>Abschicken</button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-function CountryTeacher({ responses, projection }) {
-  const [focus, setFocus] = React.useState(null); // country name
-  const counts = {};
-  const byCountry = {};
-  responses.forEach(r => {
-    const p = r.payload || {};
-    if (!p.country) return;
-    counts[p.country] = (counts[p.country] || 0) + 1;
-    (byCountry[p.country] = byCountry[p.country] || []).push({ id: r.id, why: p.why, detail: p.detail, flag: p.flag });
-  });
-  const total = responses.length;
-  if (total === 0) return <div className="m-empty">Noch keine Rückmeldungen…</div>;
-
-  const top = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,5).map(([n]) => n);
-  const streamCountries = focus ? [focus] : top;
-
-  return (
-    <div className="m-teacher m-country-teacher">
-      <div className="mt-cols">
-        <div className="mt-main">
-          <div className="mt-eyebrow">Länder-Metaphern · {total} Stimmen</div>
-          <div className="country-map">
-            {COUNTRIES.map(c => {
-              const n = counts[c.n] || 0;
-              const on = n > 0;
-              const active = focus === c.n;
-              return (
-                <button key={c.n}
-                  className={'ct-tile ' + (on ? 'on ' : 'off ') + (active ? 'active' : '')}
-                  onClick={() => on && !projection && setFocus(focus === c.n ? null : c.n)}>
-                  <span className="cf">{c.f}</span>
-                  <span className="cn">{c.n}</span>
-                  {n > 0 && <span className="badge">{n}</span>}
-                </button>
-              );
-            })}
-          </div>
-          <div className="hint-box">Greifen Sie 2–3 besonders kreative oder kontrastierende Metaphern auf. Klicken Sie ein Land an, um Begründungen zu filtern.</div>
-        </div>
-        {!projection && (
-          <div className="mt-side">
-            <div className="mt-side-head">
-              {focus ? `Begründungen · ${focus}` : 'Begründungen · Top-Länder'}
-              {focus && <button className="link-btn" onClick={() => setFocus(null)}>alle</button>}
-            </div>
-            <div className="mt-side-body">
-              {streamCountries.map(name => (byCountry[name] || []).map(item => (
-                <div key={item.id} className="country-rat">
-                  <div className="cr-head"><span className="cf">{item.flag}</span> <b>{name}</b></div>
-                  <div className="cr-why">{item.why}</div>
-                  {item.detail && <div className="cr-detail">{item.detail}</div>}
-                </div>
-              )))}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-window.METHOD_COUNTRY = {
-  id: 'country',
-  title: 'Länder-Metapher',
-  group: 'creative',
-  emoji: '🌍',
-  description: 'Welches Land passt heute zum Lernprozess?',
-  didacticHint: 'Aktiviert analoges Denken. Besonders gut nach komplexen Stunden oder um zurückhaltende Schüler:innen zu erreichen.',
-  StudentView: CountryStudent,
-  TeacherView: CountryTeacher,
-};
-
-</script>
-<script type="text/babel">
-// Exam reflection method — 4 sections
-
-const GRADES_DE = ['1', '2', '3', '4', '5', '6'];
-const POINTS = Array.from({length: 16}, (_, i) => String(15 - i));
-
-const PREP_STRATS = ['Zusammenfassungen', 'Karteikarten', 'Altklausuren', 'Lerngruppe', 'Unterlagen lesen', 'Lern-App', 'Nichts Spezielles', 'Etwas anderes'];
-const STUCK_ON = ['Zeitmanagement', 'Aufgabenverständnis', 'Fehlendes Wissen', 'Nervosität', 'Konzentration', 'Nichts', 'Etwas anderes'];
-
-function ExamStudent({ code, onSubmit, onExit, gradingMode = 'grades' }) {
-  const [step, setStep] = React.useState(0);
-  const [d, setD] = React.useState({
-    expected: '', got: '',
-    prepIntensity: null, prepStrats: [], prepReflect: '',
-    calm: null, stuckOn: [], stuckMoment: '',
-    nextTime: '', needSupport: '',
-  });
-  const [busy, setBusy] = React.useState(false);
-  const [err, setErr] = React.useState(null);
-  const update = p => setD(v => ({...v, ...p}));
-  const toggleIn = (key, val) => update({ [key]: d[key].includes(val) ? d[key].filter(x => x !== val) : [...d[key], val] });
-
-  const opts = gradingMode === 'points' ? POINTS : GRADES_DE;
-
-  const submit = async () => {
-    setBusy(true); setErr(null);
-    try {
-      await window.__store.addResponse(code, 'exam', {
-        ...d,
-        expected: d.expected ? Number(d.expected) : null,
-        got: d.got ? Number(d.got) : null,
-        gradingMode,
-        prepReflect: d.prepReflect.trim(),
-        stuckMoment: d.stuckMoment.trim(),
-        nextTime: d.nextTime.trim(),
-        needSupport: d.needSupport.trim(),
-      });
-      onSubmit();
-    } catch (e) { setErr('Speichern fehlgeschlagen.'); setBusy(false); }
-  };
-
-  const diff = (d.expected !== '' && d.got !== '')
-    ? (Number(d.expected) - Number(d.got))
-    : null;
-  let diffText = '';
-  if (diff !== null) {
-    if (gradingMode === 'grades') {
-      if (diff > 0) diffText = 'schlechter als erwartet';
-      else if (diff < 0) diffText = 'besser als erwartet';
-      else diffText = 'wie erwartet';
-    } else {
-      if (diff < 0) diffText = 'schlechter als erwartet';
-      else if (diff > 0) diffText = 'besser als erwartet';
-      else diffText = 'wie erwartet';
-    }
-  }
-
-  return (
-    <div className="m-student m-exam">
-      <div className="ms-head">
-        <div className="brand"><window.BrandLogo size="mini" rotate={true}/></div>
-        <div className="code mono">{code}</div>
-      </div>
-      <div className="exam-progress">
-        {[0,1,2,3].map(i => <div key={i} className={'ep-step ' + (i <= step ? 'on' : '')}/>)}
-      </div>
-
-      {step === 0 && (
-        <>
-          <div className="ms-intro">
-            <div className="eyebrow perf">Klausurreflexion · 1 / 4</div>
-            <h2>Erwartung vs. Realität</h2>
-          </div>
-          <div className="field">
-            <label>Welche {gradingMode === 'grades' ? 'Note' : 'Punktzahl'} hatten Sie erwartet?</label>
-            <select className="text" value={d.expected} onChange={e => update({expected: e.target.value})}>
-              <option value="">—</option>
-              {opts.map(o => <option key={o} value={o}>{o}</option>)}
-            </select>
-          </div>
-          <div className="field">
-            <label>Welche {gradingMode === 'grades' ? 'Note' : 'Punktzahl'} haben Sie bekommen?</label>
-            <select className="text" value={d.got} onChange={e => update({got: e.target.value})}>
-              <option value="">—</option>
-              {opts.map(o => <option key={o} value={o}>{o}</option>)}
-            </select>
-          </div>
-          {diffText && <div className="diff-box">{diffText}</div>}
-        </>
-      )}
-
-      {step === 1 && (
-        <>
-          <div className="ms-intro">
-            <div className="eyebrow perf">Klausurreflexion · 2 / 4</div>
-            <h2>Vorbereitung</h2>
-          </div>
-          <div className="field">
-            <label>Wie intensiv haben Sie sich vorbereitet?</label>
-            <div className="scale">
-              {[1,2,3,4,5].map(n => (
-                <button key={n} type="button"
-                  className={d.prepIntensity === n ? 'sel' : ''}
-                  onClick={() => update({prepIntensity: n})}>{n}</button>
-              ))}
-            </div>
-            <div className="scale-labels"><span>gar nicht</span><span>sehr intensiv</span></div>
-          </div>
-          <div className="field">
-            <label>Welche Lernstrategien haben Sie genutzt? <span className="optional">(Mehrfachauswahl)</span></label>
-            <div className="chips">
-              {PREP_STRATS.map(s => (
-                <button key={s}
-                  className={'chip ' + (d.prepStrats.includes(s) ? 'sel' : '')}
-                  onClick={() => toggleIn('prepStrats', s)}>{s}</button>
-              ))}
-            </div>
-          </div>
-          <div className="field">
-            <label>Was würden Sie bei der Vorbereitung wiederholen? Was nicht? <span className="optional">(optional)</span></label>
-            <textarea className="text" value={d.prepReflect} onChange={e => update({prepReflect: e.target.value})} maxLength={280}/>
-          </div>
-        </>
-      )}
-
-      {step === 2 && (
-        <>
-          <div className="ms-intro">
-            <div className="eyebrow perf">Klausurreflexion · 3 / 4</div>
-            <h2>Während der Klausur</h2>
-          </div>
-          <div className="field">
-            <label>Wie ruhig waren Sie während der Klausur?</label>
-            <div className="scale">
-              {[1,2,3,4,5].map(n => (
-                <button key={n} type="button"
-                  className={d.calm === n ? 'sel' : ''}
-                  onClick={() => update({calm: n})}>{n}</button>
-              ))}
-            </div>
-            <div className="scale-labels"><span>sehr nervös</span><span>sehr ruhig</span></div>
-          </div>
-          <div className="field">
-            <label>Wobei sind Sie ins Stocken geraten?</label>
-            <div className="chips">
-              {STUCK_ON.map(s => (
-                <button key={s}
-                  className={'chip ' + (d.stuckOn.includes(s) ? 'sel' : '')}
-                  onClick={() => toggleIn('stuckOn', s)}>{s}</button>
-              ))}
-            </div>
-          </div>
-          <div className="field">
-            <label>Welcher Moment war besonders schwierig oder entscheidend? <span className="optional">(optional)</span></label>
-            <textarea className="text" value={d.stuckMoment} onChange={e => update({stuckMoment: e.target.value})} maxLength={280}/>
-          </div>
-        </>
-      )}
-
-      {step === 3 && (
-        <>
-          <div className="ms-intro">
-            <div className="eyebrow perf">Klausurreflexion · 4 / 4</div>
-            <h2>Strategie für die nächste Klausur</h2>
-          </div>
-          <div className="field">
-            <label>Was nehmen Sie konkret für die nächste Klausur mit?</label>
-            <textarea className="text" value={d.nextTime} onChange={e => update({nextTime: e.target.value})} maxLength={280}/>
-          </div>
-          <div className="field">
-            <label>Wo möchten Sie Unterstützung?</label>
-            <textarea className="text" value={d.needSupport} onChange={e => update({needSupport: e.target.value})} maxLength={280}/>
-            <div className="hint">Nur Ihre Lehrkraft sieht diese Antwort — sie wird nicht projiziert.</div>
-          </div>
-        </>
-      )}
-
-      {err && <div className="m-err">{err}</div>}
-      <div className="ms-nav">
-        {step > 0 ? (
-          <button className="btn-ghost" onClick={() => setStep(s => s-1)}>Zurück</button>
-        ) : (
-          <button className="btn-ghost" onClick={onExit}>Abbrechen</button>
-        )}
-        {step < 3 ? (
-          <button className="btn-primary" onClick={() => setStep(s => s+1)}>Weiter</button>
-        ) : (
-          <button className="btn-submit" disabled={busy} onClick={submit}>Abschicken</button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function ExamTeacher({ responses, projection }) {
-  let exSum = 0, exN = 0, gotSum = 0, gotN = 0;
-  let prepSum = 0, prepN = 0;
-  const prepCounts = Object.fromEntries(PREP_STRATS.map(s => [s, 0]));
-  const stuckCounts = Object.fromEntries(STUCK_ON.map(s => [s, 0]));
-  const supports = [];
-  let gradingMode = 'grades';
-  responses.forEach(r => {
-    const p = r.payload || {};
-    if (p.gradingMode) gradingMode = p.gradingMode;
-    if (typeof p.expected === 'number') { exSum += p.expected; exN++; }
-    if (typeof p.got === 'number') { gotSum += p.got; gotN++; }
-    if (typeof p.prepIntensity === 'number') { prepSum += p.prepIntensity; prepN++; }
-    (p.prepStrats || []).forEach(s => { if (prepCounts[s] !== undefined) prepCounts[s]++; });
-    (p.stuckOn || []).forEach(s => { if (stuckCounts[s] !== undefined) stuckCounts[s]++; });
-    if (p.needSupport) supports.push({ id: r.id, text: p.needSupport });
-  });
-  const total = responses.length;
-  if (total === 0) return <div className="m-empty">Noch keine Rückmeldungen…</div>;
-
-  const avgEx = exN ? (exSum/exN) : null;
-  const avgGot = gotN ? (gotSum/gotN) : null;
-  const avgPrep = prepN ? (prepSum/prepN) : null;
-  const interp = avgEx !== null && avgGot !== null
-    ? (gradingMode === 'grades'
-        ? (avgGot > avgEx + 0.25 ? 'Klasse hat sich überschätzt' : avgGot < avgEx - 0.25 ? 'Klasse hat sich unterschätzt' : 'Realität ziemlich genau getroffen')
-        : (avgGot < avgEx - 0.5 ? 'Klasse hat sich überschätzt' : avgGot > avgEx + 0.5 ? 'Klasse hat sich unterschätzt' : 'Realität ziemlich genau getroffen'))
-    : '';
-
-  const maxPrep = Math.max(1, ...Object.values(prepCounts));
-  const maxStuck = Math.max(1, ...Object.values(stuckCounts));
-
-  return (
-    <div className="m-teacher m-exam-teacher">
-      <div className="exam-grid stagger">
-        <div className="exam-tile">
-          <div className="et-head">Erwartung vs. Realität</div>
-          <div className="ev-bars">
-            <div className="evb">
-              <div className="evb-lab">erwartet</div>
-              <div className="evb-v">{avgEx !== null ? avgEx.toFixed(1) : '–'}</div>
-            </div>
-            <div className="evb">
-              <div className="evb-lab">bekommen</div>
-              <div className="evb-v">{avgGot !== null ? avgGot.toFixed(1) : '–'}</div>
-            </div>
-          </div>
-          <div className="ev-interp">{interp}</div>
-        </div>
-
-        <div className="exam-tile">
-          <div className="et-head">Vorbereitung</div>
-          <div className="et-sub">Durchschnittliche Intensität: {avgPrep !== null ? avgPrep.toFixed(1) : '–'} / 5</div>
-          <div className="et-bars">
-            {Object.entries(prepCounts).sort((a,b) => b[1]-a[1]).map(([s, n]) => (
-              <div key={s} className="et-bar">
-                <div className="etb-lab">{s}</div>
-                <div className="etb-track"><div className="etb-fill" style={{width: `${(n/maxPrep)*100}%`}}/></div>
-                <div className="etb-n">{n}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="exam-tile">
-          <div className="et-head">Stolpersteine</div>
-          <div className="et-bars">
-            {Object.entries(stuckCounts).sort((a,b) => b[1]-a[1]).map(([s, n]) => {
-              const topHighlight = n > 0 && n === maxStuck;
-              return (
-                <div key={s} className={'et-bar ' + (topHighlight ? 'hi' : '')}>
-                  <div className="etb-lab">{s}</div>
-                  <div className="etb-track"><div className="etb-fill" style={{width: `${(n/maxStuck)*100}%`}}/></div>
-                  <div className="etb-n">{n}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {!projection && (
-          <div className="exam-tile private">
-            <div className="et-head">Unterstützungswünsche <span className="pill">vertraulich</span></div>
-            <div className="et-sub">Nur für Sie sichtbar · {supports.length} Einträge</div>
-            <div className="support-list">
-              {supports.map((s, i) => (
-                <div key={s.id} className="support-item">
-                  <span className="num">{String(i+1).padStart(2,'0')}</span>
-                  <span>{s.text}</span>
-                </div>
-              ))}
-              {supports.length === 0 && <div className="support-empty">Keine Unterstützungswünsche genannt.</div>}
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="hint-box">Die Unterstützungswünsche geben Hinweise auf didaktische Nacharbeit. Sie können Themen im nächsten Unterricht aufgreifen, ohne Schüler:innen zu nennen.</div>
-    </div>
-  );
-}
-
-window.METHOD_EXAM = {
-  id: 'exam',
-  title: 'Klausurreflexion',
-  group: 'performance',
-  emoji: '📝',
-  description: 'Strukturierte Reflexion nach Klausurrückgabe.',
-  didacticHint: 'Unterscheidet Vorbereitung, Prüfungsverhalten und Strategie.',
-  StudentView: ExamStudent,
-  TeacherView: ExamTeacher,
-};
 
 </script>
 <script type="text/babel">
@@ -3836,7 +2258,6 @@ Object.assign(window, { METHODS, METHOD_GROUPS, GroupPicker, MethodPicker });
 
 function Landing({ onCreate, onJoin }) {
   const [joinCode, setJoinCode] = React.useState('');
-  const [joinOpen, setJoinOpen] = React.useState(false);
   const clean = joinCode.replace(/\s+/g,'').toUpperCase();
   const canJoin = clean.length === 6;
 
@@ -3845,11 +2266,12 @@ function Landing({ onCreate, onJoin }) {
     try { return sessionStorage.getItem('reflectit:introPlayed') === '1'; }
     catch { return false; }
   });
-  const [introPhase2, setIntroPhase2] = React.useState(introDone);
+  const [introPhase2, setIntroPhase2] = React.useState(introDone); // controls header brand visibility
 
+  // Reveal the header brand as the center intro fades out.
   React.useEffect(() => {
     if (introDone) return;
-    const t = setTimeout(() => setIntroPhase2(true), 2000);
+    const t = setTimeout(() => setIntroPhase2(true), 1400);
     return () => clearTimeout(t);
   }, [introDone]);
 
@@ -3859,7 +2281,8 @@ function Landing({ onCreate, onJoin }) {
   };
 
   return (
-    <div className="landing landing-calm">
+    <div className="landing">
+      {/* Flying intro — only when not yet played */}
       {!introDone && <window.IntroLogo onDone={handleIntroDone} />}
 
       <div className="landing-head">
@@ -3867,41 +2290,46 @@ function Landing({ onCreate, onJoin }) {
           className="brand"
           style={{ opacity: introPhase2 ? 1 : 0, transition: 'opacity 500ms ease-out 200ms' }}
         >
-          <window.BrandLogo size="mini" rotate={true}/>
+          <window.BrandLogo size="mini" rotate={true} />
         </div>
+        <div className="landing-meta">Reflexions-Werkzeug für Ihren Unterricht</div>
       </div>
 
-      <div className="landing-calm-stage">
-        <window.Claim noIntro={introDone} />
-        <window.BreathingDot noIntro={introDone} />
-
-        <div className={'landing-calm-actions' + (introDone ? ' no-intro' : '')}>
-          <button className="calm-btn calm-btn-primary" onClick={onCreate}>
-            Neue Session starten
-          </button>
-          <button className="calm-btn calm-btn-secondary" onClick={() => setJoinOpen(v => !v)}>
-            An Session teilnehmen
-          </button>
-        </div>
-
-        {joinOpen && (
-          <div className="landing-calm-join">
-            <input
-              autoFocus
-              value={joinCode}
-              onChange={e => setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6))}
-              placeholder="A4K9P2"
-              maxLength={6}
-              inputMode="text"
-              aria-label="Session-Code"
-            />
-            <button disabled={!canJoin} onClick={() => onJoin(clean)}>Beitreten</button>
+      <div className="landing-hero">
+        <div>
+          <div className="hero-mirror" aria-hidden="true">
+            <window.MirrorSymbol />
           </div>
-        )}
-      </div>
-
-      <div className={'landing-calm-foot' + (introDone ? ' no-intro' : '')}>
-        Keine Konten, keine Klarnamen. Rückmeldungen anonym, am Ende der Session gelöscht.
+          <h1>Am Ende der Stunde <em>kurz innehalten.</em></h1>
+          <p className="lede">Sieben Reflexionsmethoden für das Stundenende oder nach Klausuren — anonym, ohne Login, in fünf Minuten.</p>
+          <div className="privacy-note">
+            <strong>Transparent &amp; datensparsam.</strong><br/>
+            Keine Konten, keine Klarnamen. Alle Rückmeldungen werden anonym gespeichert und am Ende der Session gelöscht.
+          </div>
+        </div>
+        <div className="landing-cards stagger">
+          <button className="landing-card" onClick={onCreate}>
+            <div>
+              <div className="tag">Lehrkraft</div>
+              <h3>Neue Session starten</h3>
+              <p>Methode wählen, Code und QR für die Klasse erzeugen.</p>
+            </div>
+            <div className="arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></div>
+          </button>
+          <div className="landing-card" style={{display:'block', cursor:'default'}}>
+            <div style={{display:'flex', gap:18, alignItems:'center'}}>
+              <div>
+                <div className="tag">Schüler:in</div>
+                <h3>Session beitreten</h3>
+                <p>Code eingeben oder QR scannen.</p>
+              </div>
+            </div>
+            <div className="join-inline">
+              <input value={joinCode} onChange={e => setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6))} placeholder="A4K9P2" maxLength={6}/>
+              <button disabled={!canJoin} onClick={() => onJoin(clean)}>Beitreten</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
