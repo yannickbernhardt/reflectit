@@ -1413,15 +1413,15 @@ input:focus, textarea:focus, select:focus {
   margin: 0;
   text-align: center;
   text-wrap: balance;
-  animation: claim-in 900ms var(--ease-out) both;
-  animation-delay: 2700ms;
+  animation: claim-in 1200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 500ms;
 }
 .hero-claim.no-intro {
   animation-delay: 0ms;
 }
 @keyframes claim-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(8px); filter: blur(8px); }
+  to   { opacity: 1; transform: translateY(0);   filter: blur(0); }
 }
 
 .breathing-dot {
@@ -1534,15 +1534,15 @@ input:focus, textarea:focus, select:focus {
   gap: 14px;
   justify-content: center;
   margin-top: 8px;
-  animation: calm-action-in 800ms var(--ease-out) both;
-  animation-delay: 3600ms;
+  animation: calm-action-in 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 900ms;
 }
 .landing-calm-actions.no-intro { animation-delay: 0ms; }
-.landing-calm-actions > *:nth-child(2) { animation-delay: 3750ms; }
+.landing-calm-actions > *:nth-child(2) { animation-delay: 980ms; }
 .landing-calm-actions.no-intro > *:nth-child(2) { animation-delay: 0ms; }
 @keyframes calm-action-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(10px); filter: blur(6px); }
+  to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
 }
 
 .calm-btn {
@@ -1619,8 +1619,8 @@ input:focus, textarea:focus, select:focus {
   color: var(--ink-faint);
   text-align: center;
   padding-top: 24px;
-  animation: calm-action-in 800ms var(--ease-out) both;
-  animation-delay: 4000ms;
+  animation: calm-action-in 800ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 1200ms;
 }
 .landing-calm-foot.no-intro { animation-delay: 0ms; }
 
@@ -2355,17 +2355,14 @@ function BreathingDot({ noIntro = false } = {}) {
     const t0 = performance.now();
     const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // Intro-Parameter — 1600ms, "von oben herabsinken"
-    const INTRO_MS = reduced ? 400 : 1600;
-    const introStartY = 2.2;    // Start oberhalb
+    // Intro-Parameter — 1300ms, "von oben herabsinken", startet mit 200ms delay
+    const INTRO_DELAY = reduced ? 0 : 200;
+    const INTRO_MS = reduced ? 400 : 1300;
+    const introStartY = 1.6;    // Start oberhalb
     const introEndY = 0;
 
-    // Weiches Ease-Out mit "Settle" (kritisch gedämpft, kein Bounce)
-    // Analog zu einem Luftwiderstand-Settle: 1 - e^(-k*t) * (1 + k*t)
-    const criticalSettle = (x) => {
-      const k = 5.5;
-      return 1 - Math.exp(-k * x) * (1 + k * x);
-    };
+    // Sanfter Ease-Out (expo-out-ähnlich) — keine Überschwünge, seidig
+    const easeOutExpo = (x) => x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
 
     const loop = () => {
       raf = requestAnimationFrame(loop);
@@ -2380,12 +2377,13 @@ function BreathingDot({ noIntro = false } = {}) {
       current.x += (target.x - current.x) * follow;
       current.y += (target.y - current.y) * follow;
 
-      // Intro-Progress
-      const p = Math.min(1, elapsed / INTRO_MS);
-      const introEase = criticalSettle(p);
+      // Intro-Progress (mit Delay)
+      const elapsedAfterDelay = Math.max(0, elapsed - INTRO_DELAY);
+      const p = Math.min(1, elapsedAfterDelay / INTRO_MS);
+      const introEase = easeOutExpo(p);
       const introY = introStartY + (introEndY - introStartY) * introEase;
-      const introOpacity = Math.min(1, p * 1.4);
-      const introScale = 0.88 + 0.12 * introEase;
+      const introOpacity = p < 0.001 ? 0 : Math.min(1, p * 1.6);
+      const introScale = 0.92 + 0.08 * introEase;
 
       // Idle — fast still, nur minimales Atmen (±0.5% Scale, 6s-Zyklus)
       const breath = reduced ? 0 : Math.sin(t * (Math.PI * 2 / 6)) * 0.005;
