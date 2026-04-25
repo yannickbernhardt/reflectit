@@ -1349,7 +1349,27 @@ input:focus, textarea:focus, select:focus {
 .brand-logo-xl { gap: 18px; }
 .brand-logo-header { gap: 12px; }
 
-/* ─── Intro choreography (in-place only) ─── */
+/* ─── Intro choreography ───
+   The pearl never "pops in" — it's revealed by a black curtain that lifts away.
+   Once revealed, the wordmark types itself out, holds, then everything fades. */
+
+/* Full-screen black curtain that hides everything until the pearl is "discovered". */
+.intro-curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 79;
+  background: #000;
+  pointer-events: none;
+  opacity: 1;
+  /* Curtain fades from full opaque to transparent over the first beat,
+     revealing the pearl which was always there, behind it. */
+  animation: intro-curtain-fade 1100ms cubic-bezier(0.4, 0, 0.2, 1) 200ms both;
+}
+@keyframes intro-curtain-fade {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 .intro-logo {
   position: fixed;
   z-index: 80;
@@ -1359,40 +1379,84 @@ input:focus, textarea:focus, select:focus {
   pointer-events: none;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%) scale(0.9);
-  opacity: 0;
-  animation: intro-in 900ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-@keyframes intro-in {
-  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.88); filter: blur(6px); }
-  60%  { opacity: 1; transform: translate(-50%, -50%) scale(1);   filter: blur(0); }
-  100% { opacity: 1; transform: translate(-50%, -50%) scale(1);   filter: blur(0); }
+  transform: translate(-50%, -50%);
+  opacity: 1;
 }
 
-/* Phase 2 — fade out in place, no movement */
+/* The pearl itself never animates in — it's static and always at full opacity.
+   What animates is the BLACK CURTAIN above it (and a soft inner glow). */
+.intro-logo .intro-pearl-glow {
+  position: absolute;
+  inset: -40% -40% -40% -40%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side,
+    rgba(255, 138, 92, 0.35) 0%,
+    rgba(255, 138, 92, 0.10) 40%,
+    rgba(255, 138, 92, 0)    70%
+  );
+  pointer-events: none;
+  opacity: 0;
+  animation: intro-glow 1800ms cubic-bezier(0.4, 0, 0.2, 1) 1100ms both;
+  filter: blur(8px);
+  z-index: -1;
+}
+@keyframes intro-glow {
+  0%   { opacity: 0; transform: scale(0.6); }
+  40%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.2); }
+}
+
+/* Wordmark reveal — letters wipe in from a clip mask, no bounce */
+.intro-logo .intro-wordmark {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.intro-logo .intro-wordmark .intro-letter {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(0.4em);
+  animation: intro-letter 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+/* Letters start AFTER the curtain has cleared */
+.intro-logo .intro-wordmark .intro-letter:nth-child(1) { animation-delay: 1300ms; }
+.intro-logo .intro-wordmark .intro-letter:nth-child(2) { animation-delay: 1370ms; }
+.intro-logo .intro-wordmark .intro-letter:nth-child(3) { animation-delay: 1440ms; }
+.intro-logo .intro-wordmark .intro-letter:nth-child(4) { animation-delay: 1510ms; }
+.intro-logo .intro-wordmark .intro-letter:nth-child(5) { animation-delay: 1580ms; }
+.intro-logo .intro-wordmark .intro-letter:nth-child(6) { animation-delay: 1650ms; }
+.intro-logo .intro-wordmark .intro-letter:nth-child(7) { animation-delay: 1720ms; }
+.intro-logo .intro-wordmark .intro-letter:nth-child(8) { animation-delay: 1790ms; }
+.intro-logo .intro-wordmark .intro-letter:nth-child(9) { animation-delay: 1860ms; }
+@keyframes intro-letter {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Phase 2 — whole intro composite gracefully exits.
+   Pearl + wordmark fade together, no scale jolt. */
 .intro-logo.intro-phase-2 {
   opacity: 0;
-  transform: translate(-50%, -50%) scale(1.02);
-  transition:
-    opacity 700ms ease-out,
-    transform 700ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 800ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.intro-curtain.intro-phase-2 {
+  /* Already at opacity 0 — keep it there */
+  display: none;
 }
 .intro-logo.intro-phase-3 {
   opacity: 0;
   pointer-events: none;
+  display: none;
 }
-
-/* Hide intro on reduced motion — CSS overrides don't help here; handled in JS */
 
 /* ─── Stage centerpiece (hero pearl) ─── */
 .mirror-symbol {
   display: inline-block;
-  animation: mirror-in 800ms var(--ease-out) both;
-  animation-delay: 2700ms; /* matches Phase 3 trigger */
+  animation: mirror-in 700ms var(--ease-out) both;
+  animation-delay: 3500ms; /* after intro fully clears */
 }
 @keyframes mirror-in {
-  from { opacity: 0; transform: scale(0.9); }
-  to   { opacity: 1; transform: scale(1); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* When user returns and intro is skipped, the pearl appears immediately */
@@ -2027,16 +2091,49 @@ function IntroLogo({ onDone }) {
       const id = setTimeout(() => { setPhase(3); onDone?.(); }, 50);
       return () => clearTimeout(id);
     }
-    const t1 = setTimeout(() => setPhase(2), 1400);
-    const t2 = setTimeout(() => { setPhase(3); onDone?.(); }, 2200);
+    // Timeline:
+    //   0–200ms    black curtain holds
+    //   200–1300ms curtain fades away, revealing the static pearl underneath
+    //   1300–1900ms wordmark letters reveal one by one
+    //   1900–2700ms hold (reads: "ReflectIt")
+    //   2700–3500ms whole composite fades out (phase 2)
+    //   3500ms+    removed from DOM (phase 3)
+    const t1 = setTimeout(() => setPhase(2), 2700);
+    const t2 = setTimeout(() => { setPhase(3); onDone?.(); }, 3500);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
+  const word = 'ReflectIt';
+
   return (
-    <div className={`intro-logo intro-phase-${phase}`} aria-hidden={phase === 3}>
-      <Pearl size={140} floating={true} />
-      <LogoWordmark size={44} />
-    </div>
+    <React.Fragment>
+      {/* Black curtain that lifts to reveal the pearl */}
+      <div className={`intro-curtain intro-phase-${phase}`} aria-hidden="true" />
+      <div className={`intro-logo intro-phase-${phase}`} aria-hidden={phase === 3}>
+        {/* Soft warm halo behind the pearl as it's revealed */}
+        <div className="intro-pearl-glow" aria-hidden="true" />
+        <Pearl size={140} floating={false} />
+        <span className="intro-wordmark">
+          {word.split('').map((ch, i) => (
+            <span
+              key={i}
+              className="intro-letter"
+              style={{
+                fontFamily: "'Newsreader', Georgia, serif",
+                fontSize: 44,
+                fontWeight: 500,
+                fontStyle: 'italic',
+                letterSpacing: '-0.01em',
+                color: 'var(--ink)',
+                lineHeight: 1,
+              }}
+            >
+              {ch}
+            </span>
+          ))}
+        </span>
+      </div>
+    </React.Fragment>
   );
 }
 
@@ -2271,7 +2368,7 @@ function Landing({ onCreate, onJoin }) {
   // Reveal the header brand as the center intro fades out.
   React.useEffect(() => {
     if (introDone) return;
-    const t = setTimeout(() => setIntroPhase2(true), 1400);
+    const t = setTimeout(() => setIntroPhase2(true), 2700);
     return () => clearTimeout(t);
   }, [introDone]);
 
