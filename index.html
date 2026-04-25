@@ -1916,7 +1916,9 @@ window.__qrPattern = function (text) {
 };
 
 window.__genCode = function () {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  // 6 letters A–Z (matches Supabase check constraint sessions_code_format).
+  // I (eye) and O (oh) excluded to avoid confusion with 1/0 when read aloud.
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
   const len = 6;
   let s = '';
   if (window.crypto && window.crypto.getRandomValues) {
@@ -2200,6 +2202,1176 @@ function TweaksPanel() {
 Object.assign(window, { TweaksPanel });
 
 </script>
+
+<script type="text/babel" data-source="methods/four-levels.jsx">
+// Four-Levels method — original student + teacher views
+// (Was originally the whole app; now one method among many.)
+
+const MoodSmiley = ({ level, color, size = 40 }) => {
+  const mouths = { 1: 'M14 34 Q24 26 34 34', 2: 'M14 32 Q24 27 34 32', 3: 'M14 30 L34 30', 4: 'M14 28 Q24 33 34 28', 5: 'M14 26 Q24 36 34 26' };
+  const eyeY = level === 1 ? 20 : 19;
+  return (
+    <svg viewBox="0 0 48 48" width={size} height={size} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="24" cy="24" r="19" />
+      {level === 1 ? (
+        <>
+          <path d="M15 18 L21 22 M15 22 L21 18" />
+          <path d="M27 18 L33 22 M27 22 L33 18" />
+        </>
+      ) : (
+        <>
+          <circle cx="18" cy={eyeY} r="1.4" fill={color} stroke="none" />
+          <circle cx="30" cy={eyeY} r="1.4" fill={color} stroke="none" />
+        </>
+      )}
+      <path d={mouths[level]} />
+      {level === 5 && <path d="M14 26 Q24 36 34 26 L14 26 Z" fill={color} opacity="0.1" stroke="none" />}
+    </svg>
+  );
+};
+
+const MOOD_COLORS = ['var(--mood-1)','var(--mood-2)','var(--mood-3)','var(--mood-4)','var(--mood-5)'];
+const MOOD_LABELS = ['sehr frustriert','frustriert','neutral','motiviert','sehr motiviert'];
+const HELP_OPTIONS = ['Gruppenarbeit','Diskussion im Plenum','Visualisierungen','Eigenes Nachdenken','Lehrer-Input','Etwas anderes'];
+const LEVELS = [
+  { num: 1, key: 'Kognitiv', title: 'Was habe ich gelernt?' },
+  { num: 2, key: 'Prozess', title: 'Wie habe ich gelernt?' },
+  { num: 3, key: 'Gefühl', title: 'Wie ging es mir dabei?' },
+  { num: 4, key: 'Transfer', title: 'Wohin geht es?' },
+];
+
+function Stepper({ step, maxReached, onGo }) {
+  return (
+    <div className="stepper">
+      {LEVELS.map((l, i) => {
+        const active = step === i;
+        const done = i < maxReached && !active;
+        return (
+          <button key={i} className={'stepper-pill ' + (active ? 'active' : done ? 'done' : '')} onClick={() => onGo(i)}>
+            <span className="num">{String(l.num).padStart(2,'0')}</span>{l.key}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function ScaleInput({ value, onChange, lowLabel, highLabel }) {
+  return (
+    <div>
+      <div className="scale">
+        {[1,2,3,4,5].map(n => (
+          <button key={n} type="button" className={value === n ? 'sel' : ''} onClick={() => onChange(n)}>{n}</button>
+        ))}
+      </div>
+      <div className="scale-labels"><span>{lowLabel}</span><span>{highLabel}</span></div>
+    </div>
+  );
+}
+
+function MoodInput({ value, onChange }) {
+  return (
+    <div>
+      <div className="mood">
+        {[1,2,3,4,5].map(n => (
+          <button key={n} type="button" className={value === n ? 'sel' : ''} onClick={() => onChange(n)}>
+            <MoodSmiley level={n} color={value === n ? 'var(--warm)' : 'var(--ink-soft)'} size={56}/>
+          </button>
+        ))}
+      </div>
+      <div className="mood-scale-labels"><span>sehr frustriert</span><span>sehr motiviert</span></div>
+    </div>
+  );
+}
+
+function FourLevelsInnerStudent({ code, onSubmit, onExit }) {
+  const [step, setStep] = React.useState(0);
+  const [maxReached, setMaxReached] = React.useState(0);
+  const [data, setData] = React.useState({});
+  const [error, setError] = React.useState(null);
+  const update = patch => setData(d => ({...d, ...patch}));
+  const go = n => { const next = Math.max(0, Math.min(3, n)); setStep(next); setMaxReached(m => Math.max(m, next)); window.scrollTo({top:0, behavior:'smooth'}); };
+
+  const submit = async () => {
+    try {
+      const payload = {
+        takeaway: (data.takeaway||'').trim(),
+        confidence: data.confidence || null,
+        help: data.help || null,
+        stuck: (data.stuck||'').trim(),
+        mood: data.mood || null,
+        moodWhy: (data.moodWhy||'').trim(),
+        openQ: (data.openQ||'').trim(),
+        transfer: (data.transfer||'').trim(),
+      };
+      await window.__store.addResponse(code, 'four_levels', payload);
+      onSubmit();
+    } catch (e) {
+      setError('Beim Speichern ist ein Fehler aufgetreten. Bitte laden Sie die Seite neu.');
+    }
+  };
+
+  const levelEl = step === 0 ? (
+    <div className="level-body">
+      <div className="field">
+        <label>In einem Satz: Was nehmen Sie heute mit? <span className="optional">(optional)</span></label>
+        <textarea className="text" value={data.takeaway||''} onChange={e => update({takeaway:e.target.value})} placeholder="z. B. Ich verstehe jetzt, wie …" maxLength={280}/>
+      </div>
+      <div className="field">
+        <label>Wie sicher fühlen Sie sich im heutigen Thema?</label>
+        <ScaleInput value={data.confidence} onChange={v => update({confidence:v})} lowLabel="unsicher" highLabel="sehr sicher"/>
+      </div>
+    </div>
+  ) : step === 1 ? (
+    <div className="level-body">
+      <div className="field">
+        <label>Was hat Ihnen heute am meisten geholfen?</label>
+        <div className="choices">
+          {HELP_OPTIONS.map(opt => (
+            <button key={opt} type="button" className={'choice ' + (data.help === opt ? 'sel' : '')} onClick={() => update({help:opt})}>
+              <span className="dot"/>{opt}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="field">
+        <label>Wo sind Sie heute ins Stocken geraten? <span className="optional">(optional)</span></label>
+        <textarea className="text" value={data.stuck||''} onChange={e => update({stuck:e.target.value})} maxLength={280}/>
+        <div className="hint">Nur die Lehrkraft sieht diese Antwort — sie wird nicht projiziert.</div>
+      </div>
+    </div>
+  ) : step === 2 ? (
+    <div className="level-body">
+      <div className="field">
+        <label>Stimmungsbarometer</label>
+        <MoodInput value={data.mood} onChange={v => update({mood:v})}/>
+      </div>
+      <div className="field">
+        <label>Warum? <span className="optional">(freiwillig)</span></label>
+        <textarea className="text" value={data.moodWhy||''} onChange={e => update({moodWhy:e.target.value})} maxLength={200}/>
+      </div>
+    </div>
+  ) : (
+    <div className="level-body">
+      <div className="field">
+        <label>Welche Frage bleibt heute offen? <span className="optional">(optional)</span></label>
+        <textarea className="text" value={data.openQ||''} onChange={e => update({openQ:e.target.value})} maxLength={240}/>
+      </div>
+      <div className="field">
+        <label>Was möchten Sie im Alltag weiterdenken oder anwenden? <span className="optional">(optional)</span></label>
+        <textarea className="text" value={data.transfer||''} onChange={e => update({transfer:e.target.value})} maxLength={240}/>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className={`student level-${step+1}`}>
+      <div className="student-head">
+        <div className="left"><div className="brand"><window.BrandLogo size="mini" rotate={true}/></div></div>
+        <div className="code mono">{code}</div>
+      </div>
+      <Stepper step={step} maxReached={Math.max(maxReached, step)} onGo={go}/>
+      <div className="level-header">
+        <div className="eyebrow">Ebene {step+1} · {LEVELS[step].key}</div>
+        <h2>{LEVELS[step].title}</h2>
+        <p>Nehmen Sie sich einen Moment. Alle Felder sind freiwillig.</p>
+      </div>
+      {levelEl}
+      {error && <div className="m-err">{error}</div>}
+      <div className="student-nav">
+        {step > 0 ? <button className="btn-ghost" onClick={() => go(step-1)}>Zurück</button>
+          : <button className="btn-ghost" onClick={onExit}>Abbrechen</button>}
+        {step < 3 ? <button className="btn-primary" onClick={() => go(step+1)}>Weiter</button>
+          : <button className="btn-submit" onClick={submit}>Reflexion abschicken</button>}
+      </div>
+    </div>
+  );
+}
+
+// Teacher view: 4 tiles
+function WordCloud({ responses }) {
+  const freq = {};
+  responses.forEach(r => {
+    const text = ((r.payload?.takeaway)||'').toLowerCase();
+    text.split(/[\s.,;:!?"'„""()\-–—/]+/).forEach(w => {
+      const clean = w.replace(/[^\wäöüß]/g,'').trim();
+      if (clean.length < 3 || window.__STOPWORDS.has(clean)) return;
+      freq[clean] = (freq[clean]||0) + 1;
+    });
+  });
+  const entries = Object.entries(freq).sort((a,b) => b[1]-a[1]).slice(0,28);
+  if (entries.length === 0) return <div className="empty">Noch keine Antworten — warten wir auf die Klasse…</div>;
+  const max = entries[0][1];
+  return (
+    <div className="cloud">
+      {entries.map(([w,n]) => {
+        const scale = 0.6 + (n/max)*1.8;
+        const tier = Math.min(5, Math.max(1, Math.round((n/max)*5)));
+        return <span key={w} className={`w${tier}`} style={{fontSize:`${scale*14+8}px`, lineHeight:1.1}}>{w}</span>;
+      })}
+    </div>
+  );
+}
+
+function ConfidenceBars({ responses }) {
+  const counts = [0,0,0,0,0]; let total=0, sum=0;
+  responses.forEach(r => { const c = r.payload?.confidence; if (c >= 1 && c <= 5) { counts[c-1]++; total++; sum += c; } });
+  const max = Math.max(1, ...counts);
+  const avg = total ? sum/total : 0;
+  return (
+    <div className="confidence-wrap">
+      <div className="confidence-head">
+        <div className="k">Sicherheit im Thema · Verteilung (1–5)</div>
+        <div className="avg">{total ? avg.toFixed(1) : '–'}<small>/ 5 · {total} Stimmen</small></div>
+      </div>
+      <div className="confidence-bars">
+        {counts.map((c,i) => (
+          <div key={i} className="confidence-bar" style={{height:`${(c/max)*100}%`, background:`oklch(${0.42+i*0.08} 0.07 ${260-i*20})`}}>
+            <div className="count">{c || ''}</div><div className="lab">{i+1}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HelpBars({ responses }) {
+  const counts = {}; HELP_OPTIONS.forEach(o => counts[o] = 0);
+  responses.forEach(r => { const h = r.payload?.help; if (h && counts.hasOwnProperty(h)) counts[h]++; });
+  const total = Object.values(counts).reduce((a,b) => a+b, 0);
+  const max = Math.max(1, ...Object.values(counts));
+  const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+  if (total === 0) return <div className="empty">Noch keine Antworten zur Lernform.</div>;
+  return (
+    <div className="bars">
+      {sorted.map(([opt,n]) => (
+        <div key={opt} className="bar-row">
+          <div className="bar-row-inner" style={{gridColumn:'1 / -1'}}><span className="lab">{opt}</span><span className="count">{n}</span></div>
+          <div className="track"><div className="fill" style={{width:`${(n/max)*100}%`}}/></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function StuckList({ responses }) {
+  const [shown, setShown] = React.useState(false);
+  const items = responses.filter(r => r.payload?.stuck?.length > 0);
+  return (
+    <div className="private-section">
+      <div className="private-head">
+        <div className="k">🔒 Stolpersteine · nur für Sie<span className="lock-badge">privat</span></div>
+        <button className="t-btn" style={{padding:'5px 10px', fontSize:12}} onClick={() => setShown(s => !s)}>{shown ? 'Verbergen' : 'Anzeigen'}</button>
+      </div>
+      {!shown ? <div className="private-hidden">Damit Schüler:innen beim Beamer nicht identifizierbar werden, bleiben diese Antworten verborgen.</div>
+        : items.length === 0 ? <div className="private-hidden">Noch keine Stolpersteine gemeldet.</div>
+        : <div className="private-list">{items.map((r,i) => (<div key={r.id} className="private-item"><span className="num">{String(i+1).padStart(2,'0')}</span><span>{r.payload.stuck}</span></div>))}</div>}
+    </div>
+  );
+}
+
+function MoodChart({ responses, projection }) {
+  const counts = [0,0,0,0,0]; let total = 0;
+  responses.forEach(r => { const m = r.payload?.mood; if (m >= 1 && m <= 5) { counts[m-1]++; total++; } });
+  if (total === 0) return <div className="empty">Noch keine Stimmungen — die Klasse reflektiert noch.</div>;
+  const max = Math.max(1, ...counts);
+  return (
+    <div className="mood-chart">
+      {counts.map((c,i) => (
+        <div key={i} className="mood-col">
+          <div className="track"><div className="fill" style={{height:`${(c/max)*100}%`, background:MOOD_COLORS[i]}}/><div className="count">{c || '·'}</div></div>
+          <div className="svg-wrap"><MoodSmiley level={i+1} color={MOOD_COLORS[i]} size={projection ? 52 : 36}/></div>
+          <div className="pct">{Math.round((c/total)*100)}%</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function QuestionCards({ responses, pickedUp, onOpen, kind }) {
+  const field = kind === 'openQ' ? 'openQ' : 'transfer';
+  const items = responses.filter(r => r.payload?.[field]?.length > 0);
+  if (items.length === 0) return <div className="empty">{kind === 'openQ' ? 'Noch keine offenen Fragen.' : 'Noch keine Transfer-Ideen.'}</div>;
+  return (
+    <div className="cards-grid">
+      {items.map((r,i) => {
+        const key = `${r.id}:${field}`;
+        const done = pickedUp.has(key);
+        return (
+          <button key={key} className={'q-card ' + (done ? 'done' : '')} onClick={() => onOpen({ item: r, field, index: i+1 })}>
+            <span className="num">{kind === 'openQ' ? 'Q' : 'T'}{String(i+1).padStart(2,'0')}</span>
+            <span className="text">{r.payload[field]}</span>
+            {done && <span className="pickedup">aufgegriffen</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function FourLevelsInnerTeacher({ responses, projection }) {
+  const [tile4Tab, setTile4Tab] = React.useState('open');
+  const [pickedUp, setPickedUp] = React.useState(new Set());
+  const [focus, setFocus] = React.useState(null);
+  const toggle = key => setPickedUp(s => { const n = new Set(s); n.has(key) ? n.delete(key) : n.add(key); return n; });
+
+  const field = focus?.field;
+  const items = field ? responses.filter(r => r.payload?.[field]) : [];
+  const focusNav = dir => {
+    if (!focus) return;
+    const idx = items.findIndex(r => r.id === focus.item.id);
+    const next = items[(idx + dir + items.length) % items.length];
+    if (next) setFocus({ item: next, field: focus.field, index: items.indexOf(next) + 1 });
+  };
+
+  return (
+    <>
+      <div className="tiles stagger">
+        <div className="tile">
+          <div className="tile-head"><div><div className="eyebrow">Ebene 1 · Kognitiv</div><h3>Was die Klasse mitnimmt</h3></div></div>
+          <div className="tile-body"><WordCloud responses={responses}/><ConfidenceBars responses={responses}/></div>
+        </div>
+        <div className="tile">
+          <div className="tile-head"><div><div className="eyebrow">Ebene 2 · Prozess</div><h3>Was heute geholfen hat</h3></div></div>
+          <div className="tile-body"><HelpBars responses={responses}/>{!projection && <StuckList responses={responses}/>}</div>
+        </div>
+        <div className="tile">
+          <div className="tile-head"><div><div className="eyebrow">Ebene 3 · Stimmung</div><h3>Wie es der Klasse geht</h3></div></div>
+          <div className="tile-body"><MoodChart responses={responses} projection={projection}/></div>
+        </div>
+        <div className="tile">
+          <div className="tile-head">
+            <div><div className="eyebrow">Ebene 4 · Transfer</div><h3>{tile4Tab === 'open' ? 'Offene Fragen' : 'Transfer-Ideen'}</h3></div>
+            <div className="tabs">
+              <button className={tile4Tab === 'open' ? 'active' : ''} onClick={() => setTile4Tab('open')}>Offene Fragen</button>
+              <button className={tile4Tab === 'transfer' ? 'active' : ''} onClick={() => setTile4Tab('transfer')}>Transfer</button>
+            </div>
+          </div>
+          <div className="tile-body">
+            <QuestionCards responses={responses} pickedUp={pickedUp} onOpen={setFocus} kind={tile4Tab === 'open' ? 'openQ' : 'transfer'}/>
+          </div>
+        </div>
+      </div>
+      {focus && (
+        <div className="modal-backdrop" onClick={() => setFocus(null)}>
+          <div className="question-focus" onClick={e => e.stopPropagation()}>
+            <div className="num">{focus.field === 'openQ' ? 'Offene Frage' : 'Transfer-Idee'} · {String(focus.index).padStart(2,'0')}</div>
+            <div className="text">{focus.item.payload[focus.field]}</div>
+            <div className="focus-actions">
+              <button className="focus-nav" onClick={() => focusNav(-1)}>‹</button>
+              <div className="right">
+                {pickedUp.has(`${focus.item.id}:${focus.field}`)
+                  ? <button className="focus-mark-undo" onClick={() => toggle(`${focus.item.id}:${focus.field}`)}>Als offen markieren</button>
+                  : <button className="focus-mark-done" onClick={() => toggle(`${focus.item.id}:${focus.field}`)}>Als aufgegriffen markieren</button>}
+                <button className="focus-nav" onClick={() => focusNav(1)}>›</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+Object.assign(window, { FourLevelsInnerStudent, FourLevelsInnerTeacher });
+
+</script>
+
+<script type="text/babel" data-source="methods/weather.jsx">
+// Weather method — 8 icons, temperature slider, freetext
+const WEATHER = [
+  { id: 'sun', emoji: '☀️', label: 'Sonne', hint: 'klar, zuversichtlich' },
+  { id: 'part', emoji: '🌤️', label: 'Sonne mit Wolken', hint: 'grundsätzlich gut, aber nicht ungetrübt' },
+  { id: 'cloud', emoji: '☁️', label: 'Bewölkt', hint: 'gedämpft, ohne Richtung' },
+  { id: 'fog', emoji: '🌫️', label: 'Nebel', hint: 'orientierungslos, unklar' },
+  { id: 'rain', emoji: '🌧️', label: 'Regen', hint: 'mühsam, zäh' },
+  { id: 'storm', emoji: '⛈️', label: 'Gewitter', hint: 'aufgewühlt, überfordert' },
+  { id: 'snow', emoji: '❄️', label: 'Schnee', hint: 'still, gebremst' },
+  { id: 'rainbow', emoji: '🌈', label: 'Regenbogen', hint: 'nach Schwierigkeit aufklarend' },
+];
+
+function WeatherStudent({ code, onSubmit, onExit }) {
+  const [sel, setSel] = React.useState(null);
+  const [temp, setTemp] = React.useState(18);
+  const [text, setText] = React.useState('');
+  const [busy, setBusy] = React.useState(false);
+  const [err, setErr] = React.useState(null);
+
+  const canSubmit = !!sel && !busy;
+
+  const submit = async () => {
+    setBusy(true); setErr(null);
+    try {
+      await window.__store.addResponse(code, 'weather', {
+        weather: sel, temperature: temp, text: text.trim(),
+      });
+      onSubmit();
+    } catch (e) { setErr('Speichern fehlgeschlagen. Bitte Seite neu laden.'); setBusy(false); }
+  };
+
+  return (
+    <div className="m-student m-weather">
+      <div className="ms-head">
+        <div className="brand"><window.BrandLogo size="mini" rotate={true}/></div>
+        <div className="code mono">{code}</div>
+      </div>
+      <div className="ms-intro">
+        <div className="eyebrow creative">Kreativ-Reflexion · Wetter</div>
+        <h2>Wie war das Wetter heute für Sie?</h2>
+        <p>Wählen Sie ein Wetter, das zu Ihrem Erleben passt.</p>
+      </div>
+
+      <div className="weather-grid stagger">
+        {WEATHER.map(w => (
+          <button key={w.id}
+            className={'weather-tile ' + (sel === w.id ? 'sel' : '')}
+            onClick={() => setSel(w.id)}
+            title={w.hint}>
+            <div className="wemoji">{w.emoji}</div>
+            <div className="wlabel">{w.label}</div>
+          </button>
+        ))}
+      </div>
+
+      <div className="field">
+        <label>Temperatur · emotionale Intensität</label>
+        <div className="temp-row">
+          <span className="temp-end">kalt</span>
+          <input type="range" min="-10" max="40" value={temp}
+            onChange={e => setTemp(+e.target.value)} className="temp-slider" />
+          <span className="temp-end">heiß</span>
+        </div>
+        <div className="temp-read">{temp}°</div>
+      </div>
+
+      <div className="field">
+        <label>Was genau war das Wetter heute für Sie? <span className="optional">(optional)</span></label>
+        <textarea className="text" value={text} onChange={e => setText(e.target.value)}
+          placeholder="Ein Gedanke zu Ihrer Wetterwahl…" maxLength={280}/>
+      </div>
+
+      {err && <div className="m-err">{err}</div>}
+
+      <div className="ms-nav">
+        <button className="btn-ghost" onClick={onExit}>Abbrechen</button>
+        <button className="btn-submit" disabled={!canSubmit} onClick={submit}>Abschicken</button>
+      </div>
+    </div>
+  );
+}
+
+function WeatherTeacher({ responses, projection }) {
+  const counts = {};
+  WEATHER.forEach(w => counts[w.id] = 0);
+  const texts = {}; // per weather
+  let tempSum = 0, tempN = 0;
+  responses.forEach(r => {
+    const p = r.payload || {};
+    if (p.weather && counts[p.weather] !== undefined) counts[p.weather]++;
+    if (p.text) { (texts[p.weather] = texts[p.weather] || []).push({ id: r.id, text: p.text }); }
+    if (typeof p.temperature === 'number') { tempSum += p.temperature; tempN++; }
+  });
+  const total = responses.length;
+  const max = Math.max(1, ...Object.values(counts));
+  const top = Object.entries(counts).sort((a,b) => b[1]-a[1])[0];
+  const topWeather = top && top[1] > 0 ? WEATHER.find(w => w.id === top[0]) : null;
+  const avgTemp = tempN ? (tempSum / tempN) : null;
+
+  if (total === 0) return <div className="m-empty">Noch keine Rückmeldungen — warten wir auf die Klasse…</div>;
+
+  return (
+    <div className="m-teacher m-teacher-weather">
+      <div className="mt-cols">
+        <div className="mt-main">
+          <div className="mt-eyebrow">Wetterlage der Klasse</div>
+          <div className="weather-hero">
+            <div className="weather-hero-emoji">{topWeather?.emoji || '—'}</div>
+            <div className="weather-hero-lab">
+              <div className="label">{topWeather?.label}</div>
+              <div className="sub">{top[1]} von {total} · {topWeather?.hint}</div>
+            </div>
+          </div>
+          <div className="weather-overview">
+            {WEATHER.map(w => (
+              <div key={w.id} className={'weather-bar ' + (counts[w.id] === 0 ? 'dim' : '')}>
+                <div className="wb-emoji">{w.emoji}</div>
+                <div className="wb-bar"><div className="wb-fill" style={{width: `${(counts[w.id]/max)*100}%`}}/></div>
+                <div className="wb-count">{counts[w.id]}</div>
+              </div>
+            ))}
+          </div>
+          {avgTemp !== null && (
+            <div className="temp-gauge">
+              <div className="tg-head">
+                <div className="k">Durchschnittstemperatur</div>
+                <div className="v">{avgTemp.toFixed(1)}°</div>
+              </div>
+              <div className="tg-track">
+                <div className="tg-ptr" style={{left: `${((avgTemp + 10) / 50) * 100}%`}}/>
+                <div className="tg-lab left">kalt</div>
+                <div className="tg-lab right">heiß</div>
+              </div>
+            </div>
+          )}
+        </div>
+        {!projection && (
+          <div className="mt-side">
+            <div className="mt-side-head">Beschreibungen · nach Wetter</div>
+            <div className="mt-side-body">
+              {WEATHER.filter(w => texts[w.id]?.length).map(w => (
+                <div key={w.id} className="ws-group">
+                  <div className="ws-group-head"><span className="e">{w.emoji}</span> {w.label} · {texts[w.id].length}</div>
+                  {texts[w.id].map(t => (
+                    <div key={t.id} className="ws-item">{t.text}</div>
+                  ))}
+                </div>
+              ))}
+              {Object.keys(texts).length === 0 && <div className="ws-empty">Noch keine Kommentare.</div>}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+window.METHOD_WEATHER = {
+  id: 'weather',
+  title: 'Wetter-Reflexion',
+  group: 'creative',
+  emoji: '🌤️',
+  description: 'Ein Wetter als Metapher für das heutige Erleben.',
+  didacticHint: 'Niedrigschwellig, funktioniert auch bei Zurückhaltung. Gut für schnelle emotionale Rückmeldung.',
+  StudentView: WeatherStudent,
+  TeacherView: WeatherTeacher,
+};
+
+</script>
+
+<script type="text/babel" data-source="methods/suitcase.jsx">
+// Suitcase / trash / washing machine method
+
+const STW_BOXES = [
+  { id: 'suitcase', emoji: '🧳', title: 'Koffer', prompt: 'Was nehmen Sie aus der Stunde mit?', accent: 'a' },
+  { id: 'trash', emoji: '🗑️', title: 'Mülltonne', prompt: 'Was lassen Sie zurück? Was war nicht hilfreich?', accent: 'b' },
+  { id: 'washer', emoji: '🌀', title: 'Waschmaschine', prompt: 'Was muss sich noch klären?', accent: 'c' },
+];
+
+function SuitcaseStudent({ code, onSubmit, onExit }) {
+  const [texts, setTexts] = React.useState({ suitcase: '', trash: '', washer: '' });
+  const [busy, setBusy] = React.useState(false);
+  const [err, setErr] = React.useState(null);
+  const canSubmit = !busy && (texts.suitcase || texts.trash || texts.washer);
+
+  const submit = async () => {
+    setBusy(true); setErr(null);
+    try {
+      await window.__store.addResponse(code, 'suitcase', {
+        suitcase: texts.suitcase.trim(),
+        trash: texts.trash.trim(),
+        washer: texts.washer.trim(),
+      });
+      onSubmit();
+    } catch (e) { setErr('Speichern fehlgeschlagen.'); setBusy(false); }
+  };
+
+  return (
+    <div className="m-student m-suitcase">
+      <div className="ms-head">
+        <div className="brand"><window.BrandLogo size="mini" rotate={true}/></div>
+        <div className="code mono">{code}</div>
+      </div>
+      <div className="ms-intro">
+        <div className="eyebrow creative">Kreativ-Reflexion · Koffer · Mülltonne · Waschmaschine</div>
+        <h2>Was nehmen Sie mit, was lassen Sie, was klären Sie noch?</h2>
+        <p>Sie müssen nicht alle drei Felder ausfüllen. Konzentrieren Sie sich auf das, was für Sie heute relevant war.</p>
+      </div>
+
+      <div className="stw-boxes">
+        {STW_BOXES.map(b => (
+          <div key={b.id} className={`stw-box stw-${b.accent}`}>
+            <div className="stw-icon">{b.emoji}</div>
+            <div className="stw-title">{b.title}</div>
+            <div className="stw-prompt">{b.prompt}</div>
+            <textarea value={texts[b.id]}
+              onChange={e => setTexts(t => ({...t, [b.id]: e.target.value}))}
+              placeholder="Ein paar Sätze…" maxLength={320} className="text"/>
+          </div>
+        ))}
+      </div>
+
+      {err && <div className="m-err">{err}</div>}
+      <div className="ms-nav">
+        <button className="btn-ghost" onClick={onExit}>Abbrechen</button>
+        <button className="btn-submit" disabled={!canSubmit} onClick={submit}>Abschicken</button>
+      </div>
+    </div>
+  );
+}
+
+function SuitcaseTeacher({ responses, projection }) {
+  const [picked, setPicked] = React.useState(new Set());
+  const toggle = async (id, field) => {
+    const k = `${id}:${field}`;
+    const n = new Set(picked); n.has(k) ? n.delete(k) : n.add(k);
+    setPicked(n);
+  };
+
+  const byBox = { suitcase: [], trash: [], washer: [] };
+  responses.forEach(r => {
+    const p = r.payload || {};
+    STW_BOXES.forEach(b => { if (p[b.id]) byBox[b.id].push({ id: r.id, text: p[b.id] }); });
+  });
+
+  if (responses.length === 0) return <div className="m-empty">Noch keine Rückmeldungen…</div>;
+
+  return (
+    <div className="m-teacher stw-grid">
+      {STW_BOXES.map(b => (
+        <div key={b.id} className={`stw-col stw-${b.accent}`}>
+          <div className="stw-col-head">
+            <div className="emoji">{b.emoji}</div>
+            <div>
+              <div className="title">{b.title}</div>
+              <div className="sub">{byBox[b.id].length} Karten</div>
+            </div>
+          </div>
+          <div className="stw-cards">
+            {byBox[b.id]
+              .sort((a,b) => picked.has(`${b.id}:${b.title}`) ? -1 : 0)
+              .map(item => {
+                const k = `${item.id}:${b.id}`;
+                const on = picked.has(k);
+                return (
+                  <div key={item.id} className={'stw-card ' + (on ? 'picked' : '')}
+                    onClick={() => !projection && toggle(item.id, b.id)}>
+                    <div className="stw-card-text">{item.text}</div>
+                    {on && <div className="stw-card-tag">aufgegriffen</div>}
+                  </div>
+                );
+              })}
+            {byBox[b.id].length === 0 && <div className="stw-empty">—</div>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+window.METHOD_SUITCASE = {
+  id: 'suitcase',
+  title: 'Koffer · Mülltonne · Waschmaschine',
+  group: 'creative',
+  emoji: '🧳',
+  description: 'Was mitnehmen, was zurücklassen, was noch durchdenken?',
+  didacticHint: 'Klassische Reflexionsmethode. Gut am Ende von Unterrichtsreihen oder inhaltlich dichten Stunden.',
+  StudentView: SuitcaseStudent,
+  TeacherView: SuitcaseTeacher,
+};
+
+</script>
+
+<script type="text/babel" data-source="methods/country.jsx">
+// Country metaphor method
+
+const COUNTRIES = [
+  { n: 'Deutschland', f: '🇩🇪' }, { n: 'Frankreich', f: '🇫🇷' }, { n: 'Italien', f: '🇮🇹' }, { n: 'Spanien', f: '🇪🇸' },
+  { n: 'Großbritannien', f: '🇬🇧' }, { n: 'Niederlande', f: '🇳🇱' }, { n: 'Schweden', f: '🇸🇪' }, { n: 'Norwegen', f: '🇳🇴' },
+  { n: 'Island', f: '🇮🇸' }, { n: 'Finnland', f: '🇫🇮' }, { n: 'Griechenland', f: '🇬🇷' }, { n: 'Polen', f: '🇵🇱' },
+  { n: 'Schweiz', f: '🇨🇭' }, { n: 'Portugal', f: '🇵🇹' }, { n: 'Irland', f: '🇮🇪' },
+  { n: 'Japan', f: '🇯🇵' }, { n: 'China', f: '🇨🇳' }, { n: 'Indien', f: '🇮🇳' }, { n: 'Südkorea', f: '🇰🇷' },
+  { n: 'Thailand', f: '🇹🇭' }, { n: 'Vietnam', f: '🇻🇳' }, { n: 'Indonesien', f: '🇮🇩' }, { n: 'Türkei', f: '🇹🇷' },
+  { n: 'Israel', f: '🇮🇱' }, { n: 'VAE', f: '🇦🇪' }, { n: 'Singapur', f: '🇸🇬' },
+  { n: 'USA', f: '🇺🇸' }, { n: 'Kanada', f: '🇨🇦' }, { n: 'Mexiko', f: '🇲🇽' }, { n: 'Brasilien', f: '🇧🇷' },
+  { n: 'Argentinien', f: '🇦🇷' }, { n: 'Chile', f: '🇨🇱' }, { n: 'Kuba', f: '🇨🇺' },
+  { n: 'Südafrika', f: '🇿🇦' }, { n: 'Ägypten', f: '🇪🇬' }, { n: 'Marokko', f: '🇲🇦' }, { n: 'Kenia', f: '🇰🇪' },
+  { n: 'Nigeria', f: '🇳🇬' }, { n: 'Madagaskar', f: '🇲🇬' },
+  { n: 'Australien', f: '🇦🇺' }, { n: 'Neuseeland', f: '🇳🇿' },
+];
+
+function CountryStudent({ code, onSubmit, onExit }) {
+  const [step, setStep] = React.useState(0);
+  const [query, setQuery] = React.useState('');
+  const [sel, setSel] = React.useState(null);
+  const [why, setWhy] = React.useState('');
+  const [detail, setDetail] = React.useState('');
+  const [busy, setBusy] = React.useState(false);
+  const [err, setErr] = React.useState(null);
+
+  const filtered = query.trim()
+    ? COUNTRIES.filter(c => c.n.toLowerCase().includes(query.toLowerCase()))
+    : COUNTRIES;
+
+  const submit = async () => {
+    setBusy(true); setErr(null);
+    try {
+      await window.__store.addResponse(code, 'country', {
+        country: sel.n, flag: sel.f, why: why.trim(), detail: detail.trim(),
+      });
+      onSubmit();
+    } catch (e) { setErr('Speichern fehlgeschlagen.'); setBusy(false); }
+  };
+
+  return (
+    <div className="m-student m-country">
+      <div className="ms-head">
+        <div className="brand"><window.BrandLogo size="mini" rotate={true}/></div>
+        <div className="code mono">{code}</div>
+      </div>
+
+      {step === 0 && (
+        <>
+          <div className="ms-intro">
+            <div className="eyebrow creative">Kreativ-Reflexion · Länder-Metapher</div>
+            <h2>Welches Land passt heute zu Ihrem Lernprozess?</h2>
+            <p>Wählen Sie per Tap.</p>
+          </div>
+          <input className="text country-search" placeholder="Land suchen…"
+            value={query} onChange={e => setQuery(e.target.value)} />
+          <div className="country-grid stagger">
+            {filtered.map(c => (
+              <button key={c.n} className={'country-tile ' + (sel?.n === c.n ? 'sel' : '')}
+                onClick={() => setSel(c)}>
+                <div className="cf">{c.f}</div>
+                <div className="cn">{c.n}</div>
+              </button>
+            ))}
+          </div>
+          <div className="ms-nav">
+            <button className="btn-ghost" onClick={onExit}>Abbrechen</button>
+            <button className="btn-primary" disabled={!sel} onClick={() => setStep(1)}>Weiter</button>
+          </div>
+        </>
+      )}
+
+      {step === 1 && (
+        <>
+          <div className="ms-intro">
+            <div className="chosen-country">
+              <div className="cf-big">{sel.f}</div>
+              <div className="cn-big">{sel.n}</div>
+            </div>
+          </div>
+          <div className="field">
+            <label>Warum dieses Land? Welche Eigenschaft passt zu Ihrem heutigen Lernprozess?</label>
+            <textarea className="text" value={why} onChange={e => setWhy(e.target.value)}
+              placeholder="z. B. kleine Schritte, aber immer in Bewegung…" maxLength={280}/>
+          </div>
+          <div className="field">
+            <label>Was bedeutet das konkret? <span className="optional">(optional)</span></label>
+            <textarea className="text" value={detail} onChange={e => setDetail(e.target.value)}
+              placeholder="Noch ein Gedanke…" maxLength={240}/>
+          </div>
+          {err && <div className="m-err">{err}</div>}
+          <div className="ms-nav">
+            <button className="btn-ghost" onClick={() => setStep(0)}>Zurück</button>
+            <button className="btn-submit" disabled={!why.trim() || busy} onClick={submit}>Abschicken</button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function CountryTeacher({ responses, projection }) {
+  const [focus, setFocus] = React.useState(null); // country name
+  const counts = {};
+  const byCountry = {};
+  responses.forEach(r => {
+    const p = r.payload || {};
+    if (!p.country) return;
+    counts[p.country] = (counts[p.country] || 0) + 1;
+    (byCountry[p.country] = byCountry[p.country] || []).push({ id: r.id, why: p.why, detail: p.detail, flag: p.flag });
+  });
+  const total = responses.length;
+  if (total === 0) return <div className="m-empty">Noch keine Rückmeldungen…</div>;
+
+  const top = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,5).map(([n]) => n);
+  const streamCountries = focus ? [focus] : top;
+
+  return (
+    <div className="m-teacher m-country-teacher">
+      <div className="mt-cols">
+        <div className="mt-main">
+          <div className="mt-eyebrow">Länder-Metaphern · {total} Stimmen</div>
+          <div className="country-map">
+            {COUNTRIES.map(c => {
+              const n = counts[c.n] || 0;
+              const on = n > 0;
+              const active = focus === c.n;
+              return (
+                <button key={c.n}
+                  className={'ct-tile ' + (on ? 'on ' : 'off ') + (active ? 'active' : '')}
+                  onClick={() => on && !projection && setFocus(focus === c.n ? null : c.n)}>
+                  <span className="cf">{c.f}</span>
+                  <span className="cn">{c.n}</span>
+                  {n > 0 && <span className="badge">{n}</span>}
+                </button>
+              );
+            })}
+          </div>
+          <div className="hint-box">Greifen Sie 2–3 besonders kreative oder kontrastierende Metaphern auf. Klicken Sie ein Land an, um Begründungen zu filtern.</div>
+        </div>
+        {!projection && (
+          <div className="mt-side">
+            <div className="mt-side-head">
+              {focus ? `Begründungen · ${focus}` : 'Begründungen · Top-Länder'}
+              {focus && <button className="link-btn" onClick={() => setFocus(null)}>alle</button>}
+            </div>
+            <div className="mt-side-body">
+              {streamCountries.map(name => (byCountry[name] || []).map(item => (
+                <div key={item.id} className="country-rat">
+                  <div className="cr-head"><span className="cf">{item.flag}</span> <b>{name}</b></div>
+                  <div className="cr-why">{item.why}</div>
+                  {item.detail && <div className="cr-detail">{item.detail}</div>}
+                </div>
+              )))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+window.METHOD_COUNTRY = {
+  id: 'country',
+  title: 'Länder-Metapher',
+  group: 'creative',
+  emoji: '🌍',
+  description: 'Welches Land passt heute zum Lernprozess?',
+  didacticHint: 'Aktiviert analoges Denken. Besonders gut nach komplexen Stunden oder um zurückhaltende Schüler:innen zu erreichen.',
+  StudentView: CountryStudent,
+  TeacherView: CountryTeacher,
+};
+
+</script>
+
+<script type="text/babel" data-source="methods/exam.jsx">
+// Exam reflection method — 4 sections
+
+const GRADES_DE = ['1', '2', '3', '4', '5', '6'];
+const POINTS = Array.from({length: 16}, (_, i) => String(15 - i));
+
+const PREP_STRATS = ['Zusammenfassungen', 'Karteikarten', 'Altklausuren', 'Lerngruppe', 'Unterlagen lesen', 'Lern-App', 'Nichts Spezielles', 'Etwas anderes'];
+const STUCK_ON = ['Zeitmanagement', 'Aufgabenverständnis', 'Fehlendes Wissen', 'Nervosität', 'Konzentration', 'Nichts', 'Etwas anderes'];
+
+function ExamStudent({ code, onSubmit, onExit, gradingMode = 'grades' }) {
+  const [step, setStep] = React.useState(0);
+  const [d, setD] = React.useState({
+    expected: '', got: '',
+    prepIntensity: null, prepStrats: [], prepReflect: '',
+    calm: null, stuckOn: [], stuckMoment: '',
+    nextTime: '', needSupport: '',
+  });
+  const [busy, setBusy] = React.useState(false);
+  const [err, setErr] = React.useState(null);
+  const update = p => setD(v => ({...v, ...p}));
+  const toggleIn = (key, val) => update({ [key]: d[key].includes(val) ? d[key].filter(x => x !== val) : [...d[key], val] });
+
+  const opts = gradingMode === 'points' ? POINTS : GRADES_DE;
+
+  const submit = async () => {
+    setBusy(true); setErr(null);
+    try {
+      await window.__store.addResponse(code, 'exam', {
+        ...d,
+        expected: d.expected ? Number(d.expected) : null,
+        got: d.got ? Number(d.got) : null,
+        gradingMode,
+        prepReflect: d.prepReflect.trim(),
+        stuckMoment: d.stuckMoment.trim(),
+        nextTime: d.nextTime.trim(),
+        needSupport: d.needSupport.trim(),
+      });
+      onSubmit();
+    } catch (e) { setErr('Speichern fehlgeschlagen.'); setBusy(false); }
+  };
+
+  const diff = (d.expected !== '' && d.got !== '')
+    ? (Number(d.expected) - Number(d.got))
+    : null;
+  let diffText = '';
+  if (diff !== null) {
+    if (gradingMode === 'grades') {
+      if (diff > 0) diffText = 'schlechter als erwartet';
+      else if (diff < 0) diffText = 'besser als erwartet';
+      else diffText = 'wie erwartet';
+    } else {
+      if (diff < 0) diffText = 'schlechter als erwartet';
+      else if (diff > 0) diffText = 'besser als erwartet';
+      else diffText = 'wie erwartet';
+    }
+  }
+
+  return (
+    <div className="m-student m-exam">
+      <div className="ms-head">
+        <div className="brand"><window.BrandLogo size="mini" rotate={true}/></div>
+        <div className="code mono">{code}</div>
+      </div>
+      <div className="exam-progress">
+        {[0,1,2,3].map(i => <div key={i} className={'ep-step ' + (i <= step ? 'on' : '')}/>)}
+      </div>
+
+      {step === 0 && (
+        <>
+          <div className="ms-intro">
+            <div className="eyebrow perf">Klausurreflexion · 1 / 4</div>
+            <h2>Erwartung vs. Realität</h2>
+          </div>
+          <div className="field">
+            <label>Welche {gradingMode === 'grades' ? 'Note' : 'Punktzahl'} hatten Sie erwartet?</label>
+            <select className="text" value={d.expected} onChange={e => update({expected: e.target.value})}>
+              <option value="">—</option>
+              {opts.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+          <div className="field">
+            <label>Welche {gradingMode === 'grades' ? 'Note' : 'Punktzahl'} haben Sie bekommen?</label>
+            <select className="text" value={d.got} onChange={e => update({got: e.target.value})}>
+              <option value="">—</option>
+              {opts.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+          {diffText && <div className="diff-box">{diffText}</div>}
+        </>
+      )}
+
+      {step === 1 && (
+        <>
+          <div className="ms-intro">
+            <div className="eyebrow perf">Klausurreflexion · 2 / 4</div>
+            <h2>Vorbereitung</h2>
+          </div>
+          <div className="field">
+            <label>Wie intensiv haben Sie sich vorbereitet?</label>
+            <div className="scale">
+              {[1,2,3,4,5].map(n => (
+                <button key={n} type="button"
+                  className={d.prepIntensity === n ? 'sel' : ''}
+                  onClick={() => update({prepIntensity: n})}>{n}</button>
+              ))}
+            </div>
+            <div className="scale-labels"><span>gar nicht</span><span>sehr intensiv</span></div>
+          </div>
+          <div className="field">
+            <label>Welche Lernstrategien haben Sie genutzt? <span className="optional">(Mehrfachauswahl)</span></label>
+            <div className="chips">
+              {PREP_STRATS.map(s => (
+                <button key={s}
+                  className={'chip ' + (d.prepStrats.includes(s) ? 'sel' : '')}
+                  onClick={() => toggleIn('prepStrats', s)}>{s}</button>
+              ))}
+            </div>
+          </div>
+          <div className="field">
+            <label>Was würden Sie bei der Vorbereitung wiederholen? Was nicht? <span className="optional">(optional)</span></label>
+            <textarea className="text" value={d.prepReflect} onChange={e => update({prepReflect: e.target.value})} maxLength={280}/>
+          </div>
+        </>
+      )}
+
+      {step === 2 && (
+        <>
+          <div className="ms-intro">
+            <div className="eyebrow perf">Klausurreflexion · 3 / 4</div>
+            <h2>Während der Klausur</h2>
+          </div>
+          <div className="field">
+            <label>Wie ruhig waren Sie während der Klausur?</label>
+            <div className="scale">
+              {[1,2,3,4,5].map(n => (
+                <button key={n} type="button"
+                  className={d.calm === n ? 'sel' : ''}
+                  onClick={() => update({calm: n})}>{n}</button>
+              ))}
+            </div>
+            <div className="scale-labels"><span>sehr nervös</span><span>sehr ruhig</span></div>
+          </div>
+          <div className="field">
+            <label>Wobei sind Sie ins Stocken geraten?</label>
+            <div className="chips">
+              {STUCK_ON.map(s => (
+                <button key={s}
+                  className={'chip ' + (d.stuckOn.includes(s) ? 'sel' : '')}
+                  onClick={() => toggleIn('stuckOn', s)}>{s}</button>
+              ))}
+            </div>
+          </div>
+          <div className="field">
+            <label>Welcher Moment war besonders schwierig oder entscheidend? <span className="optional">(optional)</span></label>
+            <textarea className="text" value={d.stuckMoment} onChange={e => update({stuckMoment: e.target.value})} maxLength={280}/>
+          </div>
+        </>
+      )}
+
+      {step === 3 && (
+        <>
+          <div className="ms-intro">
+            <div className="eyebrow perf">Klausurreflexion · 4 / 4</div>
+            <h2>Strategie für die nächste Klausur</h2>
+          </div>
+          <div className="field">
+            <label>Was nehmen Sie konkret für die nächste Klausur mit?</label>
+            <textarea className="text" value={d.nextTime} onChange={e => update({nextTime: e.target.value})} maxLength={280}/>
+          </div>
+          <div className="field">
+            <label>Wo möchten Sie Unterstützung?</label>
+            <textarea className="text" value={d.needSupport} onChange={e => update({needSupport: e.target.value})} maxLength={280}/>
+            <div className="hint">Nur Ihre Lehrkraft sieht diese Antwort — sie wird nicht projiziert.</div>
+          </div>
+        </>
+      )}
+
+      {err && <div className="m-err">{err}</div>}
+      <div className="ms-nav">
+        {step > 0 ? (
+          <button className="btn-ghost" onClick={() => setStep(s => s-1)}>Zurück</button>
+        ) : (
+          <button className="btn-ghost" onClick={onExit}>Abbrechen</button>
+        )}
+        {step < 3 ? (
+          <button className="btn-primary" onClick={() => setStep(s => s+1)}>Weiter</button>
+        ) : (
+          <button className="btn-submit" disabled={busy} onClick={submit}>Abschicken</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ExamTeacher({ responses, projection }) {
+  let exSum = 0, exN = 0, gotSum = 0, gotN = 0;
+  let prepSum = 0, prepN = 0;
+  const prepCounts = Object.fromEntries(PREP_STRATS.map(s => [s, 0]));
+  const stuckCounts = Object.fromEntries(STUCK_ON.map(s => [s, 0]));
+  const supports = [];
+  let gradingMode = 'grades';
+  responses.forEach(r => {
+    const p = r.payload || {};
+    if (p.gradingMode) gradingMode = p.gradingMode;
+    if (typeof p.expected === 'number') { exSum += p.expected; exN++; }
+    if (typeof p.got === 'number') { gotSum += p.got; gotN++; }
+    if (typeof p.prepIntensity === 'number') { prepSum += p.prepIntensity; prepN++; }
+    (p.prepStrats || []).forEach(s => { if (prepCounts[s] !== undefined) prepCounts[s]++; });
+    (p.stuckOn || []).forEach(s => { if (stuckCounts[s] !== undefined) stuckCounts[s]++; });
+    if (p.needSupport) supports.push({ id: r.id, text: p.needSupport });
+  });
+  const total = responses.length;
+  if (total === 0) return <div className="m-empty">Noch keine Rückmeldungen…</div>;
+
+  const avgEx = exN ? (exSum/exN) : null;
+  const avgGot = gotN ? (gotSum/gotN) : null;
+  const avgPrep = prepN ? (prepSum/prepN) : null;
+  const interp = avgEx !== null && avgGot !== null
+    ? (gradingMode === 'grades'
+        ? (avgGot > avgEx + 0.25 ? 'Klasse hat sich überschätzt' : avgGot < avgEx - 0.25 ? 'Klasse hat sich unterschätzt' : 'Realität ziemlich genau getroffen')
+        : (avgGot < avgEx - 0.5 ? 'Klasse hat sich überschätzt' : avgGot > avgEx + 0.5 ? 'Klasse hat sich unterschätzt' : 'Realität ziemlich genau getroffen'))
+    : '';
+
+  const maxPrep = Math.max(1, ...Object.values(prepCounts));
+  const maxStuck = Math.max(1, ...Object.values(stuckCounts));
+
+  return (
+    <div className="m-teacher m-exam-teacher">
+      <div className="exam-grid stagger">
+        <div className="exam-tile">
+          <div className="et-head">Erwartung vs. Realität</div>
+          <div className="ev-bars">
+            <div className="evb">
+              <div className="evb-lab">erwartet</div>
+              <div className="evb-v">{avgEx !== null ? avgEx.toFixed(1) : '–'}</div>
+            </div>
+            <div className="evb">
+              <div className="evb-lab">bekommen</div>
+              <div className="evb-v">{avgGot !== null ? avgGot.toFixed(1) : '–'}</div>
+            </div>
+          </div>
+          <div className="ev-interp">{interp}</div>
+        </div>
+
+        <div className="exam-tile">
+          <div className="et-head">Vorbereitung</div>
+          <div className="et-sub">Durchschnittliche Intensität: {avgPrep !== null ? avgPrep.toFixed(1) : '–'} / 5</div>
+          <div className="et-bars">
+            {Object.entries(prepCounts).sort((a,b) => b[1]-a[1]).map(([s, n]) => (
+              <div key={s} className="et-bar">
+                <div className="etb-lab">{s}</div>
+                <div className="etb-track"><div className="etb-fill" style={{width: `${(n/maxPrep)*100}%`}}/></div>
+                <div className="etb-n">{n}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="exam-tile">
+          <div className="et-head">Stolpersteine</div>
+          <div className="et-bars">
+            {Object.entries(stuckCounts).sort((a,b) => b[1]-a[1]).map(([s, n]) => {
+              const topHighlight = n > 0 && n === maxStuck;
+              return (
+                <div key={s} className={'et-bar ' + (topHighlight ? 'hi' : '')}>
+                  <div className="etb-lab">{s}</div>
+                  <div className="etb-track"><div className="etb-fill" style={{width: `${(n/maxStuck)*100}%`}}/></div>
+                  <div className="etb-n">{n}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {!projection && (
+          <div className="exam-tile private">
+            <div className="et-head">Unterstützungswünsche <span className="pill">vertraulich</span></div>
+            <div className="et-sub">Nur für Sie sichtbar · {supports.length} Einträge</div>
+            <div className="support-list">
+              {supports.map((s, i) => (
+                <div key={s.id} className="support-item">
+                  <span className="num">{String(i+1).padStart(2,'0')}</span>
+                  <span>{s.text}</span>
+                </div>
+              ))}
+              {supports.length === 0 && <div className="support-empty">Keine Unterstützungswünsche genannt.</div>}
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="hint-box">Die Unterstützungswünsche geben Hinweise auf didaktische Nacharbeit. Sie können Themen im nächsten Unterricht aufgreifen, ohne Schüler:innen zu nennen.</div>
+    </div>
+  );
+}
+
+window.METHOD_EXAM = {
+  id: 'exam',
+  title: 'Klausurreflexion',
+  group: 'performance',
+  emoji: '📝',
+  description: 'Strukturierte Reflexion nach Klausurrückgabe.',
+  didacticHint: 'Unterscheidet Vorbereitung, Prüfungsverhalten und Strategie.',
+  StudentView: ExamStudent,
+  TeacherView: ExamTeacher,
+};
+
+</script>
+
+<script type="text/babel" data-source="methods/four-levels-meta.jsx">
+// Four-Levels method — registers the method using its inner student/teacher components
+// defined in methods/four-levels-inner.jsx
+
+window.METHOD_FOUR_LEVELS = {
+  id: 'four_levels',
+  title: 'Vier-Ebenen-Reflexion',
+  group: 'structured',
+  emoji: '🧭',
+  description: 'Kognitiv, Prozess, Gefühl, Transfer — vier aufeinander aufbauende Ebenen.',
+  didacticHint: 'Systematisch und ausführlich. Gut geeignet nach inhaltlich dichten oder komplexen Stunden.',
+  StudentView: (props) => <FourLevelsInnerStudent {...props} />,
+  TeacherView: (props) => <FourLevelsInnerTeacher {...props} />,
+};
+
+</script>
+
 <script type="text/babel">
 // Methods registry — central catalog
 // To add a new method:
@@ -2422,7 +3594,7 @@ function Landing({ onCreate, onJoin }) {
               </div>
             </div>
             <div className="join-inline">
-              <input value={joinCode} onChange={e => setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6))} placeholder="A4K9P2" maxLength={6}/>
+              <input value={joinCode} onChange={e => setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z]/g,'').slice(0,6))} placeholder="ABCDEF" maxLength={6}/>
               <button disabled={!canJoin} onClick={() => onJoin(clean)}>Beitreten</button>
             </div>
           </div>
@@ -2649,7 +3821,7 @@ function App() {
 
   // Parse hash for join links
   React.useEffect(() => {
-    const m = window.location.hash.match(/join=([A-Z0-9]{6})/i);
+    const m = window.location.hash.match(/join=([A-Z]{6})/i);
     if (m) { setCode(m[1].toUpperCase()); setRoute('student'); }
   }, []);
 
