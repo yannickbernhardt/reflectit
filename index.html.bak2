@@ -8,7 +8,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css" />
 <style>
 :root {
   --bg: oklch(0.985 0.004 85);
@@ -1313,24 +1312,32 @@ input:focus, textarea:focus, select:focus {
 
 /* ===================== PHASE B: Original logo + intro + mirror ===================== */
 
-/* ─── Pearl (brand mark) ─── */
-.pearl-wrap {
+.logo-icon-3d {
   display: inline-block;
-  line-height: 0;
+  perspective: 1000px;
+  filter:
+    drop-shadow(0 12px 20px rgba(120, 40, 130, 0.28))
+    drop-shadow(0 3px 6px rgba(70, 20, 80, 0.18));
+  flex: none;
   vertical-align: middle;
-  filter: drop-shadow(0 4px 10px oklch(0.35 0.12 20 / 0.25));
 }
-.pearl-wrap svg { display: block; }
-.pearl-wrap.is-floating svg {
-  /* No CPU float — the cursor-tracked light is the live element now. */
+.logo-icon-3d svg {
+  display: block;
+  transform-style: preserve-3d;
+  backface-visibility: visible;
+  will-change: transform;
 }
-.pearl-wrap.is-paused svg { animation-play-state: paused; }
-@keyframes pearl-float {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-3px); }
+.logo-icon-3d.is-rotating svg {
+  animation: logo-spin-y 22s linear infinite;
+}
+.logo-icon-3d.is-paused svg {
+  animation-play-state: paused;
+}
+@keyframes logo-spin-y {
+  from { transform: rotateY(0deg); }
+  to   { transform: rotateY(360deg); }
 }
 
-/* Wordmark */
 .logo-wordmark {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   font-weight: 700;
@@ -1340,7 +1347,6 @@ input:focus, textarea:focus, select:focus {
   line-height: 1;
 }
 
-/* Composite */
 .brand-logo {
   display: inline-flex;
   align-items: center;
@@ -1350,27 +1356,7 @@ input:focus, textarea:focus, select:focus {
 .brand-logo-xl { gap: 18px; }
 .brand-logo-header { gap: 12px; }
 
-/* ─── Intro choreography ───
-   The pearl never "pops in" — it's revealed by a black curtain that lifts away.
-   Once revealed, the wordmark types itself out, holds, then everything fades. */
-
-/* Full-screen black curtain that hides everything until the pearl is "discovered". */
-.intro-curtain {
-  position: fixed;
-  inset: 0;
-  z-index: 79;
-  background: #000;
-  pointer-events: none;
-  opacity: 1;
-  /* Curtain fades from full opaque to transparent over the first beat,
-     revealing the pearl which was always there, behind it. */
-  animation: intro-curtain-fade 1100ms cubic-bezier(0.4, 0, 0.2, 1) 200ms both;
-}
-@keyframes intro-curtain-fade {
-  0%   { opacity: 1; }
-  100% { opacity: 0; }
-}
-
+/* Intro choreography */
 .intro-logo {
   position: fixed;
   z-index: 80;
@@ -1378,91 +1364,242 @@ input:focus, textarea:focus, select:focus {
   align-items: center;
   gap: 18px;
   pointer-events: none;
+  transform-origin: left center;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 0;
+  animation: intro-in 700ms var(--ease-out) forwards;
+  transition:
+    top 1200ms cubic-bezier(0.4, 0.0, 0.2, 1),
+    left 1200ms cubic-bezier(0.4, 0.0, 0.2, 1),
+    transform 1200ms cubic-bezier(0.4, 0.0, 0.2, 1),
+    opacity 300ms ease-out 900ms,
+    gap 1200ms ease-in-out;
+}
+@keyframes intro-in {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.intro-logo.intro-phase-2,
+.intro-logo.intro-phase-3 {
+  top: 36px;
+  left: 40px;
+  transform: translate(0, 0) scale(0.3);
+  gap: 10px;
+  animation: none;
   opacity: 1;
-}
-
-/* The pearl itself never animates in — it's static and always at full opacity.
-   What animates is the BLACK CURTAIN above it (and a soft inner glow). */
-.intro-logo .intro-pearl-glow {
-  position: absolute;
-  inset: -40% -40% -40% -40%;
-  border-radius: 50%;
-  background: radial-gradient(closest-side,
-    rgba(255, 138, 92, 0.35) 0%,
-    rgba(255, 138, 92, 0.10) 40%,
-    rgba(255, 138, 92, 0)    70%
-  );
-  pointer-events: none;
-  opacity: 0;
-  animation: intro-glow 1800ms cubic-bezier(0.4, 0, 0.2, 1) 1100ms both;
-  filter: blur(8px);
-  z-index: -1;
-}
-@keyframes intro-glow {
-  0%   { opacity: 0; transform: scale(0.6); }
-  40%  { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1.2); }
-}
-
-/* Wordmark reveal — letters wipe in from a clip mask, no bounce */
-.intro-logo .intro-wordmark {
-  display: inline-block;
-  overflow: hidden;
-  white-space: nowrap;
-}
-.intro-logo .intro-wordmark .intro-letter {
-  display: inline-block;
-  opacity: 0;
-  transform: translateY(0.4em);
-  animation: intro-letter 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-/* Letters start AFTER the curtain has cleared */
-.intro-logo .intro-wordmark .intro-letter:nth-child(1) { animation-delay: 1300ms; }
-.intro-logo .intro-wordmark .intro-letter:nth-child(2) { animation-delay: 1370ms; }
-.intro-logo .intro-wordmark .intro-letter:nth-child(3) { animation-delay: 1440ms; }
-.intro-logo .intro-wordmark .intro-letter:nth-child(4) { animation-delay: 1510ms; }
-.intro-logo .intro-wordmark .intro-letter:nth-child(5) { animation-delay: 1580ms; }
-.intro-logo .intro-wordmark .intro-letter:nth-child(6) { animation-delay: 1650ms; }
-.intro-logo .intro-wordmark .intro-letter:nth-child(7) { animation-delay: 1720ms; }
-.intro-logo .intro-wordmark .intro-letter:nth-child(8) { animation-delay: 1790ms; }
-.intro-logo .intro-wordmark .intro-letter:nth-child(9) { animation-delay: 1860ms; }
-@keyframes intro-letter {
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Phase 2 — whole intro composite gracefully exits.
-   Pearl + wordmark fade together, no scale jolt. */
-.intro-logo.intro-phase-2 {
-  opacity: 0;
-  transition: opacity 800ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-.intro-curtain.intro-phase-2 {
-  /* Already at opacity 0 — keep it there */
-  display: none;
 }
 .intro-logo.intro-phase-3 {
   opacity: 0;
-  pointer-events: none;
-  display: none;
 }
 
-/* ─── Stage centerpiece (hero pearl) ─── */
-.mirror-symbol {
-  display: inline-block;
-  animation: mirror-in 700ms var(--ease-out) both;
-  animation-delay: 3500ms; /* after intro fully clears */
-}
-@keyframes mirror-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+.intro-logo.intro-phase-2 .logo-icon-3d.is-rotating svg,
+.intro-logo.intro-phase-3 .logo-icon-3d.is-rotating svg {
+  animation-duration: 60s;
 }
 
-/* When user returns and intro is skipped, the pearl appears immediately */
-.mirror-symbol.no-intro {
+/* ─── Hero Claim & Breathing Dot (stage center) ─── */
+.hero-claim {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-weight: 450;
+  font-size: clamp(24px, 4.2vw, 44px);
+  letter-spacing: -0.005em;
+  line-height: 1.2;
+  background: var(--grad-accent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 0;
+  text-align: center;
+  text-wrap: balance;
+  animation: claim-in 900ms var(--ease-out) both;
+  animation-delay: 2700ms;
+}
+.hero-claim.no-intro {
   animation-delay: 0ms;
+}
+@keyframes claim-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.breathing-dot {
+  width: 80px;
+  height: 80px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: dot-in 1000ms var(--ease-out) both;
+  animation-delay: 3000ms;
+}
+.breathing-dot.no-intro {
+  animation-delay: 0ms;
+}
+@keyframes dot-in {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.breathing-dot__core {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(200, 52, 140, 0.38) 0%,
+    rgba(232, 90, 122, 0.22) 35%,
+    rgba(255, 138, 92, 0.08) 65%,
+    rgba(255, 138, 92, 0) 100%
+  );
+  animation: dot-breathe 4s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes dot-breathe {
+  0%, 100% { transform: scale(0.85); opacity: 0.5; }
+  50%      { transform: scale(1.15); opacity: 0.9; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .breathing-dot__core { animation: none; transform: scale(1); opacity: 0.7; }
+}
+
+/* ===================== Calm Landing (new centered composition) ===================== */
+.landing-calm {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding-top: max(24px, env(safe-area-inset-top));
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  padding-left: max(24px, env(safe-area-inset-left));
+  padding-right: max(24px, env(safe-area-inset-right));
+  max-width: 100%;
+}
+.landing-calm .landing-head {
+  padding-bottom: 0;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+.landing-calm-stage {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  padding: 40px 0;
+  text-align: center;
+}
+.landing-calm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 8px;
+  animation: calm-action-in 800ms var(--ease-out) both;
+  animation-delay: 3600ms;
+}
+.landing-calm-actions.no-intro { animation-delay: 0ms; }
+.landing-calm-actions > *:nth-child(2) { animation-delay: 3750ms; }
+.landing-calm-actions.no-intro > *:nth-child(2) { animation-delay: 0ms; }
+@keyframes calm-action-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.calm-btn {
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  padding: 16px 28px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  min-height: 52px;
+  transition: transform var(--dur-sm) var(--ease-out), box-shadow var(--dur-sm) var(--ease-out), background var(--dur-sm) var(--ease-out);
+}
+.calm-btn-primary {
+  color: #fff;
+  background: linear-gradient(135deg, #E86A3A 0%, #C8348C 55%, #5C6FD1 100%);
+  box-shadow: 0 6px 18px rgba(200, 52, 140, 0.28), 0 2px 6px rgba(70, 20, 80, 0.18), inset 0 1px 0 rgba(255,255,255,0.35);
+}
+.calm-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(200, 52, 140, 0.35), 0 3px 8px rgba(70, 20, 80, 0.22), inset 0 1px 0 rgba(255,255,255,0.4); }
+.calm-btn-primary:active { transform: translateY(0); }
+.calm-btn-secondary {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.8);
+  border-color: var(--line);
+  backdrop-filter: blur(6px);
+}
+.calm-btn-secondary:hover { background: #fff; border-color: var(--ink-faint); transform: translateY(-1px); }
+
+.landing-calm-join {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+  animation: calm-action-in 400ms var(--ease-out) both;
+}
+.landing-calm-join input {
+  font: inherit;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-align: center;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+  width: 160px;
+  text-transform: uppercase;
+}
+.landing-calm-join input:focus {
+  outline: none;
+  border-color: var(--accent-b);
+  box-shadow: 0 0 0 3px rgba(200, 52, 140, 0.15);
+}
+.landing-calm-join button {
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 14px 20px;
+  border-radius: 12px;
+  border: none;
+  background: var(--ink);
+  color: #fff;
+  cursor: pointer;
+  min-height: 48px;
+}
+.landing-calm-join button:disabled {
+  background: var(--line);
+  color: var(--ink-faint);
+  cursor: not-allowed;
+}
+
+.landing-calm-foot {
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  text-align: center;
+  padding-top: 24px;
+  animation: calm-action-in 800ms var(--ease-out) both;
+  animation-delay: 4000ms;
+}
+.landing-calm-foot.no-intro { animation-delay: 0ms; }
+
+/* Mobile */
+@media (max-width: 760px) {
+  .landing-calm-stage { gap: 28px; padding: 32px 0; }
+  .landing-calm-actions { flex-direction: column; width: 100%; max-width: 360px; }
+  .calm-btn { width: 100%; }
+  .landing-calm-join { width: 100%; max-width: 360px; flex-direction: row; }
+  .landing-calm-join input { flex: 1; width: auto; }
+}
+
+.hero-mirror {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
 }
 
 /* ===================== PHASE C1: Page transitions (method steps) ===================== */
@@ -1757,7 +1894,7 @@ input:focus, textarea:focus, select:focus {
 .student-head .brand { font-size: 15px; font-weight: 600; color: var(--ink); }
 .teacher-head .brand { font-size: 16px; font-weight: 600; }
 
-/* Teacher header: wordmark should remain light */
+/* Teacher header wordmark color */
 .teacher-head .logo-wordmark { color: var(--teacher-ink); }
 
 /* Existing sub-page brand-mark was 24x24; mini-logo is 30x30 so shells need a pinch less air */
@@ -1775,8 +1912,12 @@ input:focus, textarea:focus, select:focus {
 
 /* Intro shrinks on narrow viewports */
 @media (max-width: 760px) {
-  .mirror-symbol .pearl-wrap { width: 140px !important; height: 140px !important; }
-  .mirror-symbol .pearl-wrap svg { width: 140px !important; height: 140px !important; }
+  .intro-logo.intro-phase-2,
+  .intro-logo.intro-phase-3 {
+    top: 22px;
+    left: 20px;
+  }
+  .breathing-dot { width: 56px; height: 56px; }
 }
 
 /* Animation-free fallback for initial render (prevents flash of unstyled) */
@@ -1784,15 +1925,11 @@ input:focus, textarea:focus, select:focus {
 html.no-fx-anims .stagger > * { animation: none !important; opacity: 1 !important; transform: none !important; }
 
 </style>
-</head>
-<body>
-<div id="root"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.development.js"></script>
 <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.development.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.29.0/babel.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
 <script>
 // ReflectIt — Supabase storage layer w/ method + payload support
 (function () {
@@ -1917,9 +2054,7 @@ window.__qrPattern = function (text) {
 };
 
 window.__genCode = function () {
-  // 6 letters A–Z (matches Supabase check constraint sessions_code_format).
-  // I (eye) and O (oh) excluded to avoid confusion with 1/0 when read aloud.
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const len = 6;
   let s = '';
   if (window.crypto && window.crypto.getRandomValues) {
@@ -1945,112 +2080,90 @@ window.__STOPWORDS = new Set([
 ]);
 
 </script>
+</head>
+<body>
+<div id="root"></div>
+
 <script type="text/babel">
-// ReflectIt: 3D "Perle" (glass sphere) as the sole brand mark.
-// No rectangular icon, no mirror.
+// ReflectIt original logo: rounded-rect icon with gradient + white inner "display",
+// plus ReflectIt wordmark. Icon rotates slowly on Y-axis.
 
-function Pearl({ size = 48, floating = true, paused = false }) {
-  const s = size;
-  const id = React.useId ? React.useId().replace(/:/g, '') : `p${Math.random().toString(36).slice(2, 8)}`;
-  const coreId   = `pearl-core-${id}`;
-  const rimId    = `pearl-rim-${id}`;
-  const shineId  = `pearl-shine-${id}`;
-  const shadowId = `pearl-shadow-${id}`;
-
-  const pad = s * 0.08;
-  const d = s - pad * 2;
-  const cx = s / 2, cy = s / 2;
-  const r = d / 2;
-
-  // Cursor-tracked specular highlight.
-  // Light position is normalized to [0..1] inside the SVG box, but it can extend
-  // BEYOND the box (we clamp to [-0.4 .. 1.4]) so the catchlight slides naturally
-  // toward the cursor even when the cursor is well outside the pearl — like a
-  // real light source moving around it.
-  const wrapRef = React.useRef(null);
-  const [light, setLight] = React.useState({ x: 0.32, y: 0.28 });
-
-  React.useEffect(() => {
-    if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return;
-    let raf = 0, pending = null;
-    const onMove = (e) => {
-      pending = e;
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        const el = wrapRef.current;
-        if (!el || !pending) return;
-        const rect = el.getBoundingClientRect();
-        const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-        // Vector from pearl center to cursor.
-        const dx = pending.clientX - center.x;
-        const dy = pending.clientY - center.y;
-        const dist = Math.hypot(dx, dy);
-        // Specular position is OPPOSITE to where the light comes from?
-        // No — the bright spot appears on the side facing the light. So highlight
-        // moves TOWARD the cursor. Map cursor offset (in units of pearl radius) to
-        // a normalized 0..1 position, soft-clamped so it slows as it approaches edge.
-        const norm = Math.min(dist / (r * 2.5), 1); // 1 when cursor is far away
-        const ux = dist === 0 ? 0 : dx / dist;
-        const uy = dist === 0 ? 0 : dy / dist;
-        // Highlight offset from center, in normalized SVG space (0..1).
-        // Max offset = 0.42 from center (0.5), so range ~[0.08 .. 0.92].
-        const offset = norm * 0.42;
-        setLight({ x: 0.5 + ux * offset, y: 0.5 + uy * offset });
-      });
-    };
-    window.addEventListener('pointermove', onMove, { passive: true });
-    return () => {
-      window.removeEventListener('pointermove', onMove);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, [r]);
-
-  // Core gradient also subtly shifts so the shaded side rotates with the light.
-  const coreCx = (1 - light.x) * 0.5 + light.x * 0.7; // tug toward light
-  const coreCy = (1 - light.y) * 0.5 + light.y * 0.7;
+function LogoIcon({ size = 48, rotate = true, paused = false }) {
+  // Square (1:1) rounded rect with 3-stop diagonal gradient (orange → magenta → blue),
+  // strong 30% corner radius, soft 3D rim (highlight top, shadow bottom),
+  // centered near-square white inner "display".
+  const w = size;
+  const h = size;
+  const r = Math.round(w * 0.30);
+  const innerW = Math.round(w * 0.34);
+  const innerH = Math.round(h * 0.44);
+  const innerX = (w - innerW) / 2;
+  const innerY = (h - innerH) / 2;
+  const innerR = Math.round(innerW * 0.30);
+  const uid = `logo-${size}-${Math.round(Math.random() * 1e6)}`;
 
   return (
     <div
-      ref={wrapRef}
-      className={'pearl-wrap' + (floating ? ' is-floating' : '') + (paused ? ' is-paused' : '')}
-      style={{ width: s, height: s }}
+      className={'logo-icon-3d' + (rotate ? ' is-rotating' : '') + (paused ? ' is-paused' : '')}
+      style={{ width: w, height: h }}
       aria-hidden="true"
     >
-      <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} xmlns="http://www.w3.org/2000/svg">
+      <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <radialGradient id={coreId} cx={coreCx} cy={coreCy} r="0.9">
-            <stop offset="0%"   stopColor="#FFC8A8" />
-            <stop offset="28%"  stopColor="#FF8A5C" />
-            <stop offset="62%"  stopColor="#E85A7A" />
-            <stop offset="100%" stopColor="#7A1F4A" />
-          </radialGradient>
-          <radialGradient id={rimId} cx={1 - light.x} cy={1 - light.y} r="0.55">
-            <stop offset="0%"   stopColor="rgba(255,150,120,0.55)" />
-            <stop offset="60%"  stopColor="rgba(255,150,120,0)" />
-          </radialGradient>
-          <radialGradient id={shineId} cx={light.x} cy={light.y} r="0.28">
-            <stop offset="0%"   stopColor="rgba(255,255,255,0.95)" />
-            <stop offset="60%"  stopColor="rgba(255,255,255,0.15)" />
+          {/* Main body: TL orange → mid magenta → BR blue/violet */}
+          <linearGradient id={`${uid}-body`} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%"   stopColor="#E86A3A" />
+            <stop offset="45%"  stopColor="#C8348C" />
+            <stop offset="100%" stopColor="#5C6FD1" />
+          </linearGradient>
+          {/* Top rim highlight */}
+          <linearGradient id={`${uid}-rim-top`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"  stopColor="rgba(255,255,255,0.55)" />
+            <stop offset="20%" stopColor="rgba(255,255,255,0.12)" />
+            <stop offset="55%" stopColor="rgba(255,255,255,0)" />
+          </linearGradient>
+          {/* Bottom shadow/vignette */}
+          <linearGradient id={`${uid}-rim-bot`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="55%" stopColor="rgba(0,0,0,0)" />
+            <stop offset="100%" stopColor="rgba(70,20,100,0.35)" />
+          </linearGradient>
+          {/* Soft inner-corner shine */}
+          <radialGradient id={`${uid}-shine`} cx="0.25" cy="0.18" r="0.65">
+            <stop offset="0%"  stopColor="rgba(255,255,255,0.45)" />
             <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-          </radialGradient>
-          <radialGradient id={shadowId} cx="0.5" cy="0.5" r="0.5">
-            <stop offset="0%"   stopColor="rgba(40,10,25,0.35)" />
-            <stop offset="100%" stopColor="rgba(40,10,25,0)" />
           </radialGradient>
         </defs>
 
-        <ellipse cx={cx} cy={cy + r * 0.92} rx={r * 0.72} ry={r * 0.12} fill={`url(#${shadowId})`} />
-        <circle cx={cx} cy={cy} r={r} fill={`url(#${coreId})`} />
-        <circle cx={cx} cy={cy} r={r} fill={`url(#${rimId})`} />
-        <circle cx={cx} cy={cy} r={r} fill={`url(#${shineId})`} />
-        {/* Catchlight — small bright dot that tracks the cursor more aggressively */}
-        <circle
-          cx={cx + (light.x - 0.5) * d * 0.85}
-          cy={cy + (light.y - 0.5) * d * 0.85}
-          r={r * 0.06}
-          fill="rgba(255,255,255,0.9)"
-          style={{ transition: 'cx 80ms linear, cy 80ms linear' }}
+        {/* Body */}
+        <rect x="0" y="0" width={w} height={h} rx={r} ry={r} fill={`url(#${uid}-body)`} />
+        {/* Bottom shadow fade */}
+        <rect x="0" y="0" width={w} height={h} rx={r} ry={r} fill={`url(#${uid}-rim-bot)`} />
+        {/* Top highlight shine */}
+        <rect x="0" y="0" width={w} height={h} rx={r} ry={r} fill={`url(#${uid}-rim-top)`} />
+        {/* Soft corner glow */}
+        <rect x="0" y="0" width={w} height={h} rx={r} ry={r} fill={`url(#${uid}-shine)`} />
+
+        {/* Inner white "display" — slightly warm white to feel like frosted glass */}
+        <rect x={innerX} y={innerY} width={innerW} height={innerH} rx={innerR} ry={innerR} fill="#FBF3F5" />
+        {/* Subtle inner highlight on the white rect */}
+        <rect
+          x={innerX + Math.max(1, Math.round(w * 0.015))}
+          y={innerY + Math.max(1, Math.round(h * 0.015))}
+          width={innerW - Math.max(2, Math.round(w * 0.03))}
+          height={Math.round(innerH * 0.45)}
+          rx={Math.round(innerR * 0.75)}
+          ry={Math.round(innerR * 0.75)}
+          fill="rgba(255,255,255,0.7)"
+        />
+
+        {/* Fine outer edge stroke to crisp the silhouette */}
+        <rect
+          x="0.5" y="0.5"
+          width={w - 1} height={h - 1}
+          rx={r - 0.5} ry={r - 0.5}
+          fill="none"
+          stroke="rgba(255,255,255,0.25)"
+          strokeWidth="1"
         />
       </svg>
     </div>
@@ -2059,11 +2172,7 @@ function Pearl({ size = 48, floating = true, paused = false }) {
 
 function LogoWordmark({ size = 20, color = 'var(--ink)' }) {
   return (
-    <span
-      className="logo-wordmark"
-      style={{ fontSize: size, color }}
-      aria-label="ReflectIt"
-    >
+    <span className="logo-wordmark" style={{ fontSize: size, color }} aria-label="ReflectIt">
       ReflectIt
     </span>
   );
@@ -2071,84 +2180,61 @@ function LogoWordmark({ size = 20, color = 'var(--ink)' }) {
 
 function BrandLogo({ size = 'mini', rotate = false }) {
   const map = {
-    mini:   { icon: 28, text: 15 },
-    header: { icon: 36, text: 17 },
-    xl:     { icon: 140, text: 44 },
+    mini:   { icon: 26, text: 15 },
+    header: { icon: 34, text: 17 },
+    xl:     { icon: 120, text: 44 },
   };
   const s = map[size] || map.mini;
   return (
     <span className={`brand-logo brand-logo-${size}`}>
-      <Pearl size={s.icon} floating={rotate} />
+      <LogoIcon size={s.icon} rotate={rotate} />
       <LogoWordmark size={s.text} />
     </span>
   );
 }
-
-const LogoIcon = Pearl;
 
 function IntroLogo({ onDone }) {
   const [phase, setPhase] = React.useState(1);
 
   React.useEffect(() => {
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      const id = setTimeout(() => { setPhase(3); onDone?.(); }, 50);
+      const id = setTimeout(() => { setPhase(3); onDone && onDone(); }, 50);
       return () => clearTimeout(id);
     }
-    // Timeline:
-    //   0–200ms    black curtain holds
-    //   200–1300ms curtain fades away, revealing the static pearl underneath
-    //   1300–1900ms wordmark letters reveal one by one
-    //   1900–2700ms hold (reads: "ReflectIt")
-    //   2700–3500ms whole composite fades out (phase 2)
-    //   3500ms+    removed from DOM (phase 3)
-    const t1 = setTimeout(() => setPhase(2), 2700);
-    const t2 = setTimeout(() => { setPhase(3); onDone?.(); }, 3500);
+    const t1 = setTimeout(() => setPhase(2), 2000);
+    const t2 = setTimeout(() => { setPhase(3); onDone && onDone(); }, 3200);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
-  const word = 'ReflectIt';
-
   return (
-    <React.Fragment>
-      {/* Black curtain that lifts to reveal the pearl */}
-      <div className={`intro-curtain intro-phase-${phase}`} aria-hidden="true" />
-      <div className={`intro-logo intro-phase-${phase}`} aria-hidden={phase === 3}>
-        {/* Soft warm halo behind the pearl as it's revealed */}
-        <div className="intro-pearl-glow" aria-hidden="true" />
-        <Pearl size={140} floating={false} />
-        <span className="intro-wordmark">
-          {word.split('').map((ch, i) => (
-            <span
-              key={i}
-              className="intro-letter"
-              style={{
-                fontFamily: "'Newsreader', Georgia, serif",
-                fontSize: 44,
-                fontWeight: 500,
-                fontStyle: 'italic',
-                letterSpacing: '-0.01em',
-                color: 'var(--ink)',
-                lineHeight: 1,
-              }}
-            >
-              {ch}
-            </span>
-          ))}
-        </span>
-      </div>
-    </React.Fragment>
-  );
-}
-
-function MirrorSymbol() {
-  return (
-    <div className="mirror-symbol" aria-hidden="true">
-      <Pearl size={180} floating={true} />
+    <div className={`intro-logo intro-phase-${phase}`} aria-hidden={phase === 3}>
+      <LogoIcon size={120} rotate={true} />
+      <LogoWordmark size={44} />
     </div>
   );
 }
 
-Object.assign(window, { BrandLogo, LogoIcon, Pearl, LogoWordmark, IntroLogo, MirrorSymbol });
+function BreathingDot({ noIntro = false } = {}) {
+  // A single soft glowing circle that pulses like a breath.
+  return (
+    <div className={'breathing-dot' + (noIntro ? ' no-intro' : '')} aria-hidden="true">
+      <div className="breathing-dot__core" />
+    </div>
+  );
+}
+
+function Claim({ noIntro = false } = {}) {
+  return (
+    <p className={'hero-claim' + (noIntro ? ' no-intro' : '')}>
+      Am Ende der Stunde kurz innehalten.
+    </p>
+  );
+}
+
+// Backward-compat alias
+const MirrorSymbol = BreathingDot;
+
+Object.assign(window, { BrandLogo, LogoIcon, LogoWordmark, IntroLogo, MirrorSymbol, BreathingDot, Claim });
 
 </script>
 <script type="text/babel">
@@ -2203,8 +2289,7 @@ function TweaksPanel() {
 Object.assign(window, { TweaksPanel });
 
 </script>
-
-<script type="text/babel" data-source="methods/four-levels.jsx">
+<script type="text/babel">
 // Four-Levels method — original student + teacher views
 // (Was originally the whole app; now one method among many.)
 
@@ -2577,8 +2662,23 @@ function FourLevelsInnerTeacher({ responses, projection }) {
 Object.assign(window, { FourLevelsInnerStudent, FourLevelsInnerTeacher });
 
 </script>
+<script type="text/babel">
+// Four-Levels method — registers the method using its inner student/teacher components
+// defined in methods/four-levels-inner.jsx
 
-<script type="text/babel" data-source="methods/weather.jsx">
+window.METHOD_FOUR_LEVELS = {
+  id: 'four_levels',
+  title: 'Vier-Ebenen-Reflexion',
+  group: 'structured',
+  emoji: '🧭',
+  description: 'Kognitiv, Prozess, Gefühl, Transfer — vier aufeinander aufbauende Ebenen.',
+  didacticHint: 'Systematisch und ausführlich. Gut geeignet nach inhaltlich dichten oder komplexen Stunden.',
+  StudentView: (props) => <FourLevelsInnerStudent {...props} />,
+  TeacherView: (props) => <FourLevelsInnerTeacher {...props} />,
+};
+
+</script>
+<script type="text/babel">
 // Weather method — 8 icons, temperature slider, freetext
 const WEATHER = [
   { id: 'sun', emoji: '☀️', label: 'Sonne', hint: 'klar, zuversichtlich' },
@@ -2748,8 +2848,7 @@ window.METHOD_WEATHER = {
 };
 
 </script>
-
-<script type="text/babel" data-source="methods/suitcase.jsx">
+<script type="text/babel">
 // Suitcase / trash / washing machine method
 
 const STW_BOXES = [
@@ -2871,23 +2970,22 @@ window.METHOD_SUITCASE = {
 };
 
 </script>
-
-<script type="text/babel" data-source="methods/country.jsx">
+<script type="text/babel">
 // Country metaphor method
 
 const COUNTRIES = [
-  { n: 'Deutschland', c: 'de' }, { n: 'Frankreich', c: 'fr' }, { n: 'Italien', c: 'it' }, { n: 'Spanien', c: 'es' },
-  { n: 'Großbritannien', c: 'gb' }, { n: 'Niederlande', c: 'nl' }, { n: 'Schweden', c: 'se' }, { n: 'Norwegen', c: 'no' },
-  { n: 'Island', c: 'is' }, { n: 'Finnland', c: 'fi' }, { n: 'Griechenland', c: 'gr' }, { n: 'Polen', c: 'pl' },
-  { n: 'Schweiz', c: 'ch' }, { n: 'Portugal', c: 'pt' }, { n: 'Irland', c: 'ie' },
-  { n: 'Japan', c: 'jp' }, { n: 'China', c: 'cn' }, { n: 'Indien', c: 'in' }, { n: 'Südkorea', c: 'kr' },
-  { n: 'Thailand', c: 'th' }, { n: 'Vietnam', c: 'vn' }, { n: 'Indonesien', c: 'id' }, { n: 'Türkei', c: 'tr' },
-  { n: 'Israel', c: 'il' }, { n: 'VAE', c: 'ae' }, { n: 'Singapur', c: 'sg' },
-  { n: 'USA', c: 'us' }, { n: 'Kanada', c: 'ca' }, { n: 'Mexiko', c: 'mx' }, { n: 'Brasilien', c: 'br' },
-  { n: 'Argentinien', c: 'ar' }, { n: 'Chile', c: 'cl' }, { n: 'Kuba', c: 'cu' },
-  { n: 'Südafrika', c: 'za' }, { n: 'Ägypten', c: 'eg' }, { n: 'Marokko', c: 'ma' }, { n: 'Kenia', c: 'ke' },
-  { n: 'Nigeria', c: 'ng' }, { n: 'Madagaskar', c: 'mg' },
-  { n: 'Australien', c: 'au' }, { n: 'Neuseeland', c: 'nz' },
+  { n: 'Deutschland', f: '🇩🇪' }, { n: 'Frankreich', f: '🇫🇷' }, { n: 'Italien', f: '🇮🇹' }, { n: 'Spanien', f: '🇪🇸' },
+  { n: 'Großbritannien', f: '🇬🇧' }, { n: 'Niederlande', f: '🇳🇱' }, { n: 'Schweden', f: '🇸🇪' }, { n: 'Norwegen', f: '🇳🇴' },
+  { n: 'Island', f: '🇮🇸' }, { n: 'Finnland', f: '🇫🇮' }, { n: 'Griechenland', f: '🇬🇷' }, { n: 'Polen', f: '🇵🇱' },
+  { n: 'Schweiz', f: '🇨🇭' }, { n: 'Portugal', f: '🇵🇹' }, { n: 'Irland', f: '🇮🇪' },
+  { n: 'Japan', f: '🇯🇵' }, { n: 'China', f: '🇨🇳' }, { n: 'Indien', f: '🇮🇳' }, { n: 'Südkorea', f: '🇰🇷' },
+  { n: 'Thailand', f: '🇹🇭' }, { n: 'Vietnam', f: '🇻🇳' }, { n: 'Indonesien', f: '🇮🇩' }, { n: 'Türkei', f: '🇹🇷' },
+  { n: 'Israel', f: '🇮🇱' }, { n: 'VAE', f: '🇦🇪' }, { n: 'Singapur', f: '🇸🇬' },
+  { n: 'USA', f: '🇺🇸' }, { n: 'Kanada', f: '🇨🇦' }, { n: 'Mexiko', f: '🇲🇽' }, { n: 'Brasilien', f: '🇧🇷' },
+  { n: 'Argentinien', f: '🇦🇷' }, { n: 'Chile', f: '🇨🇱' }, { n: 'Kuba', f: '🇨🇺' },
+  { n: 'Südafrika', f: '🇿🇦' }, { n: 'Ägypten', f: '🇪🇬' }, { n: 'Marokko', f: '🇲🇦' }, { n: 'Kenia', f: '🇰🇪' },
+  { n: 'Nigeria', f: '🇳🇬' }, { n: 'Madagaskar', f: '🇲🇬' },
+  { n: 'Australien', f: '🇦🇺' }, { n: 'Neuseeland', f: '🇳🇿' },
 ];
 
 function CountryStudent({ code, onSubmit, onExit }) {
@@ -2907,7 +3005,7 @@ function CountryStudent({ code, onSubmit, onExit }) {
     setBusy(true); setErr(null);
     try {
       await window.__store.addResponse(code, 'country', {
-        country: sel.n, flag: sel.c, why: why.trim(), detail: detail.trim(),
+        country: sel.n, flag: sel.f, why: why.trim(), detail: detail.trim(),
       });
       onSubmit();
     } catch (e) { setErr('Speichern fehlgeschlagen.'); setBusy(false); }
@@ -2933,7 +3031,7 @@ function CountryStudent({ code, onSubmit, onExit }) {
             {filtered.map(c => (
               <button key={c.n} className={'country-tile ' + (sel?.n === c.n ? 'sel' : '')}
                 onClick={() => setSel(c)}>
-                <span className={'fi fi-' + c.c + ' cf'}></span>
+                <div className="cf">{c.f}</div>
                 <div className="cn">{c.n}</div>
               </button>
             ))}
@@ -2949,7 +3047,7 @@ function CountryStudent({ code, onSubmit, onExit }) {
         <>
           <div className="ms-intro">
             <div className="chosen-country">
-              <span className={'fi fi-' + sel.c + ' cf-big'}></span>
+              <div className="cf-big">{sel.f}</div>
               <div className="cn-big">{sel.n}</div>
             </div>
           </div>
@@ -3004,7 +3102,7 @@ function CountryTeacher({ responses, projection }) {
                 <button key={c.n}
                   className={'ct-tile ' + (on ? 'on ' : 'off ') + (active ? 'active' : '')}
                   onClick={() => on && !projection && setFocus(focus === c.n ? null : c.n)}>
-                  <span className={'fi fi-' + c.c + ' cf'}></span>
+                  <span className="cf">{c.f}</span>
                   <span className="cn">{c.n}</span>
                   {n > 0 && <span className="badge">{n}</span>}
                 </button>
@@ -3022,7 +3120,7 @@ function CountryTeacher({ responses, projection }) {
             <div className="mt-side-body">
               {streamCountries.map(name => (byCountry[name] || []).map(item => (
                 <div key={item.id} className="country-rat">
-                  <div className="cr-head"><span className={'fi fi-' + item.flag + ' cf'}></span> <b>{name}</b></div>
+                  <div className="cr-head"><span className="cf">{item.flag}</span> <b>{name}</b></div>
                   <div className="cr-why">{item.why}</div>
                   {item.detail && <div className="cr-detail">{item.detail}</div>}
                 </div>
@@ -3047,8 +3145,7 @@ window.METHOD_COUNTRY = {
 };
 
 </script>
-
-<script type="text/babel" data-source="methods/exam.jsx">
+<script type="text/babel">
 // Exam reflection method — 4 sections
 
 const GRADES_DE = ['1', '2', '3', '4', '5', '6'];
@@ -3355,24 +3452,6 @@ window.METHOD_EXAM = {
 };
 
 </script>
-
-<script type="text/babel" data-source="methods/four-levels-meta.jsx">
-// Four-Levels method — registers the method using its inner student/teacher components
-// defined in methods/four-levels-inner.jsx
-
-window.METHOD_FOUR_LEVELS = {
-  id: 'four_levels',
-  title: 'Vier-Ebenen-Reflexion',
-  group: 'structured',
-  emoji: '🧭',
-  description: 'Kognitiv, Prozess, Gefühl, Transfer — vier aufeinander aufbauende Ebenen.',
-  didacticHint: 'Systematisch und ausführlich. Gut geeignet nach inhaltlich dichten oder komplexen Stunden.',
-  StudentView: (props) => <FourLevelsInnerStudent {...props} />,
-  TeacherView: (props) => <FourLevelsInnerTeacher {...props} />,
-};
-
-</script>
-
 <script type="text/babel">
 // Methods registry — central catalog
 // To add a new method:
@@ -3528,6 +3607,7 @@ Object.assign(window, { METHODS, METHOD_GROUPS, GroupPicker, MethodPicker });
 
 function Landing({ onCreate, onJoin }) {
   const [joinCode, setJoinCode] = React.useState('');
+  const [joinOpen, setJoinOpen] = React.useState(false);
   const clean = joinCode.replace(/\s+/g,'').toUpperCase();
   const canJoin = clean.length === 6;
 
@@ -3536,12 +3616,11 @@ function Landing({ onCreate, onJoin }) {
     try { return sessionStorage.getItem('reflectit:introPlayed') === '1'; }
     catch { return false; }
   });
-  const [introPhase2, setIntroPhase2] = React.useState(introDone); // controls header brand visibility
+  const [introPhase2, setIntroPhase2] = React.useState(introDone);
 
-  // Reveal the header brand as the center intro fades out.
   React.useEffect(() => {
     if (introDone) return;
-    const t = setTimeout(() => setIntroPhase2(true), 2700);
+    const t = setTimeout(() => setIntroPhase2(true), 2000);
     return () => clearTimeout(t);
   }, [introDone]);
 
@@ -3551,8 +3630,7 @@ function Landing({ onCreate, onJoin }) {
   };
 
   return (
-    <div className="landing">
-      {/* Flying intro — only when not yet played */}
+    <div className="landing landing-calm">
       {!introDone && <window.IntroLogo onDone={handleIntroDone} />}
 
       <div className="landing-head">
@@ -3560,46 +3638,41 @@ function Landing({ onCreate, onJoin }) {
           className="brand"
           style={{ opacity: introPhase2 ? 1 : 0, transition: 'opacity 500ms ease-out 200ms' }}
         >
-          <window.BrandLogo size="mini" rotate={true} />
+          <window.BrandLogo size="mini" rotate={true}/>
         </div>
-        <div className="landing-meta">Reflexions-Werkzeug für Ihren Unterricht</div>
       </div>
 
-      <div className="landing-hero">
-        <div>
-          <div className="hero-mirror" aria-hidden="true">
-            <window.MirrorSymbol />
-          </div>
-          <h1>Am Ende der Stunde <em>kurz innehalten.</em></h1>
-          <p className="lede">Sieben Reflexionsmethoden für das Stundenende oder nach Klausuren — anonym, ohne Login, in fünf Minuten.</p>
-          <div className="privacy-note">
-            <strong>Transparent &amp; datensparsam.</strong><br/>
-            Keine Konten, keine Klarnamen. Alle Rückmeldungen werden anonym gespeichert und am Ende der Session gelöscht.
-          </div>
-        </div>
-        <div className="landing-cards stagger">
-          <button className="landing-card" onClick={onCreate}>
-            <div>
-              <div className="tag">Lehrkraft</div>
-              <h3>Neue Session starten</h3>
-              <p>Methode wählen, Code und QR für die Klasse erzeugen.</p>
-            </div>
-            <div className="arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></div>
+      <div className="landing-calm-stage">
+        <window.Claim noIntro={introDone} />
+        <window.BreathingDot noIntro={introDone} />
+
+        <div className={'landing-calm-actions' + (introDone ? ' no-intro' : '')}>
+          <button className="calm-btn calm-btn-primary" onClick={onCreate}>
+            Neue Session starten
           </button>
-          <div className="landing-card" style={{display:'block', cursor:'default'}}>
-            <div style={{display:'flex', gap:18, alignItems:'center'}}>
-              <div>
-                <div className="tag">Schüler:in</div>
-                <h3>Session beitreten</h3>
-                <p>Code eingeben oder QR scannen.</p>
-              </div>
-            </div>
-            <div className="join-inline">
-              <input value={joinCode} onChange={e => setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z]/g,'').slice(0,6))} placeholder="ABCDEF" maxLength={6}/>
-              <button disabled={!canJoin} onClick={() => onJoin(clean)}>Beitreten</button>
-            </div>
-          </div>
+          <button className="calm-btn calm-btn-secondary" onClick={() => setJoinOpen(v => !v)}>
+            An Session teilnehmen
+          </button>
         </div>
+
+        {joinOpen && (
+          <div className="landing-calm-join">
+            <input
+              autoFocus
+              value={joinCode}
+              onChange={e => setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6))}
+              placeholder="A4K9P2"
+              maxLength={6}
+              inputMode="text"
+              aria-label="Session-Code"
+            />
+            <button disabled={!canJoin} onClick={() => onJoin(clean)}>Beitreten</button>
+          </div>
+        )}
+      </div>
+
+      <div className={'landing-calm-foot' + (introDone ? ' no-intro' : '')}>
+        Keine Konten, keine Klarnamen. Rückmeldungen anonym, am Ende der Session gelöscht.
       </div>
     </div>
   );
@@ -3822,7 +3895,7 @@ function App() {
 
   // Parse hash for join links
   React.useEffect(() => {
-    const m = window.location.hash.match(/join=([A-Z]{6})/i);
+    const m = window.location.hash.match(/join=([A-Z0-9]{6})/i);
     if (m) { setCode(m[1].toUpperCase()); setRoute('student'); }
   }, []);
 
